@@ -35,5 +35,5 @@ ENV SPRING_PROFILES_ACTIVE=prod \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError -Djava.io.tmpdir=/app/tmp -Djava.awt.headless=true"
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=5 \
-  CMD curl -fsS http://localhost:8080/actuator/health/readiness || exit 1
+  CMD curl -fsS "http://localhost:${PORT:-8080}/actuator/health/readiness" || exit 1
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
