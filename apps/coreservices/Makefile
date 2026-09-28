@@ -8,6 +8,7 @@ TAG         ?= latest
 GIT_SHA     := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 PLATFORM    ?= linux/arm64
 PORT        ?= 8080
+PROFILE     ?= local
 # The container can't reach the host's localhost, so point the DB at host.docker.internal.
 DOCKER_DB_URL ?= $(subst localhost,host.docker.internal,$(shell grep -E '^DB_URL=' .env 2>/dev/null | cut -d= -f2-))
 
@@ -15,8 +16,9 @@ DOCKER_DB_URL ?= $(subst localhost,host.docker.internal,$(shell grep -E '^DB_URL
 
 ## --- Gradle ---
 
+# Defaults to the `local` profile (Swagger UI, dev tokens, fake integrations); override with PROFILE=...
 run:
-	./gradlew bootRun
+	SPRING_PROFILES_ACTIVE=$(PROFILE) ./gradlew bootRun
 
 build:
 	./gradlew bootJar -x test

@@ -12,6 +12,10 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /v1/swagger-ui.html
+    # Keep the Authorize dialog values across page reloads.
+    persist-authorization: true
+    operations-sorter: alpha
+    tags-sorter: alpha
 
 hub:
   bootstrap-admin-uid: ${HUB_BOOTSTRAP_ADMIN_UID:local-admin}

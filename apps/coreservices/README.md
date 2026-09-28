@@ -40,6 +40,8 @@ The `local` profile needs **no real credentials**:
 | Product credential   | `LocalDevSeeder` creates Document Doctor client `dd_local_DEVCLIENT` / `local-dev-secret-0123456789-abcdefghijklmnop` and redirect URI `http://localhost:3001/auth/callback`. |
 
 Swagger UI (local only): `http://localhost:8080/v1/swagger-ui.html`, OpenAPI at `/v1/openapi.json`.
+Click **Authorize** and paste a token from `POST /v1/dev/token` into `firebaseIdToken`; `/v1/products/**`
+calls also need the seeded client id/secret in `productClientId` / `productClientSecret`.
 
 ### Local, full stack with Docker Compose
 
