@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-[ADR-001](./ADR-001-initial_technology.md) chose a single Spring Boot REST API behind Nginx on EC2, called by the Next.js app on Vercel, by connected SaaS products, and by Midtrans. [ADR-002](./ADR-002-usecase.md) describes every flow as a use case. This ADR defines the full contract behind those use cases:
+[ADR-001](./ADR-001-initial_technology.md) chose a single Spring Boot REST API behind Nginx on EC2, called by the Next.js app on Cloudflare Workers, by connected SaaS products, and by Midtrans. [ADR-002](./ADR-002-usecase.md) describes every flow as a use case. This ADR defines the full contract behind those use cases:
 
 | #   | Covered here                                                                                         |
 | --- | ---------------------------------------------------------------------------------------------------- |
@@ -66,8 +66,9 @@ Sign-in is **Google only** (PRD OQ2), so every token has a verified email; there
 
 ### 3.3 Request and response format
 
-- Content type is `application/json; charset=utf-8`, except file uploads (`multipart/form-data`) and errors (`application/problem+json`).
-- JSON field names are `camelCase`. Enum values are `UPPER_SNAKE_CASE` (for example `PUBLISHED`, `EXPIRED`).
+- Content type is `application/json; charset=utf-8`, except file uploads (`multipart/form-data`).
+- Every response body uses one of the three envelopes in §3.5, except `204 No Content` (no body) and `POST /webhooks/midtrans` (§9.1).
+- JSON field names are `camelCase`, except the fixed `meta.total_page` field of the envelope (§3.5). Enum values are `UPPER_SNAKE_CASE` (for example `PUBLISHED`, `EXPIRED`).
 - IDs are UUID strings, except transactions, which are addressed by their `orderId` (for example `DSH-20261028-7F3K9Q`), and products and plans, which also have a stable human `code` (for example `document-doctor`).
 - Timestamps are ISO-8601 in UTC with a `Z` suffix: `"2026-10-28T03:15:00Z"`. The frontend converts to the user's time zone (default `Asia/Jakarta`).
 - Money is an **integer number of rupiah** plus a currency code; there are no decimals in IDR:
@@ -76,7 +77,7 @@ Sign-in is **Google only** (PRD OQ2), so every token has a verified email; there
   { "amount": 49000, "currency": "IDR" }
   ```
 
-- `null` fields are included in responses (not omitted), so the shape is stable.
+- `null` fields inside `data` are included (not omitted), so the shape is stable. The envelope itself carries only the keys listed for its type in §3.5.
 - `PATCH` bodies are partial: only the fields sent are changed. `PUT` replaces the whole editable resource.
 
 ### 3.4 Pagination, sorting, filtering
@@ -86,53 +87,107 @@ List endpoints take:
 | Parameter | Default      | Notes                                                                                             |
 | --------- | ------------ | ------------------------------------------------------------------------------------------------- |
 | `page`    | `1`          | 1-based (Spring `one-indexed-parameters: true`). Matches `?page=n` on the site.                   |
-| `size`    | `20`         | Maximum `100`.                                                                                    |
+| `limit`   | `20`         | Maximum `100`.                                                                                    |
 | `sort`    | per endpoint | `field,asc` or `field,desc`. Only the fields listed for the endpoint are allowed; others → `400`. |
 
-Paged response:
+In this document, **`Page<X>`** means the paginated success envelope (§3.5) whose `data` is a list of `X`:
 
 ```json
 {
-  "items": [
-    /* ... */
+  "data": [
+    /* X, X, ... */
   ],
-  "page": 1,
-  "size": 20,
-  "totalItems": 57,
-  "totalPages": 3
+  "code": 200,
+  "message": "Success retrieve list",
+  "meta": {
+    "total": 57,
+    "page": 1,
+    "limit": 20,
+    "total_page": 3
+  }
 }
 ```
 
-### 3.5 Errors
+A list that is **not paged** (for example `/admin/categories`) uses the plain success envelope: the list is in `data` and there is no `meta`.
 
-Errors use RFC 9457 Problem Details (`application/problem+json`) with a stable machine-readable `code`:
+### 3.5 Response envelope
+
+Every response uses one of three envelopes.
+
+**Paginated success** (paged lists, `Page<X>` in this document):
 
 ```json
 {
-  "type": "https://api.<domain>/problems/validation-failed",
-  "title": "Validation failed",
-  "status": 400,
-  "code": "VALIDATION_FAILED",
-  "detail": "One or more fields are invalid.",
-  "instance": "/v1/admin/articles",
-  "traceId": "6f1c2a9e4b7d3c10",
-  "errors": [
+  "data": [],
+  "code": 200,
+  "message": "Success retrieve list",
+  "meta": {
+    "total": 200,
+    "page": 1,
+    "limit": 20,
+    "total_page": 10
+  }
+}
+```
+
+| Field             | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| `data`            | List of objects for this page (may be empty).        |
+| `code`            | HTTP status code, same as the response status line.  |
+| `message`         | Human-readable text. For display and logs only.      |
+| `meta.total`      | Total number of items that match the request.        |
+| `meta.page`       | Current page (1-based).                              |
+| `meta.limit`      | Page size requested.                                 |
+| `meta.total_page` | Number of pages for this `limit`.                    |
+
+**Success** (every other `2xx`, and the `301` in §5.3):
+
+```json
+{
+  "data": {},
+  "code": 200,
+  "message": "Success retrieve data"
+}
+```
+
+| Field     | Description                                                                                          |
+| --------- | ---------------------------------------------------------------------------------------------------- |
+| `data`    | One object, or a list for endpoints that are not paged (§3.4). Every shape in §5–§10 describes `data`. |
+| `code`    | HTTP status code, same as the response status line.                                                  |
+| `message` | Human-readable text. For display and logs only.                                                      |
+
+Success envelopes have no `error` key, and the plain success envelope has no `meta` key.
+
+**Error** (`4xx`, `5xx`):
+
+```json
+{
+  "code": 400,
+  "message": "Validation failed",
+  "error": [
     {
       "field": "title",
-      "code": "SIZE",
       "message": "Must be between 1 and 200 characters."
     }
   ]
 }
 ```
 
-- Clients branch on `code`, never on `title` or `detail` (those are for humans and may change).
-- `errors` is present only for `VALIDATION_FAILED`.
-- `traceId` is logged on the server, so a user or admin can quote it when reporting a problem.
+| Field              | Description                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `code`             | HTTP status code, same as the response status line.                                                  |
+| `message`          | Human-readable summary. For each reason in the tables below, the API uses one fixed `message` text.  |
+| `error`            | List of problems. One item per invalid field for `400` validation; an empty list `[]` otherwise.     |
+| `error[].field`    | Request field (body, query, or path parameter) that caused the problem, in `camelCase`.              |
+| `error[].message`  | What is wrong with that field.                                                                       |
 
-Common error codes:
+- Clients branch on the HTTP `code`, never on `message` text.
+- The **reason names** in this document (for example `SLUG_TAKEN`) are documentation labels for each case and the key the API uses to pick the fixed `message`; they are not a field in the body.
+- Every response (success or error) carries an `X-Trace-Id` header that is also logged on the server, so a user or admin can quote it when reporting a problem.
 
-| HTTP | `code`                   | When                                                            |
+Common error reasons:
+
+| HTTP | Reason                   | When                                                            |
 | ---- | ------------------------ | --------------------------------------------------------------- |
 | 400  | `VALIDATION_FAILED`      | Bean Validation failed, or a bad query parameter.               |
 | 400  | `MALFORMED_REQUEST`      | Body is not valid JSON or has the wrong type.                   |
@@ -140,18 +195,20 @@ Common error codes:
 | 401  | `INVALID_CLIENT`         | Missing or wrong product client credential (§8).                |
 | 403  | `FORBIDDEN`              | Signed in but not allowed (for example not an admin).           |
 | 404  | `NOT_FOUND`              | Resource does not exist **or the caller may not see it**.       |
-| 409  | `CONFLICT`               | Generic state conflict; specific codes are listed per endpoint. |
+| 409  | `CONFLICT`               | Generic state conflict; specific reasons are listed per endpoint. |
 | 413  | `PAYLOAD_TOO_LARGE`      | Upload over the limit (Nginx or API).                           |
 | 415  | `UNSUPPORTED_MEDIA_TYPE` | Upload is not JPEG, PNG, or WebP.                               |
 | 429  | `RATE_LIMITED`           | Nginx `limit_req` hit (§3.7). Includes `Retry-After`.           |
 | 500  | `INTERNAL_ERROR`         | Unexpected error. Safe to retry `GET`s.                         |
 | 502  | `UPSTREAM_ERROR`         | Midtrans or S3 call failed.                                     |
 
+Errors produced by Nginx itself (`413`, `429`, `502`/`504` when the API is down) are returned in the error envelope through `error_page` handlers, so the frontend parses one shape.
+
 A user asking for another user's resource gets `404`, not `403`, so IDs cannot be probed.
 
 ### 3.6 CORS and caching
 
-- CORS allow-list: the Vercel production domain, the staging domain, and `http://localhost:3000`. Allowed headers: `Authorization`, `Content-Type`, `Idempotency-Key`. No cookies (`credentials` not allowed); tokens go in headers (ADR-001 §7.2).
+- CORS allow-list: the production site domain, the staging domain, and `http://localhost:3000`. Allowed headers: `Authorization`, `Content-Type`, `Idempotency-Key`; exposed header: `X-Trace-Id`. No cookies (`credentials` not allowed); tokens go in headers (ADR-001 §7.2).
 - Connected products call the API **server-to-server**, so CORS does not apply to them.
 - `/public/**` responses send `Cache-Control: public, max-age=60, stale-while-revalidate=600` and an `ETag`. Next.js ISR is the main cache; this is a second layer.
 - Every other response sends `Cache-Control: no-store`, except the entitlement endpoint (§8.5).
@@ -313,7 +370,7 @@ The frontend builds `srcset` from `variants`. URLs are CloudFront URLs and never
 
 | Method | Path                             | Description                                                                                                                                                    |
 | ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/public/articles`               | Paged list of `PUBLISHED` articles, newest first. Query: `category` (slug), `tag` (slug), `page`, `size`. Returns `Page<ArticleSummary>`.                      |
+| GET    | `/public/articles`               | Paged list of `PUBLISHED` articles, newest first. Query: `category` (slug), `tag` (slug), `page`, `limit`. Returns `Page<ArticleSummary>`.                      |
 | GET    | `/public/articles/{slug}`        | One published article: `ArticleSummary` + `body` (Markdown), `bodyHtml` (sanitized), `metaTitle`, `metaDescription`, `canonicalUrl`.                           |
 | GET    | `/public/categories`             | All categories that have at least one published article: `[{ slug, name, articleCount }]`.                                                                     |
 | GET    | `/public/categories/{slug}`      | One category `{ slug, name, articleCount }`. Used by `generateMetadata` on the category page (UC-03 step 3).                                                  |
@@ -359,9 +416,9 @@ Per PRD OQ3, the only difference between Free and Pro at launch is `removeAds`. 
 | Case                                                        | Response                                                                                                                                                                                        |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Unknown slug, draft article, or unknown category/tag        | `404 NOT_FOUND` → Next.js `notFound()` (UC-01, UC-03).                                                                                                                                          |
-| Old slug of a renamed published article (UC-16)             | `301 Moved Permanently`, `Location: /v1/public/articles/{newSlug}`, body `{ "slug": "<newSlug>" }`. Next.js fetches with `redirect: "manual"` and calls `permanentRedirect("/blog/<newSlug>")`. |
+| Old slug of a renamed published article (UC-16)             | `301 Moved Permanently`, `Location: /v1/public/articles/{newSlug}`, `data` `{ "slug": "<newSlug>" }`. Next.js fetches with `redirect: "manual"` and calls `permanentRedirect("/blog/<newSlug>")`. |
 | Unknown or inactive product                                 | `404 NOT_FOUND`.                                                                                                                                                                                |
-| Filter matches but no articles                              | `200` with empty `items` (UC-03).                                                                                                                                                               |
+| Filter matches but no articles                              | `200` with empty `data` (UC-03).                                                                                                                                                                |
 
 ## 6. Group 2 — Account (`/me`, `/me/session`)
 
@@ -488,11 +545,11 @@ Responses:
 | ------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- |
 | `201 Created`                   | New `PENDING` transaction created and Snap token obtained.                                    | `Transaction` (with `snap`)            |
 | `200 OK`                        | Reused an unexpired `PENDING` transaction for the same plan, or same `Idempotency-Key`.       | `Transaction` (with `snap`)            |
-| `400 VALIDATION_FAILED`         | `planId` missing.                                                                             | Problem                                |
-| `404 NOT_FOUND`                 | Plan does not exist.                                                                          | Problem                                |
-| `409 PLAN_NOT_PURCHASABLE`      | Plan inactive, product inactive, or price is 0 (free plans are never bought, ADR-002 R4).     | Problem                                |
-| `409 PLAN_CHANGE_NOT_SUPPORTED` | User has an entitled subscription to the same product on a **different** plan (UC-08).        | Problem                                |
-| `502 UPSTREAM_ERROR`            | Midtrans Snap call failed; the transaction is saved as `FAILED` (UC-08).                      | Problem with `orderId` extension field |
+| `400 VALIDATION_FAILED`         | `planId` missing.                                                                             | Error                                  |
+| `404 NOT_FOUND`                 | Plan does not exist.                                                                          | Error                                  |
+| `409 PLAN_NOT_PURCHASABLE`      | Plan inactive, product inactive, or price is 0 (free plans are never bought, ADR-002 R4).     | Error                                  |
+| `409 PLAN_CHANGE_NOT_SUPPORTED` | User has an entitled subscription to the same product on a **different** plan (UC-08).        | Error                                  |
+| `502 UPSTREAM_ERROR`            | Midtrans Snap call failed; the transaction is saved as `FAILED` (UC-08).                      | Error; `message` includes the `orderId` |
 
 Buying the **same** plan while entitled is a renewal (UC-12) and is allowed; UC-09 extends `endDate` from `max(now, endDate)`.
 
@@ -502,9 +559,9 @@ The frontend opens Snap with `snap.token`, then polls `GET /me/transactions/{ord
 
 | Method | Path                         | Description                                                                                                                                  | Success                                                              | Errors                                     |
 | ------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------ |
-| GET    | `/me/transactions`           | Own transactions, newest first. Query: `status`, `page`, `size`. `sort`: `createdAt`. (UC-11)                                                | `200` `Page<Transaction>`                                            | —                                          |
+| GET    | `/me/transactions`           | Own transactions, newest first. Query: `status`, `page`, `limit`. `sort`: `createdAt`. (UC-11)                                                | `200` `Page<Transaction>`                                            | —                                          |
 | GET    | `/me/transactions/{orderId}` | One own transaction. Used for polling after Snap closes (UC-08 step 7): poll every 3 s for up to 2 min, then show the pending instructions. | `200` `Transaction`                                                  | `404` if not found **or not the caller's** |
-| GET    | `/me/subscriptions`          | Own subscriptions, one per product, entitled first. (UC-10)                                                                                  | `200` `{ "items": [Subscription] }` (not paged; one row per product) | —                                          |
+| GET    | `/me/subscriptions`          | Own subscriptions, one per product, entitled first. (UC-10)                                                                                  | `200` `[Subscription]` (not paged, no `meta`; one row per product) | —                                          |
 
 There are no cancel or resume endpoints: with one-time payments a subscription simply ends at `endDate` if it is not renewed (ADR-002 §4).
 
@@ -654,7 +711,7 @@ Processing follows ADR-002 UC-09 exactly: verify signature → fetch Midtrans St
 | `403 FORBIDDEN` | Signature invalid.                                                                                          | Retries, then gives up; logged as a warning. |
 | `5xx`           | Database or Status API failure.                                                                             | Retries later; processing is idempotent.     |
 
-Response body is always `{ "received": true }` (Midtrans ignores it). This endpoint does **not** use Problem Details, and the field names are Midtrans's `snake_case`, not the hub's `camelCase`.
+Response body is always `{ "received": true }` (Midtrans ignores it). This endpoint does **not** use the response envelope (§3.5), and the field names are Midtrans's `snake_case`, not the hub's `camelCase`.
 
 Refunds are made in the Midtrans dashboard (PRD OQ6). The resulting `refund` / `partial_refund` notification is the only way a transaction becomes `REFUNDED`.
 
@@ -666,7 +723,7 @@ The admin dashboard. Auth `Admin`. Admin screens for users and payments are **re
 
 | Method | Path                             | Description                                                                                                                                              | Success                        | Errors |
 | ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------ |
-| GET    | `/admin/users`                   | Query: `q` (name or email, contains, case-insensitive), `productCode`, `page`, `size`. `sort`: `createdAt`, `name`, `email`, `lastSignInAt`, `paidAmount`. | `200` `Page<AdminUserSummary>` | —      |
+| GET    | `/admin/users`                   | Query: `q` (name or email, contains, case-insensitive), `productCode`, `page`, `limit`. `sort`: `createdAt`, `name`, `email`, `lastSignInAt`, `paidAmount`. | `200` `Page<AdminUserSummary>` | —      |
 | GET    | `/admin/users/{id}`              | Profile, joined products, subscriptions, transaction summary.                                                                                            | `200` `AdminUser`              | `404`  |
 | GET    | `/admin/users/{id}/transactions` | Same as `GET /admin/transactions?userId={id}`.                                                                                                           | `200` `Page<AdminTransaction>` | `404`  |
 
@@ -695,25 +752,29 @@ The admin dashboard. Auth `Admin`. Admin screens for users and payments are **re
 
 | Method | Path                                 | Description                                                                                                                                                                                                    | Success                                                | Errors                      |
 | ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------- |
-| GET    | `/admin/transactions`                | Query: `userId`, `productCode`, `status` (repeatable), `from`, `to` (ISO dates, on `createdAt`), `q` (`orderId` or email), `needsReview` (bool), `page`, `size`. `sort`: `createdAt` (default desc), `amount`. | `200` `Page<AdminTransaction>` + `summary`             | —                           |
+| GET    | `/admin/transactions`                | Query: `userId`, `productCode`, `status` (repeatable), `from`, `to` (ISO dates, on `createdAt`), `q` (`orderId` or email), `needsReview` (bool), `page`, `limit`. `sort`: `createdAt` (default desc), `amount`. | `200` `Page<AdminTransaction>` + `meta.summary`        | —                           |
 | GET    | `/admin/transactions/{orderId}`      | Full detail incl. status history and linked subscription.                                                                                                                                                      | `200` `AdminTransactionDetail`                         | `404`                       |
 | POST   | `/admin/transactions/{orderId}/sync` | Fetch Midtrans Status API and apply UC-09 steps 3–8. No body.                                                                                                                                                  | `200` `AdminTransactionDetail` (`changed: true/false`) | `404`, `502 UPSTREAM_ERROR` |
 
-List response adds a summary for the whole filtered set (UC-15 step 2):
+List response adds a summary for the whole filtered set to `meta` (UC-15 step 2):
 
 ```json
 {
-  "items": [
+  "data": [
     /* AdminTransaction */
   ],
-  "page": 1,
-  "size": 20,
-  "totalItems": 134,
-  "totalPages": 7,
-  "summary": {
-    "count": 134,
-    "paidCount": 118,
-    "paidAmount": { "amount": 5782000, "currency": "IDR" }
+  "code": 200,
+  "message": "Success retrieve list",
+  "meta": {
+    "total": 134,
+    "page": 1,
+    "limit": 20,
+    "total_page": 7,
+    "summary": {
+      "count": 134,
+      "paidCount": 118,
+      "paidAmount": { "amount": 5782000, "currency": "IDR" }
+    }
   }
 }
 ```
@@ -726,7 +787,7 @@ There is no refund endpoint (PRD OQ6).
 
 | Method | Path                             | Description                                                                                                                                                  | Success                                 | Errors                                                                |
 | ------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | --------------------------------------------------------------------- |
-| GET    | `/admin/articles`                | Query: `q` (title), `status` (`DRAFT`/`PUBLISHED`), `category` (id), `tag` (id), `page`, `size`. `sort`: `updatedAt` (default desc), `publishedAt`, `title`. | `200` `Page<AdminArticleSummary>`       | —                                                                     |
+| GET    | `/admin/articles`                | Query: `q` (title), `status` (`DRAFT`/`PUBLISHED`), `category` (id), `tag` (id), `page`, `limit`. `sort`: `updatedAt` (default desc), `publishedAt`, `title`. | `200` `Page<AdminArticleSummary>`       | —                                                                     |
 | POST   | `/admin/articles`                | Create; always saved as `DRAFT`. Body `ArticleInput`.                                                                                                        | `201` `AdminArticle`, `Location` header | `400`, `409 SLUG_TAKEN`                                               |
 | GET    | `/admin/articles/{id}`           | Full article for the editor.                                                                                                                                 | `200` `AdminArticle`                    | `404`                                                                 |
 | PUT    | `/admin/articles/{id}`           | Replace editable fields. If published, triggers revalidation (§11.1); a slug change on a published article keeps the old slug as a redirect (UC-16).         | `200` `AdminArticle` (+ `revalidation`) | `400`, `404`, `409 SLUG_TAKEN`, `409 VERSION_CONFLICT`                |
@@ -767,11 +828,11 @@ Publish/unpublish are idempotent (`200`, no revalidation if nothing changed).
 
 | Method | Path                | Description                                                                                              | Success                                                                                | Errors                                                              |
 | ------ | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| GET    | `/admin/media`      | Query: `q` (alt text or file name), `unused` (bool), `page`, `size`. `sort`: `createdAt` (default desc). | `200` `Page<AdminImage>`                                                               | —                                                                   |
+| GET    | `/admin/media`      | Query: `q` (alt text or file name), `unused` (bool), `page`, `limit`. `sort`: `createdAt` (default desc). | `200` `Page<AdminImage>`                                                               | —                                                                   |
 | POST   | `/admin/media`      | `multipart/form-data`: `file` (JPEG/PNG/WebP, max 10 MB), `alt` (required, 1–250 chars).                 | `201` `AdminImage` new; `200` `AdminImage` if the content hash already exists (UC-19) | `400`, `413`, `415`, `400 IMAGE_UNREADABLE`                         |
 | GET    | `/admin/media/{id}` | Image with usage.                                                                                        | `200` `AdminImage`                                                                     | `404`                                                               |
 | PATCH  | `/admin/media/{id}` | `{ "alt": "..." }`                                                                                       | `200` `AdminImage`                                                                     | `400`, `404`                                                        |
-| DELETE | `/admin/media/{id}` | Delete record and S3 objects.                                                                            | `204`                                                                                  | `404`, `409 IMAGE_IN_USE` with `articles: [{ id, title }]` (UC-19) |
+| DELETE | `/admin/media/{id}` | Delete record and S3 objects.                                                                            | `204`                                                                                  | `404`, `409 IMAGE_IN_USE`; one `error` item per article (`field: "articles"`, `message` = title); `usedBy` on `GET` gives the IDs (UC-19) |
 
 **AdminImage** = `Image` (§5.1) + `{ fileName, contentHash, sizeBytes, usedBy: [{ id, title, usage: "COVER" | "BODY" }], createdAt }`.
 
@@ -781,10 +842,10 @@ Nginx allows `client_max_body_size 11m` on `/v1/admin/media`; the API checks aga
 
 | Method | Path                     | Body / query                                             | Success                                                               | Errors                                                  |
 | ------ | ------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------- |
-| GET    | `/admin/categories`      | — (not paged)                                            | `200` `{ items: [{ id, name, slug, articleCount, publishedCount }] }` | —                                                       |
+| GET    | `/admin/categories`      | — (not paged)                                            | `200` `[{ id, name, slug, articleCount, publishedCount }]` | —                                                       |
 | POST   | `/admin/categories`      | `{ "name": "DevOps", "slug": "devops" }` (slug optional) | `201` Category                                                        | `400`, `409 NAME_TAKEN`, `409 SLUG_TAKEN`               |
 | PATCH  | `/admin/categories/{id}` | `{ "name"?, "slug"? }` — revalidates pages that use it   | `200` Category (+ `revalidation`)                                     | `400`, `404`, `409`                                     |
-| DELETE | `/admin/categories/{id}` | —                                                        | `204`                                                                 | `404`, `409 CATEGORY_IN_USE` with `articleCount` (UC-20) |
+| DELETE | `/admin/categories/{id}` | —                                                        | `204`                                                                 | `404`, `409 CATEGORY_IN_USE`; `message` includes the article count (UC-20) |
 
 ### 10.6 Tags (UC-20)
 
@@ -792,7 +853,7 @@ Same shape as categories, with one difference:
 
 | Method | Path               | Notes                                                                                                                                                  |
 | ------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| GET    | `/admin/tags`      | `{ items: [{ id, name, slug, articleCount, publishedCount }] }`                                                                                        |
+| GET    | `/admin/tags`      | `[{ id, name, slug, articleCount, publishedCount }]`                                                                                        |
 | POST   | `/admin/tags`      | `409 NAME_TAKEN` / `409 SLUG_TAKEN`                                                                                                                    |
 | PATCH  | `/admin/tags/{id}` | Revalidates pages that use it.                                                                                                                         |
 | DELETE | `/admin/tags/{id}` | Removes the tag from all articles and revalidates them (UC-20). The frontend shows the confirmation using `articleCount`; the API does not ask. `204`. |
@@ -801,7 +862,7 @@ Same shape as categories, with one difference:
 
 | Method | Path                                          | Description                                                                                                                                                  | Success                                                                   | Errors                                                |
 | ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------- |
-| GET    | `/admin/products`                             | All products incl. inactive, with plan counts.                                                                                                               | `200` `{ items: [AdminProduct] }`                                         | —                                                     |
+| GET    | `/admin/products`                             | All products incl. inactive, with plan counts.                                                                                                               | `200` `[AdminProduct]`                                                    | —                                                     |
 | POST   | `/admin/products`                             | `{ "code": "document-doctor", "name": "...", "description": "...", "websiteUrl": "https://...", "active": true }`. Also creates the first client credential. | `201` `AdminProduct` + `credential` (with `clientSecret`, **shown once**) | `400`, `409 CODE_TAKEN`                               |
 | GET    | `/admin/products/{id}`                        | Product, all plans, credentials (without secrets).                                                                                                           | `200` `AdminProduct`                                                      | `404`                                                 |
 | PATCH  | `/admin/products/{id}`                        | `{ "name"?, "description"?, "websiteUrl"?, "active"? }`. `code` is immutable (products use it in URLs).                                                      | `200` `AdminProduct`                                                      | `400`, `404`                                          |
@@ -866,9 +927,9 @@ The scheduler (UC-13) has no HTTP endpoint; it runs inside the API with `@Schedu
 
 ## 12. Error Code Catalog
 
-Endpoint-specific codes, in addition to §3.5:
+Endpoint-specific error reasons, in addition to §3.5. Each has its own fixed `message`; clients see only the HTTP `code`.
 
-| HTTP | `code`                                   | Endpoint(s)                                 |
+| HTTP | Reason                                   | Endpoint(s)                                 |
 | ---- | ---------------------------------------- | ------------------------------------------- |
 | 400  | `IMAGE_UNREADABLE`                       | `POST /admin/media`                         |
 | 403  | `PRODUCT_INACTIVE`                       | Group 4                                     |
@@ -914,7 +975,7 @@ Endpoint-specific codes, in addition to §3.5:
 
 - One prefix per group means one Spring Security rule per group, and one Nginx rate-limit rule per group.
 - Connected products get a small, stable contract (two endpoints) that does not change when the hub's internals do.
-- Problem Details with stable `code`s let the frontend show the right message without parsing text.
+- One fixed set of envelopes (paginated, success, error) for every endpoint means one fetch wrapper in Next.js and one parser in each connected product.
 - `entitled` is computed only on the server, so the access rule from ADR-002 §6.2 lives in one place.
 - Read-only admin screens for users and payments mean fewer endpoints that can change money or access.
 
@@ -926,6 +987,7 @@ Endpoint-specific codes, in addition to §3.5:
 | Up to 5 minutes of stale entitlement in products (for example after a refund). | Short cache; forced refresh after checkout; refunds are rare. Add hub → product webhooks later if needed. |
 | Polling `GET /me/transactions/{orderId}` adds load after each checkout. | 3 s interval, 2 min cap; the endpoint is a single indexed lookup.                                            |
 | No admin endpoint to fix a user's access by hand.                       | `POST /admin/transactions/{orderId}/sync` fixes missed webhooks; add grant/extend endpoints if support needs them. |
+| Two different `409`s on one endpoint (for example `PLAN_NOT_PURCHASABLE` vs `PLAN_CHANGE_NOT_SUPPORTED`) look the same to a client, which sees only the HTTP `code`. | The frontend shows `message` as is; if a client ever needs to branch on the reason, add an optional reason field to the error envelope (non-breaking, §3.1). |
 | This document and the generated OpenAPI can drift.                      | Contract tests (Spring REST Docs or OpenAPI diff in CI, ADR-007) fail the build on mismatch.                 |
 
 ## 15. Follow-up

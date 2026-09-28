@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-The [PRD](../PRD.md) says **what** users want. [ADR-001](./ADR-001-initial_technology.md) says **which tools** we use (Next.js on Vercel, Spring Boot + PostgreSQL on EC2, Firebase Auth, Midtrans, S3 + CloudFront).
+The [PRD](../PRD.md) says **what** users want. [ADR-001](./ADR-001-initial_technology.md) says **which tools** we use (Next.js on Cloudflare Workers, Spring Boot + PostgreSQL on EC2, Firebase Auth, Midtrans, S3 + CloudFront).
 
 This document says **how each feature works, step by step**. Each feature is written as a _use case_:
 
@@ -56,7 +56,7 @@ Use this document when you build a feature. Frontend and backend follow the same
 
 ### 3.2 External services the hub calls
 
-Firebase Auth (sign-in), Midtrans (payment), S3 / CloudFront (images), Vercel (hosts Next.js), search engines (read public pages).
+Firebase Auth (sign-in), Midtrans (payment), S3 / CloudFront (images), Cloudflare Workers (hosts Next.js), search engines (read public pages).
 
 ## 4. Answers to the PRD Open Questions
 
@@ -176,7 +176,7 @@ These apply to UC-04 to UC-21:
 
 **Steps**
 
-1. Vercel returns the cached page.
+1. Cloudflare returns the cached page.
 2. The page shows the title, cover image, body, category, tags, and publish date. The cover image uses CloudFront at 480 / 960 / 1600 px (`srcset`).
 3. The page `<head>` has SEO data: title, meta description, canonical URL, Open Graph tags, and `Article` JSON-LD (built with Next.js `generateMetadata`).
 4. If the page is not cached yet, Next.js calls `GET /public/articles/{slug}`, builds the page, and caches it.
@@ -187,7 +187,7 @@ These apply to UC-04 to UC-21:
 | ------------------------------------- | ---------------------------------------------- |
 | Slug not found, or article is a draft | Show the `404` page (`notFound()`).            |
 | Old slug of a renamed article         | Permanent redirect (`301`) to the new slug.    |
-| API is down                           | Vercel keeps showing the old cached page.      |
+| API is down                           | Cloudflare keeps showing the old cached page.  |
 
 **Result:** The visitor reads the article without signing in. The article is in `sitemap.xml`, and `robots.txt` allows it.
 
