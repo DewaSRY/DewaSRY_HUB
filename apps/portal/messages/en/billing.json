@@ -1,1 +1,116 @@
-{}
+{
+  "status": {
+    "PENDING": "Pending",
+    "PAID": "Paid",
+    "FAILED": "Failed",
+    "REFUNDED": "Refunded"
+  },
+  "subscriptionStatus": {
+    "ACTIVE": "Active",
+    "EXPIRED": "Expired",
+    "CANCELLED": "Cancelled"
+  },
+  "method": {
+    "QRIS": "QRIS",
+    "BANK_TRANSFER": "Bank transfer",
+    "GOPAY": "GoPay",
+    "SHOPEEPAY": "ShopeePay",
+    "CREDIT_CARD": "Card",
+    "OTHER": "Other"
+  },
+  "transactions": {
+    "title": "Payment history",
+    "description": "Every payment you have made on the hub, newest first.",
+    "filterStatus": "Filter by status",
+    "allStatuses": "All statuses",
+    "empty": "No payments yet",
+    "emptyDescription": "When you buy a plan, the payment shows up here.",
+    "browseProducts": "Browse products",
+    "date": "Date",
+    "product": "Product",
+    "plan": "Plan",
+    "amount": "Amount",
+    "method": "Method",
+    "status": "Status"
+  },
+  "detail": {
+    "title": "Payment details",
+    "summary": "Summary",
+    "orderId": "Order ID",
+    "copyOrderId": "Copy order ID",
+    "createdAt": "Created",
+    "paidAt": "Paid",
+    "pendingTitle": "Waiting for payment",
+    "pendingDescription": "Finish the payment in Midtrans. This page updates once Midtrans confirms it.",
+    "pendingExpired": "The payment window has closed. If you paid, the status will update shortly; otherwise it will expire.",
+    "failed": "Payment failed",
+    "refunded": "This payment was refunded, and access for it has ended."
+  },
+  "checkout": {
+    "title": "Checkout",
+    "renewTitle": "Renew subscription",
+    "period": "Access period",
+    "price": "Price",
+    "total": "Total",
+    "oneTimeNotice": "One-time payment, no automatic renewal. Access starts once the payment is confirmed.",
+    "pay": "Pay with Midtrans",
+    "securedBy": "Payments are processed securely by Midtrans.",
+    "freePlan": "Free plans don't need a payment.",
+    "snapNotConfigured": "Midtrans is not configured (NEXT_PUBLIC_MIDTRANS_CLIENT_KEY). The hosted payment page will open instead.",
+    "planUnavailableTitle": "This plan isn't available",
+    "planUnavailableDescription": "It may no longer be sold. Choose another plan of the product.",
+    "choosePlan": "Choose a plan",
+    "errors": {
+      "network": "Can't reach the server. Check your connection and try again.",
+      "notFound": "This plan no longer exists.",
+      "conflict": "This plan can't be bought right now.",
+      "upstream": "Payment could not be started, please try again.",
+      "generic": "Checkout failed. Please try again."
+    },
+    "processingTitle": "Payment processing",
+    "processingDescription": "We're waiting for Midtrans to confirm your payment. This usually takes a few seconds.",
+    "pendingTitle": "Waiting for your payment",
+    "pendingDescription": "We haven't received a confirmation yet. Complete the payment and this page will update.",
+    "instructions": {
+      "qris": "Scan the QRIS code in the Midtrans window with your banking or e-wallet app.",
+      "va": "Transfer the exact amount to the virtual account number shown by Midtrans.",
+      "generic": "Complete the payment in the Midtrans window.",
+      "keepPage": "Keep this page open, or come back later — the status updates automatically.",
+      "history": "You can always find this payment in your payment history."
+    },
+    "reopenPayment": "Reopen payment",
+    "openInstructions": "Open payment instructions",
+    "checkAgain": "Check again",
+    "viewTransaction": "View payment",
+    "successTitle": "Payment confirmed",
+    "successDescription": "{{product}} {{plan}} is now active on your account.",
+    "viewSubscriptions": "View my subscriptions",
+    "backToProduct": "Back to {{product}}",
+    "failedTitle": "Payment failed",
+    "failedDescription": "The payment was declined, cancelled, or expired. You were not charged for this order.",
+    "tryAgain": "Try again",
+    "viewHistory": "Payment history",
+    "howItWorksTitle": "How it works",
+    "howItWorks": {
+      "one": "Confirm the plan and open the Midtrans payment window.",
+      "two": "Pay with QRIS, virtual account, e-wallet, or card.",
+      "three": "Access starts as soon as Midtrans confirms the payment."
+    },
+    "orderId": "Order ID"
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "description": "Your access to each product. Renew any time — early renewals never lose paid days.",
+    "empty": "No subscriptions yet",
+    "emptyDescription": "Pick a plan to unlock paid features in a product.",
+    "browseProducts": "Browse products",
+    "activeUntil": "Active until {{date}}",
+    "endedOn": "Ended on {{date}}",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "renew": "Renew",
+    "buyAgain": "Buy again",
+    "choosePlan": "Choose another plan",
+    "planRetired": "This plan is no longer sold."
+  }
+}

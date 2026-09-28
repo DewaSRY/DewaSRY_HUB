@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { localeParams, isAppLocale } from "@/i18n/settings";
+import { isAppLocale } from "@/i18n/settings";
 import { getMessages } from "@/i18n/server";
 import { TranslationsProvider } from "@/providers/translations-provider";
 import { QueryProvider } from "@/providers/query-provider";
@@ -37,9 +37,9 @@ export const viewport: Viewport = {
   ],
 };
 
-export function generateStaticParams() {
-  return localeParams();
-}
+// No `generateStaticParams` here on purpose: static pages list the locales
+// themselves (`localeParams()`), while ISR data pages return `[]` so they are
+// rendered on first request instead of at build, when the API may be down.
 
 export default async function RootLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;

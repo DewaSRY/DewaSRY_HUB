@@ -89,7 +89,19 @@ tasks.named('test') {
 	useJUnitPlatform()
 	maxHeapSize = '1g'
 	testLogging {
-		events 'failed'
-		exceptionFormat 'full'
+		events = ['failed']
+		exceptionFormat = 'full'
 	}
+}
+
+// Only the executable Spring Boot jar is needed (Dockerfile copies build/libs/app.jar).
+tasks.named('jar') {
+	enabled = false
+}
+tasks.named('bootJar') {
+	archiveFileName = 'app.jar'
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs += ['-Xlint:deprecation']
 }

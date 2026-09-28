@@ -32,7 +32,7 @@ public enum ErrorReason {
     PLAN_NOT_PURCHASABLE(HttpStatus.CONFLICT, "The plan cannot be purchased"),
     PLAN_CHANGE_NOT_SUPPORTED(HttpStatus.CONFLICT, "Changing plan during an active period is not supported"),
     FREE_PLAN_EXISTS(HttpStatus.CONFLICT, "The product already has an active free plan"),
-    PAYLOAD_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "The upload is too large"),
+    PAYLOAD_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "The upload is too large"),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only JPEG, PNG, or WebP images are supported"),
     ARTICLE_INCOMPLETE(HttpStatus.UNPROCESSABLE_CONTENT, "The article is missing required fields for publishing"),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),

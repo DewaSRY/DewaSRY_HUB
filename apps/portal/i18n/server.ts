@@ -9,17 +9,28 @@ import {
   type AppNamespace,
 } from "./settings";
 
+/**
+ * A namespace can be split over several files (`admin.json`,
+ * `admin-commerce.json`, …) so each admin sub-feature owns its strings. The
+ * files are merged by top-level key into one namespace.
+ */
+const NAMESPACE_FILES: Partial<Record<AppNamespace, string[]>> = {
+  admin: ["admin", "admin-commerce", "admin-editor"],
+};
+
+async function loadNamespace(locale: AppLocale, ns: AppNamespace) {
+  const files = NAMESPACE_FILES[ns] ?? [ns];
+  const parts = await Promise.all(
+    files.map(async (file) => (await import(`../messages/${locale}/${file}.json`)).default as Record<string, unknown>),
+  );
+  return Object.assign({}, ...parts) as Record<string, unknown>;
+}
+
 async function loadMessages(
   locale: AppLocale,
   only: readonly AppNamespace[] = namespaces,
 ) {
-  const entries = await Promise.all(
-    only.map(async (ns) => {
-      const mod = await import(`../messages/${locale}/${ns}.json`);
-      return [ns, mod.default] as const;
-    }),
-  );
-
+  const entries = await Promise.all(only.map(async (ns) => [ns, await loadNamespace(locale, ns)] as const));
   return Object.fromEntries(entries);
 }
 

@@ -74,7 +74,6 @@ export function isHttpsUrl(value: unknown): value is string {
  */
 export function isAllowedHref(value: unknown): value is string {
   if (typeof value !== "string" || !value || value.length > 2048) return false;
-  // eslint-disable-next-line no-control-regex -- rejecting control characters is the point.
   if (/[\u0000-\u001f\u007f]/.test(value)) return false;
   if (value.startsWith("#")) return true;
   if (value.startsWith("/")) return !value.startsWith("//") && !value.startsWith("/\\");

@@ -8,6 +8,7 @@ import {
   useLayoutEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
@@ -32,16 +33,16 @@ function getSystemTheme(): ResolvedTheme {
     : "light";
 }
 
-function resolveTheme(theme: Theme): ResolvedTheme {
-  return theme === "system" ? getSystemTheme() : theme;
+function subscribeToSystemTheme(onChange: () => void) {
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
 }
 
-function applyTheme(theme: Theme): ResolvedTheme {
-  const resolved = resolveTheme(theme);
+function applyTheme(resolved: ResolvedTheme) {
   const root = document.documentElement;
   root.classList.toggle("dark", resolved === "dark");
   root.style.colorScheme = resolved;
-  return resolved;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -50,25 +51,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       ? "system"
       : ((localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system"),
   );
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
-    typeof window === "undefined" ? "light" : resolveTheme(theme),
-  );
+  const systemTheme = useSyncExternalStore(subscribeToSystemTheme, getSystemTheme, () => "light" as const);
+  const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme;
 
   // Re-applies the class the inline script set in <head>, since React's
   // Strict Mode dev remount clears attributes it doesn't manage from JSX.
   useLayoutEffect(() => {
-    setResolvedTheme(applyTheme(theme));
-  }, [theme]);
-
-  useEffect(() => {
-    if (theme !== "system") return;
-
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => setResolvedTheme(applyTheme("system"));
-
-    mql.addEventListener("change", handleChange);
-    return () => mql.removeEventListener("change", handleChange);
-  }, [theme]);
+    applyTheme(resolvedTheme);
+  }, [resolvedTheme]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {

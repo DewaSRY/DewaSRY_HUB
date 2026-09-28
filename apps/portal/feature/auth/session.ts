@@ -80,6 +80,8 @@ export function startSession(): void {
 
   setTokenProvider(async (forceRefresh) => (auth.currentUser ? auth.currentUser.getIdToken(forceRefresh) : null));
   setUnauthorizedHandler(() => {
+    // Hard navigation on purpose: it drops all in-memory state after a rejected token.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(`/${currentLocale()}/logout?reason=expired`);
   });
 

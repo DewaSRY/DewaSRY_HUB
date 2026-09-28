@@ -16,7 +16,6 @@ export function safeNextPath(next: string | null | undefined, fallback = DEFAULT
     return fallback;
   }
   if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback;
-  // eslint-disable-next-line no-control-regex -- control characters are never valid in a path.
   if (/[\u0000-\u001f\u007f\\]/.test(value)) return fallback;
   let url: URL;
   try {

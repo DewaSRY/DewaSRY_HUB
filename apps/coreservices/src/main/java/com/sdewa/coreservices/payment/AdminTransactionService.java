@@ -125,10 +125,10 @@ public class AdminTransactionService {
         Root<PaymentTransaction> root = cq.from(PaymentTransaction.class);
         Predicate where = spec.toPredicate(root, cq, cb);
         var isPaid = cb.equal(root.get("status"), TransactionStatus.PAID);
-        cq.multiselect(
+        cq.select(cb.array(
                 cb.count(root),
                 cb.sum(cb.<Long>selectCase().when(isPaid, 1L).otherwise(0L)),
-                cb.sum(cb.<Long>selectCase().when(isPaid, root.<Long>get("amount")).otherwise(0L)));
+                cb.sum(cb.<Long>selectCase().when(isPaid, root.<Long>get("amount")).otherwise(0L))));
         if (where != null) {
             cq.where(where);
         }

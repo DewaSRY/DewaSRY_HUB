@@ -53,9 +53,11 @@ export function translateErrors(
 
 export function zodResolverTranslate<
   Input extends FieldValues,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mirrors react-hook-form's Resolver generics.
   Context = any,
   Output = Input,
 >(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zod's Def generic is irrelevant here.
   schema: ZodType<Output, any, Input>,
   t: (key: string, params?: Record<string, unknown>) => string,
 ): Resolver<Input, Context, Output> {

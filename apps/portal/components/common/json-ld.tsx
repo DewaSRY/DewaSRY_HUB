@@ -9,7 +9,7 @@ export function JsonLd({ data, id }: { data: JsonLdData | JsonLdData[]; id?: str
     <script
       id={id}
       type="application/ld+json"
-      // eslint-disable-next-line react/no-danger -- JSON-LD only, escaped above.
+      // JSON-LD only; the payload is escaped by serializeJsonLd().
       dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   );

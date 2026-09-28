@@ -134,7 +134,7 @@ function TableDataState({
   isEmpty,
   isError,
   colSpan = 10,
-  emptyIcon,
+  emptyIcon: _emptyIcon,
   hideEmptyImage = false,
   emptyTitle,
   emptyDescription,

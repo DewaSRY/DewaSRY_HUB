@@ -17,6 +17,7 @@ import {
   largestVariant,
   pickRelated,
   wasUpdated,
+  type ArticleSummary,
 } from "@/feature/content";
 import { getArticle, listArticles } from "@/feature/content/server";
 import { readOrFallback } from "@/lib/api/public-fetch";
@@ -69,8 +70,8 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/blog/
   const t = labels.tContent;
 
   const related = article.category
-    ? await readOrFallback(() => listArticles({ category: article.category!.slug, limit: 4 }), emptyPage(1, 4))
-    : { data: emptyPage(1, 4), unavailable: false };
+    ? await readOrFallback(() => listArticles({ category: article.category!.slug, limit: 4 }), emptyPage<ArticleSummary>(1, 4))
+    : { data: emptyPage<ArticleSummary>(1, 4), unavailable: false };
   const relatedArticles = pickRelated(related.data.data, article.slug, 3);
 
   const toc = buildToc(article.body);
