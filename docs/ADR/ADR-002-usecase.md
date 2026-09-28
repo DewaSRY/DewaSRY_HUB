@@ -1,599 +1,690 @@
 # ADR-002: Use Cases
 
-| Field    | Value                                                             |
-| -------- | ----------------------------------------------------------------- |
-| Author   | Dewa Surya Ariesta                                                |
-| Date     | 28 September 2026                                                 |
-| Status   | Proposed                                                          |
-| Deciders | Dewa Surya Ariesta                                                |
-| Related  | [PRD v0.2](../PRD.md), [ADR-001](./ADR-001-initial_technology.md) |
+| Author   | Dewa Surya Ariesta                                           |
+| -------- | ------------------------------------------------------------ |
+| Date     | 28 September 2026                                            |
+| Status   | Proposed                                                     |
+| Deciders | Dewa Surya Ariesta                                           |
+| Related  | [PRD](../PRD.md), [ADR-001](./ADR-001-initial_technology.md) |
 
----
-
-## 1. What is this document?
+## 1. Overview
 
 The [PRD](../PRD.md) says **what** users want. [ADR-001](./ADR-001-initial_technology.md) says **which tools** we use (Next.js on Vercel, Spring Boot + PostgreSQL on EC2, Firebase Auth, Midtrans, S3 + CloudFront).
 
-This document says **how each feature works, step by step**. Each feature is written as a *use case*:
+This document says **how each feature works, step by step**. Each feature is written as a _use case_:
 
-- **Who** starts it
-- **When** it starts
-- **Steps** – what the user does and what the system does
-- **If something goes wrong** – the error cases
-- **Result** – what is true at the end
+| Part                 | Meaning                                    |
+| -------------------- | ------------------------------------------ |
+| Who                  | The actor that starts it.                  |
+| Needs                | What must be true before it starts.        |
+| When                 | The trigger.                               |
+| PRD                  | The PRD story or requirement it covers.    |
+| Steps                | What the user does and what the system does. |
+| If something goes wrong | The error cases and what happens.       |
+| Result               | What is true at the end.                   |
 
-Use this document when you build a feature. Frontend and backend should both follow the same steps.
+Use this document when you build a feature. Frontend and backend follow the same steps. Endpoint details are in [ADR-003](./ADR-003-api-contract.md); tables and columns are in [ADR-004](./ADR-004-initial_schema_model.md).
 
-## 2. Words you need to know
+## 2. Glossary
 
-| Word                | Meaning                                                                                                   |
-| ------------------- | --------------------------------------------------------------------------------------------------------- |
-| Hub                 | This project: the website + API that holds users, subscriptions, payments, and blog articles.             |
-| Connected product   | Another app (for example Document Doctor) that uses the hub for login and to check if a user has paid.    |
-| Firebase ID token   | A signed string Firebase gives the browser after login. We send it in every API call to prove who we are. |
-| Entitlement         | "Is this user allowed to use the paid features of this product right now?" – yes or no.                  |
-| Midtrans Snap       | The Midtrans payment popup. The user pays inside it (VA, QRIS, e-wallet, card).                           |
-| Webhook             | An HTTP call that Midtrans sends to **our** API to tell us a payment status changed.                      |
-| ISR                 | Next.js feature: pages are built once, cached, and rebuilt when we ask (revalidate) or after some time.   |
-| Revalidate          | Tell Next.js "this page changed, rebuild it".                                                             |
-| JSONB               | A PostgreSQL column type that stores JSON. We use it for plan limits (`features`).                        |
-| Idempotent          | Safe to run twice. Running it again gives the same result and does not double anything.                   |
-| Audit log           | A table that records who changed what and when (for admin actions).                                       |
+| Term              | Definition                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| Hub               | This project: the website + API that holds users, subscriptions, payments, and blog articles.                |
+| Connected product | Another app (for example Document Doctor) that uses the hub for sign-in and to check whether a user has paid. |
+| Firebase ID token | A signed string Firebase gives the browser after Google sign-in. It is sent in every API call to prove who the user is. |
+| Plan              | A priced offering of a product, for example "Document Doctor Pro, monthly". A free plan has price 0.         |
+| Subscription      | A user's access to one product on one plan, from `start_date` to `end_date`.                                 |
+| Entitlement       | "Is this user allowed to use the paid features of this product right now?" – yes or no, plus the plan's `features`. |
+| Midtrans Snap     | The Midtrans payment popup. The user pays inside it (QRIS, virtual account, e-wallet, card).                 |
+| Webhook           | An HTTP call that Midtrans sends to **our** API to tell us a payment status changed.                        |
+| ISR               | Next.js feature: pages are built once, cached, and rebuilt when we ask (revalidate) or after some time.      |
+| Revalidate        | Tell Next.js "this page changed, rebuild it".                                                               |
+| Idempotent        | Safe to run twice. Running it again gives the same result and does not double anything.                     |
 
-## 3. Who uses the system
+## 3. Actors
 
-**People and systems that start an action:**
+### 3.1 People and systems that start an action
 
-| Actor             | Who is it                                                                   |
-| ----------------- | --------------------------------------------------------------------------- |
-| Visitor           | Anyone on the public website who is not logged in.                          |
-| SaaS User         | A logged-in user (role `USER`).                                             |
-| Administrator     | Dewa (role `ADMIN`, stored in PostgreSQL).                                  |
-| Connected product | Document Doctor and future apps.                                            |
-| Scheduler         | A timed job inside Spring Boot (`@Scheduled`), for example every hour.      |
-| Midtrans          | Sends payment webhooks to our API.                                          |
+| Actor             | Who is it                                                                  |
+| ----------------- | -------------------------------------------------------------------------- |
+| Visitor           | Anyone on the public website who is not signed in.                         |
+| SaaS User         | A signed-in user (role `USER`).                                            |
+| Administrator     | Dewa (role `ADMIN`, stored in PostgreSQL).                                 |
+| Connected product | Document Doctor and future apps.                                           |
+| Scheduler         | A timed job inside Spring Boot (`@Scheduled`), for example every hour.     |
+| Midtrans          | Sends payment webhooks to our API.                                         |
 
-**External services we call:** Firebase Auth (login), Midtrans (payment), S3 / CloudFront (images), Vercel (hosts Next.js), search engines (read public pages).
+### 3.2 External services the hub calls
 
-## 4. Decisions for the PRD's open questions
+Firebase Auth (sign-in), Midtrans (payment), S3 / CloudFront (images), Vercel (hosts Next.js), search engines (read public pages).
 
-The PRD has some open questions. Until another ADR changes them, we use these answers:
+## 4. Answers to the PRD Open Questions
 
-| Question                                  | Our answer                                                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| OQ1 Which payment gateway and currency?   | Midtrans Snap, IDR only.                                                                                    |
-| OQ2 How does login work across products?  | All products use the same Firebase project. Products ask the hub API about the user. Details in ADR-003.  |
-| OQ3 Document Doctor plans and prices?     | Plans are just data in the database (UC-24). A free plan = a plan with price 0, no checkout.               |
-| OQ4 Sign up on the hub or in a product?   | **Both.** The first time the hub API sees a valid Firebase token, it creates the user.                     |
-| OQ5 Show usage per plan?                  | Not now. Plan limits are stored in `features` (JSONB). Usage tracking needs its own ADR.                    |
-| OQ6 Refunds?                              | Admin refunds in the Midtrans dashboard, then marks it in the hub (UC-23).                                  |
-| Renewals                                  | Manual. The user pays again to renew. "Cancel" means "don't renew" – access stays until the end date.      |
+These are the answers from the PRD, with the detail this document needs to build them.
 
-## 5. List of use cases
+| No  | PRD question                               | PRD answer                                   | What it means for the use cases                                                                                   |
+| --- | ------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1   | Payment gateway and currency?              | Midtrans for initial                         | Midtrans Snap, **IDR only**. QRIS is enabled in Snap (G5).                                                        |
+| 2   | SSO approach for connected products?       | OAuth 2.0 with Firebase                      | Google sign-in through one shared Firebase project. Products ask the hub API about the user (UC-06, UC-07).       |
+| 3   | Document Doctor plans and pricing?         | For now, the paid plan removes the ads       | A **free plan** (price 0, ads shown) and a **paid plan** (ads removed). The difference lives in the plan's `features`. |
+| 4   | Sign up on the hub or in a product?        | Both                                         | The first time the hub API sees a valid Firebase token, from either place, it creates the user.                  |
+| 5   | Show usage per plan?                       | Should be, but later                         | Not in this release. Plan limits are stored in `features` so usage can be added later.                           |
+| 6   | Refunds in the platform?                   | No                                           | No refund feature in the hub. Dewa refunds in the Midtrans dashboard; the hub only receives the `refund` status from the webhook (UC-09). |
 
-| ID    | Use case                      | Who                | Backend module            | Priority | Phase |
-| ----- | ----------------------------- | ------------------ | ------------------------- | -------- | ----- |
-| UC-01 | Read article                  | Visitor            | `content`                 | P0       | 1     |
-| UC-02 | View about & products         | Visitor            | `content`, `product`      | P0       | 1     |
-| UC-03 | Browse by category / tag      | Visitor            | `content`                 | P1       | 4     |
-| UC-04 | Sign in / sign up             | Visitor            | `identity`                | P0       | 2     |
-| UC-05 | Manage profile                | SaaS User          | `identity`                | P0       | 2     |
-| UC-06 | Buy a subscription            | SaaS User          | `payment`, `subscription` | P0       | 3     |
-| UC-07 | Handle payment webhook        | Midtrans           | `payment`, `subscription` | P0       | 3     |
-| UC-08 | View my subscriptions         | SaaS User          | `subscription`            | P0       | 3     |
-| UC-09 | View my payment history       | SaaS User          | `payment`                 | P0       | 3     |
-| UC-10 | Renew subscription            | SaaS User          | `payment`, `subscription` | P1       | 4     |
-| UC-11 | Cancel subscription           | SaaS User          | `subscription`            | P1       | 4     |
-| UC-12 | Join a connected product      | Connected product  | `identity`                | P0       | 2     |
-| UC-13 | Check entitlement             | Connected product  | `subscription`            | P0       | 2–3   |
-| UC-14 | Expire subscriptions          | Scheduler          | `subscription`            | P0       | 3     |
-| UC-15 | Manage users                  | Admin              | `admin`, `identity`       | P0       | 2     |
-| UC-16 | Manage a user's subscriptions | Admin              | `admin`, `subscription`   | P0       | 3     |
-| UC-17 | View transactions             | Admin              | `admin`, `payment`        | P0       | 3     |
-| UC-18 | Create / edit article         | Admin              | `content`                 | P0       | 1     |
-| UC-19 | Publish / unpublish article   | Admin              | `content`                 | P0       | 1     |
-| UC-20 | Manage article list           | Admin              | `content`                 | P0       | 1     |
-| UC-21 | Manage media library          | Admin              | `media`                   | P0       | 1     |
-| UC-22 | Manage categories & tags      | Admin              | `content`                 | P0       | 1     |
-| UC-23 | Record refund                 | Admin              | `admin`, `payment`        | P1       | 3     |
-| UC-24 | Manage products & plans       | Admin              | `product`                 | P0       | 3     |
+Two more decisions follow from the PRD goals:
 
-Note: UC-23 and UC-24 are not in the PRD yet, but we need them. Add them to PRD v0.3.
+| Topic    | Decision                                                                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Payments | **One-time payments only** (G5). Each purchase pays for one period (for example one month). There is no automatic recurring charge.         |
+| Renewal  | To keep access, the user buys the plan again (UC-12). There is nothing to "cancel": a subscription simply ends at `end_date` if it is not renewed. |
 
-## 6. Status rules
+## 5. Use Case List
+
+Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = later. Phase = release phase in PRD §9.
+
+| ID    | Use case                   | Who               | PRD                         | Backend module            | Priority | Phase |
+| ----- | -------------------------- | ----------------- | --------------------------- | ------------------------- | -------- | ----- |
+| UC-01 | Read article               | Visitor           | V-1.1, FR-C1, FR-C5         | `content`                 | P0       | 1     |
+| UC-02 | View about & products      | Visitor           | V-1.2                       | `content`, `product`      | P0       | 1     |
+| UC-03 | Browse by category / tag   | Visitor           | V-1.3                       | `content`                 | P1       | 4     |
+| UC-04 | Sign in / sign up          | Visitor           | FR-U1, FR-U4, OQ4           | `identity`                | P0       | 2     |
+| UC-05 | View my profile            | SaaS User         | US-2.1                      | `identity`                | P0       | 2     |
+| UC-06 | Join a connected product   | Connected product | FR-U1, FR-U3                | `identity`                | P0       | 2     |
+| UC-07 | Check entitlement          | Connected product | FR-U2                       | `subscription`            | P0       | 2–3   |
+| UC-08 | Buy a plan                 | SaaS User         | US-2.2, G5, FR-P1           | `payment`, `subscription` | P0       | 3     |
+| UC-09 | Handle payment webhook     | Midtrans          | FR-P2, FR-P3                | `payment`, `subscription` | P0       | 3     |
+| UC-10 | View my subscriptions      | SaaS User         | US-2.4                      | `subscription`            | P0       | 3     |
+| UC-11 | View my payment history    | SaaS User         | US-2.3                      | `payment`                 | P0       | 3     |
+| UC-12 | Renew a subscription       | SaaS User         | Release plan phase 4        | `payment`, `subscription` | P1       | 4     |
+| UC-13 | Expire subscriptions       | Scheduler         | US-2.4                      | `subscription`            | P0       | 3     |
+| UC-14 | View users                 | Administrator     | A-3.1                       | `admin`, `identity`       | P0       | 2     |
+| UC-15 | View payment history       | Administrator     | A-3.2                       | `admin`, `payment`        | P0       | 3     |
+| UC-16 | Create / edit article      | Administrator     | A-3.3, A-3.4, FR-C3         | `content`                 | P0       | 1     |
+| UC-17 | Publish / unpublish article | Administrator    | A-3.6, FR-C2, FR-C5         | `content`                 | P0       | 1     |
+| UC-18 | Manage article list        | Administrator     | Persona 4.3 "Manage post content" | `content`           | P0       | 1     |
+| UC-19 | Manage media library       | Administrator     | A-3.7, FR-C4                | `media`                   | P0       | 1     |
+| UC-20 | Manage categories & tags   | Administrator     | A-3.8, FR-C3                | `content`                 | P0       | 1     |
+| UC-21 | Manage products & plans    | Administrator     | G3, NFR Extensibility       | `product`                 | P0       | 3     |
+
+UC-21 has no PRD user story, but the hub cannot sell plans or connect a new product without it. Until the admin screen exists (phase 3), Document Doctor and its plans are seeded by a database migration (ADR-004 §8).
+
+## 6. Status Rules
 
 These statuses are used by both the API and the database. Do not add other statuses without updating this document.
 
 ### 6.1 Transaction (a payment attempt)
 
-| Status     | Meaning                                  | Can change to        |
-| ---------- | ---------------------------------------- | -------------------- |
-| `PENDING`  | Checkout created, user has not paid yet. | `PAID`, `FAILED`     |
-| `PAID`     | Money received.                          | `REFUNDED` only      |
-| `FAILED`   | Payment denied, cancelled, or expired.   | nothing (final)      |
-| `REFUNDED` | Money returned to the user.              | nothing (final)      |
+| Status     | Meaning                                  | Can change to    |
+| ---------- | ---------------------------------------- | ---------------- |
+| `PENDING`  | Checkout created, user has not paid yet. | `PAID`, `FAILED` |
+| `PAID`     | Money received.                          | `REFUNDED` only  |
+| `FAILED`   | Payment denied, cancelled, or expired.   | nothing (final)  |
+| `REFUNDED` | Money returned to the user by Dewa in the Midtrans dashboard. | nothing (final) |
 
 A transaction **never** goes back to `PENDING`.
 
-How Midtrans status maps to our status:
+How the Midtrans status maps to our status:
 
-| Midtrans `transaction_status`                            | Our status |
-| -------------------------------------------------------- | ---------- |
-| `pending`                                                | `PENDING`  |
-| `settlement`, or `capture` with `fraud_status = accept`  | `PAID`     |
-| `deny`, `cancel`, `expire`, `failure`                    | `FAILED`   |
-| `refund`, `partial_refund`                               | `REFUNDED` |
+| Midtrans `transaction_status`                           | Our status |
+| ------------------------------------------------------- | ---------- |
+| `pending`                                               | `PENDING`  |
+| `settlement`, or `capture` with `fraud_status = accept` | `PAID`     |
+| `deny`, `cancel`, `expire`, `failure`                   | `FAILED`   |
+| `refund`, `partial_refund`                              | `REFUNDED` |
 
 ### 6.2 Subscription (access to a product)
 
-| Status      | Meaning                                                   | How it gets here                                            |
-| ----------- | --------------------------------------------------------- | ----------------------------------------------------------- |
-| `ACTIVE`    | User has access until `end_date`.                         | Payment is `PAID` (UC-07), admin grant (UC-16), or renewal. |
-| `EXPIRED`   | `end_date` passed and the user did not cancel.            | Scheduler (UC-14).                                          |
-| `CANCELLED` | `end_date` passed after the user cancelled, or admin cancelled it now. | Scheduler (UC-14) or admin (UC-16).             |
+| Status      | Meaning                                              | How it gets here                                |
+| ----------- | ---------------------------------------------------- | ----------------------------------------------- |
+| `ACTIVE`    | User has access until `end_date`.                    | A payment becomes `PAID` (UC-09).               |
+| `EXPIRED`   | `end_date` passed and the user did not renew.        | Scheduler (UC-13).                              |
+| `CANCELLED` | Access ended early because the payment was refunded. | Midtrans `refund` webhook (UC-09).              |
 
-An `EXPIRED` or `CANCELLED` subscription becomes `ACTIVE` again when the user pays (UC-10).
+An `EXPIRED` or `CANCELLED` subscription becomes `ACTIVE` again when the user pays (UC-12).
 
-**Important rules:**
+**Important rules**
 
-- A subscription row is created **only** when payment is confirmed or an admin grants it. There is no "pending subscription".
-- One user has **at most one** current subscription per product.
-- A user is **entitled** when: `status = ACTIVE` **and** `now < end_date`.
-- If the user cancelled but the end date has not passed yet, the status is still `ACTIVE` (with `cancel_at_period_end = true`), and they still have access.
+| #   | Rule                                                                                                            |
+| --- | --------------------------------------------------------------------------------------------------------------- |
+| R1  | A subscription row is created **only** when a payment is confirmed. There is no "pending subscription".        |
+| R2  | One user has **at most one** subscription row per product. Renewing updates the same row.                      |
+| R3  | A user is **entitled** when `status = ACTIVE` **and** `now < end_date`.                                        |
+| R4  | A free plan (price 0) is never bought. A user without a subscription gets the free plan's `features` (UC-07). |
 
-## 7. Rules for every logged-in request
+## 7. Rules for Every Signed-in Request
 
-These apply to UC-04 to UC-24:
+These apply to UC-04 to UC-21:
 
-1. The browser sends the header `Authorization: Bearer <Firebase ID token>`. Spring Security checks it.
-2. Invalid or expired token → `401`. The frontend gets a fresh token from Firebase and tries **once** more.
-3. User is deactivated (UC-15) → `403` on every endpoint.
-4. Endpoints under `/admin/**` need `role = ADMIN` → otherwise `403`.
+| #   | Rule                                                                                                            |
+| --- | --------------------------------------------------------------------------------------------------------------- |
+| A1  | The browser sends `Authorization: Bearer <Firebase ID token>`. Spring Security checks it.                       |
+| A2  | Invalid or expired token → `401`. The frontend gets a fresh token from Firebase and tries **once** more.        |
+| A3  | Endpoints under `/admin/**` need `role = ADMIN` → otherwise `403`.                                              |
+| A4  | The user is always taken from the token, never from a user id in the request.                                   |
 
-## 8. Use cases
+## 8. Use Cases
 
 ### 8.1 Public website (Visitor)
 
 #### UC-01 Read article
 
-- **Who:** Visitor (and search engines)
-- **Needs:** The article is `PUBLISHED`.
-- **When:** Visitor opens `/blog/<slug>`.
+| Who   | Visitor (and search engines)       |
+| ----- | ---------------------------------- |
+| Needs | The article is `PUBLISHED`.        |
+| When  | Visitor opens `/blog/<slug>`.      |
+| PRD   | V-1.1, FR-C1, FR-C5                |
 
 **Steps**
+
 1. Vercel returns the cached page.
 2. The page shows the title, cover image, body, category, tags, and publish date. The cover image uses CloudFront at 480 / 960 / 1600 px (`srcset`).
-3. The page `<head>` has SEO data: title, meta description, canonical URL, Open Graph tags, and `Article` JSON-LD.
+3. The page `<head>` has SEO data: title, meta description, canonical URL, Open Graph tags, and `Article` JSON-LD (built with Next.js `generateMetadata`).
 4. If the page is not cached yet, Next.js calls `GET /public/articles/{slug}`, builds the page, and caches it.
 
 **If something goes wrong**
-- Slug not found or article is a draft → show the `404` page (`notFound()`).
-- API is down → Vercel keeps showing the old cached page.
 
-**Result:** Visitor reads the article without logging in. The article is in `sitemap.xml`.
+| Case                                  | What happens                                   |
+| ------------------------------------- | ---------------------------------------------- |
+| Slug not found, or article is a draft | Show the `404` page (`notFound()`).            |
+| Old slug of a renamed article         | Permanent redirect (`301`) to the new slug.    |
+| API is down                           | Vercel keeps showing the old cached page.      |
+
+**Result:** The visitor reads the article without signing in. The article is in `sitemap.xml`, and `robots.txt` allows it.
 
 #### UC-02 View about & products
 
-- **Who:** Visitor
-- **When:** Visitor opens `/about` or `/products`.
+| Who  | Visitor                                    |
+| ---- | ------------------------------------------ |
+| When | Visitor opens `/about` or `/products`.     |
+| PRD  | V-1.2                                      |
 
 **Steps**
-1. `/about` shows Dewa's profile, skills, and portfolio (static page).
-2. `/products` calls `GET /public/products` and lists active products with their public plans and prices in IDR.
-3. Each product has two buttons: "Learn more" (goes to the product website) and "Get started" (login with UC-04, then buy with UC-06).
+
+1. `/about` shows Dewa's profile as a full-stack developer, skills, and portfolio (static page).
+2. `/products` calls `GET /public/products` and lists active products with their public plans and prices in IDR. For Document Doctor this shows Free (with ads) and Pro (no ads).
+3. Each product has two buttons: "Learn more" (goes to the product website) and "Get started" (sign in with UC-04, then buy with UC-08).
 
 #### UC-03 Browse by category / tag
 
-- **Who:** Visitor
-- **When:** Visitor opens `/blog/category/<slug>` or `/blog/tag/<slug>`.
+| Who  | Visitor                                                        |
+| ---- | -------------------------------------------------------------- |
+| When | Visitor opens `/blog/category/<slug>` or `/blog/tag/<slug>`.   |
+| PRD  | V-1.3                                                          |
 
 **Steps**
+
 1. Show only `PUBLISHED` articles in that category or tag, newest first, with pages (`?page=n`).
 2. Each item shows title, excerpt, small cover image (480 px), and publish date.
+3. The page title and description come from the category or tag name, using an async `generateMetadata` that fetches the category or tag from the API (the PRD's research note in §4.3).
 
 **If something goes wrong**
-- Unknown slug → `404`.
-- No articles → show an empty message with a link back to the blog.
 
-### 8.2 Login and profile
+| Case         | What happens                                        |
+| ------------ | --------------------------------------------------- |
+| Unknown slug | `404`.                                              |
+| No articles  | Show an empty message with a link back to the blog. |
+
+### 8.2 Sign-in and profile
 
 #### UC-04 Sign in / sign up
 
-- **Who:** Visitor
-- **When:** Visitor clicks "Sign in", or opens a page that needs login (account, checkout).
+| Who  | Visitor                                                                                 |
+| ---- | --------------------------------------------------------------------------------------- |
+| When | Visitor clicks "Sign in", or opens a page that needs sign-in (account, checkout).       |
+| PRD  | FR-U1, FR-U4, OQ2, OQ4                                                                   |
 
 **Steps**
-1. Frontend opens the Firebase login (Google, and email/password if enabled).
+
+1. Frontend opens the Firebase **Google** sign-in popup.
 2. Firebase gives the browser an ID token.
 3. Frontend calls `POST /me/session` with the token.
 4. Backend checks the token and looks for the user by Firebase `uid`.
-5. If the user does not exist, backend creates it from the token data (`uid`, email, name, picture) with `role = USER` and `status = ACTIVE`.
-6. Backend returns the profile and role. Frontend sends the user back to the page they came from, or to `/account`.
+5. If the user does not exist, backend creates it from the token data (`uid`, email, name, picture) with `role = USER`.
+6. If the user exists, backend refreshes email, name, and picture from the token (the profile follows the Google account, US-2.1) and saves `last_sign_in_at`.
+7. Backend returns the profile and role. Frontend sends the user back to the page they came from, or to `/account`.
 
 **If something goes wrong**
-- User closes the popup → stay on the login page, nothing is created.
-- Email not verified (email/password login) → `403 EMAIL_NOT_VERIFIED`. Frontend asks the user to verify their email.
-- User is deactivated → `403`. Frontend shows "Account disabled, contact support".
 
-**Result:** User is logged in and has exactly one user row in the database.
+| Case                    | What happens                                     |
+| ----------------------- | ------------------------------------------------ |
+| User closes the popup   | Stay on the sign-in page; nothing is created.    |
+| Token invalid           | `401`; the frontend shows the sign-in button again. |
+
+**Result:** The user is signed in and has exactly one user row in the database.
 
 **Sign out:** Frontend calls Firebase `signOut()`. No backend call is needed – the backend does not keep sessions.
 
-#### UC-05 Manage profile
+#### UC-05 View my profile
 
-- **Who:** SaaS User (logged in)
-- **When:** User opens `/account/profile`.
+| Who  | SaaS User (signed in)                  |
+| ---- | -------------------------------------- |
+| When | User opens `/account/profile`.         |
+| PRD  | US-2.1                                 |
 
 **Steps**
-1. Frontend calls `GET /me` → name, email, avatar, joined products.
-2. User changes their name and/or uploads a new avatar.
-3. Frontend sends `PATCH /me` (avatar as multipart). The avatar is resized to 96 and 256 px and saved in S3 under `avatars/<hash>/`.
-4. Backend checks the data, saves it, and returns the new profile.
+
+1. Frontend calls `GET /me`.
+2. The page shows name, email, and avatar (from the Google account), the date the user joined, and the products the user has joined.
+3. The page says the profile comes from the Google account, with a link to the Google account settings for changes.
 
 **If something goes wrong**
-- Empty or too long name, or bad image → `400` with field errors.
-- User wants to change email → they do it in Firebase. On the next login, the backend updates the email from the token.
 
-**Result:** Profile is updated. Connected products see the new data on their next call.
+| Case                                    | What happens                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------------- |
+| User changed their name/photo in Google | The new data shows after the next sign-in (UC-04 step 6).                    |
 
-#### UC-12 Join a connected product
+**Result:** The user sees their profile. The profile is not edited in the hub.
 
-- **Who:** Connected product (for example Document Doctor)
-- **Needs:** The product is registered in the hub (UC-24) and uses the same Firebase project.
-- **When:** A user logs in to Document Doctor for the first time.
+#### UC-06 Join a connected product
+
+| Who   | Connected product (for example Document Doctor)                                       |
+| ----- | ------------------------------------------------------------------------------------- |
+| Needs | The product is registered in the hub (UC-21) and uses the same Firebase project.      |
+| When  | A user signs in to Document Doctor.                                                   |
+| PRD   | FR-U1, FR-U3                                                                           |
 
 **Steps**
-1. User logs in inside Document Doctor and gets a Firebase ID token.
-2. Document Doctor calls `POST /products/{productCode}/members` with the user's token **and** its own product credential.
-3. Hub finds or creates the user (same as UC-04 steps 4–5).
-4. Hub saves that this user joined this product (`user_product` table, with join date), if not saved already.
-5. Hub returns the user profile and entitlement (UC-13).
+
+1. The user signs in with Google inside Document Doctor and gets a Firebase ID token.
+2. Document Doctor's **backend** calls `POST /products/{productCode}/members` with the user's token **and** its own client credential.
+3. Hub finds or creates the user (same as UC-04 steps 4–6).
+4. Hub saves that this user joined this product (with the join date), if not saved already.
+5. Hub returns the user profile and entitlement (UC-07).
 
 **If something goes wrong**
-- Unknown or inactive product, or wrong credential → `401` / `403`.
-- User already joined → nothing changes, return `200`.
 
-**Result:** The hub knows the user joined the product. Admin can see it in UC-15. Full API details are in ADR-003.
+| Case                                                 | What happens                    |
+| ---------------------------------------------------- | ------------------------------- |
+| Unknown or inactive product, or wrong credential     | `401` / `403`.                  |
+| User already joined                                  | Nothing changes; return `200`.  |
 
-#### UC-13 Check entitlement
+**Result:** The hub knows the user joined the product. The admin sees it in UC-14.
 
-- **Who:** Connected product
-- **Needs:** User joined the product (UC-12).
-- **When:** The product needs to know if the user can use a paid feature.
+#### UC-07 Check entitlement
+
+| Who  | Connected product                                                    |
+| ---- | -------------------------------------------------------------------- |
+| When | The product needs to know if the user can use a paid feature (for example "hide ads"). |
+| PRD  | FR-U2                                                                 |
 
 **Steps**
-1. Product calls `GET /products/{productCode}/entitlements/me` with the user's token and its product credential.
+
+1. The product backend calls `GET /products/{productCode}/entitlements/me` with the user's token and its client credential.
 2. Hub loads the user's subscription for that product.
-3. Hub returns: `entitled` (true/false), plan code, status, `end_date`, and the plan's `features` (limits).
+3. Hub returns: `entitled` (true/false), plan, status, `end_date`, and the plan's `features`.
 
 **If something goes wrong**
-- No subscription, or not entitled (see §6.2) → `entitled: false`, plus the free plan's features if a free plan exists.
+
+| Case                                     | What happens                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------- |
+| No subscription, or not entitled (R3)    | `entitled: false`, plus the free plan's `features` (for Document Doctor: ads on). |
 
 **Rules**
-- The product may cache the answer for a short time (about 5 minutes). It must check again after the user comes back from checkout.
-- The hub is the only source of truth. Products do not keep their own copy of subscriptions.
+
+| #   | Rule                                                                                                   |
+| --- | ------------------------------------------------------------------------------------------------------ |
+| E1  | The product may cache the answer for up to 5 minutes. It must check again after the user returns from checkout. |
+| E2  | The hub is the only source of truth. Products do not keep their own copy of subscriptions.             |
 
 ### 8.3 Payments and subscriptions
 
-#### UC-06 Buy a subscription
+#### UC-08 Buy a plan
 
-- **Who:** SaaS User (logged in)
-- **Needs:** The plan is active and costs more than 0.
-- **When:** User clicks "Subscribe" on a plan.
+| Who   | SaaS User (signed in)                    |
+| ----- | ---------------------------------------- |
+| Needs | The plan is active and costs more than 0. |
+| When  | User clicks "Buy" on a plan.             |
+| PRD   | US-2.2, G5, FR-P1                        |
 
 **Steps**
-1. Frontend shows a summary (product, plan, period, price in IDR). User confirms.
+
+1. Frontend shows a summary (product, plan, period, price in IDR, "one-time payment, no automatic renewal"). User confirms.
 2. Frontend calls `POST /checkout` with `planId`.
 3. Backend checks the plan and the user's current subscription.
 4. Backend creates a transaction: unique `order_id`, user, plan, amount, `IDR`, status `PENDING`.
-5. Backend calls Midtrans Snap API, saves the Snap token, and returns it to the frontend.
-6. Frontend opens the Snap popup. User pays.
-7. When the popup closes, frontend shows "Payment processing" and calls `GET /transactions/{orderId}` every few seconds until the status is not `PENDING`. (For VA/QRIS, show the payment instructions.)
-8. When UC-07 marks the transaction `PAID`, frontend shows success and a link to `/account/subscriptions`.
+5. Backend calls the Midtrans Snap API, saves the Snap token, and returns it to the frontend.
+6. Frontend opens the Snap popup. The user pays with QRIS, virtual account, e-wallet, or card.
+7. When the popup closes, frontend shows "Payment processing" and calls `GET /me/transactions/{orderId}` every few seconds until the status is not `PENDING`. For QRIS and virtual account, show the payment instructions.
+8. When UC-09 marks the transaction `PAID`, frontend shows success and a link to `/account/subscriptions`.
 
 **If something goes wrong**
-- User already has an active subscription for this product → treat it as a renewal (UC-10). Changing plan in the middle of a period is **not** supported yet.
-- User already has a `PENDING` transaction for the same plan that has not expired → return the old Snap token, do not create a new transaction.
-- Midtrans API error or timeout → set transaction to `FAILED`, show "Payment could not be started, please try again".
-- User closes the popup without paying → transaction stays `PENDING` until Midtrans sends `expire`.
-- Payment failed → UC-07 sets `FAILED`. User sees the reason and can try again.
 
-**Result:** ⚠️ Access is given **only** by UC-07 (the webhook). Never trust the browser popup callback or redirect – a user could fake it.
+| Case                                                                   | What happens                                                                                       |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| User already has an entitled subscription on the **same** plan         | Treat it as a renewal (UC-12).                                                                     |
+| User already has an entitled subscription on a **different** plan      | `409`. Changing plan in the middle of a period is **not** supported yet.                          |
+| User already has an unexpired `PENDING` transaction for the same plan  | Return the old Snap token; do not create a new transaction.                                        |
+| Midtrans API error or timeout                                          | Set the transaction to `FAILED`; show "Payment could not be started, please try again".            |
+| User closes the popup without paying                                   | The transaction stays `PENDING` until Midtrans sends `expire`.                                     |
+| Payment failed                                                         | UC-09 sets `FAILED`. The user sees the reason and can try again.                                   |
 
-#### UC-07 Handle payment webhook
+**Result:** ⚠️ Access is given **only** by UC-09 (the webhook). Never trust the browser popup callback or redirect – a user could fake it.
 
-- **Who:** Midtrans
-- **When:** Midtrans calls `POST /webhooks/midtrans`.
+#### UC-09 Handle payment webhook
+
+| Who  | Midtrans                                  |
+| ---- | ----------------------------------------- |
+| When | Midtrans calls `POST /webhooks/midtrans`. |
+| PRD  | FR-P2, FR-P3, NFR Security, NFR Reliability |
 
 **Steps**
+
 1. Check the signature: `signature_key = SHA512(order_id + status_code + gross_amount + server_key)`. This proves the call really came from Midtrans.
 2. Call the Midtrans Status API for this `order_id`. Use **that** response as the truth, not the webhook body.
 3. Start one database transaction (`@Transactional`) and lock the transaction row (`SELECT ... FOR UPDATE`) so two webhooks cannot update it at the same time.
 4. Map the Midtrans status to our status (§6.1). If nothing changed, stop.
-5. Check the amount matches what we saved. Then update status, payment method, Midtrans reference, and `paid_at`.
+5. Check the amount matches what we saved. Then update status, payment method, Midtrans reference, and `paid_at`, and add a row to the status history.
 6. If the new status is `PAID`, create or extend the subscription:
    - No subscription yet → create one: `ACTIVE`, `start_date = now`, `end_date = now + period`.
-   - Subscription exists → `end_date = max(now, end_date) + period`, status `ACTIVE`, `cancel_at_period_end = false`.
-7. Link the subscription to the transaction, commit, return `200`.
+   - Subscription exists → `end_date = max(now, end_date) + period`, `status = ACTIVE`, plan = the paid plan.
+7. If the new status is `REFUNDED` and this payment is linked to the subscription → set the subscription `CANCELLED` and `end_date = now`.
+8. Link the subscription to the transaction, commit, return `200`.
 
 **If something goes wrong**
-- Bad signature → `403`, log a warning, change nothing.
-- Unknown `order_id` → log it and return `200` (so Midtrans stops sending it).
-- Status change not allowed (for example `PAID` → `FAILED`) → ignore, log, return `200`.
-- Amount does not match → do **not** give access, flag it for admin, return `200`.
-- Database error → return `5xx`. Midtrans will send the webhook again later. Steps 3–6 are idempotent, so this is safe.
+
+| Case                                             | What happens                                                                       |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Bad signature                                    | `403`, log a warning, change nothing.                                              |
+| Unknown `order_id`                               | Log it and return `200` (so Midtrans stops sending it).                            |
+| Status change not allowed (e.g. `PAID` → `FAILED`) | Ignore, log, return `200`.                                                       |
+| Amount does not match                            | Do **not** give access; flag the transaction for the admin; return `200`.          |
+| Database or Status API error                     | Return `5xx`. Midtrans sends the webhook again later. Steps 3–8 are idempotent.    |
 
 **Result:** Each status change for an `order_id` is applied exactly once, even if Midtrans sends the webhook many times.
 
-#### UC-08 View my subscriptions
+#### UC-10 View my subscriptions
 
-- **Who:** SaaS User
-- **When:** User opens `/account/subscriptions`.
+| Who  | SaaS User                               |
+| ---- | --------------------------------------- |
+| When | User opens `/account/subscriptions`.    |
+| PRD  | US-2.4                                  |
 
 **Steps**
+
 1. Frontend calls `GET /me/subscriptions`.
-2. For each product, show: product, plan, status, and the renewal or end date.
+2. For each product, show: product, plan name, status, and the end date ("Active until …" or "Expired on …").
 3. Show buttons based on status:
 
-| Status                                      | Show                    |
-| ------------------------------------------- | ----------------------- |
-| `ACTIVE`                                    | Renew, Cancel           |
-| `ACTIVE` with `cancel_at_period_end = true` | "Ends on <date>", Resume |
-| `EXPIRED` or `CANCELLED`                    | Renew / Subscribe       |
+| Status                   | Show                                                   |
+| ------------------------ | ------------------------------------------------------ |
+| `ACTIVE`                 | "Active until <date>", Renew (phase 4)                 |
+| `EXPIRED` or `CANCELLED` | "Ended on <date>", Buy again                           |
 
 **If something goes wrong**
-- No subscriptions → empty message with a link to `/products`.
 
-#### UC-09 View my payment history
+| Case             | What happens                                    |
+| ---------------- | ----------------------------------------------- |
+| No subscriptions | Empty message with a link to `/products`.       |
 
-- **Who:** SaaS User
-- **When:** User opens `/account/payments`.
+#### UC-11 View my payment history
+
+| Who  | SaaS User                         |
+| ---- | --------------------------------- |
+| When | User opens `/account/payments`.   |
+| PRD  | US-2.3                            |
 
 **Steps**
+
 1. Frontend calls `GET /me/transactions?page=n`.
-2. Show a list, newest first: date, product, plan, amount (IDR), payment method, status.
-3. For a `PENDING` transaction, the user can open the payment instructions again (until it expires).
+2. Show a list, newest first: date, product, plan, amount (IDR), payment method, status (`PENDING`, `PAID`, `FAILED`, `REFUNDED`).
+3. For a `PENDING` transaction, the user can open the payment instructions again until it expires.
 
-**Rule:** A user only sees **their own** transactions. Always filter by the user from the token, never by a user id sent in the request.
+**Rule:** A user only sees **their own** transactions (A4).
 
-#### UC-10 Renew subscription
+#### UC-12 Renew a subscription
 
-- **Who:** SaaS User
-- **Needs:** User has a subscription for the product (any status).
-- **When:** User clicks "Renew" (UC-08) or a link in a reminder email.
+| Who   | SaaS User                                                     |
+| ----- | ------------------------------------------------------------- |
+| Needs | The user has a subscription for the product (any status).     |
+| When  | User clicks "Renew" or "Buy again" (UC-10).                   |
+| PRD   | Release plan phase 4 ("renewal self-service"), G5             |
 
 **Steps**
-1. Frontend starts UC-06 with the same plan.
-2. After payment, UC-07 sets `end_date = max(now, end_date) + period`. So renewing early never loses paid days.
+
+1. Frontend starts UC-08 with the same plan.
+2. After payment, UC-09 sets `end_date = max(now, end_date) + period`. Renewing early never loses paid days.
 
 **If something goes wrong**
-- The old plan is not sold anymore → user picks another active plan of the same product.
 
-**Result:** Subscription is `ACTIVE` with a later end date.
+| Case                            | What happens                                               |
+| ------------------------------- | ---------------------------------------------------------- |
+| The old plan is not sold anymore | The user picks another active plan of the same product.   |
 
-#### UC-11 Cancel subscription
+**Result:** The subscription is `ACTIVE` with a later end date.
 
-- **Who:** SaaS User
-- **Needs:** Subscription is `ACTIVE`.
-- **When:** User clicks "Cancel" and confirms.
+The API already supports this in phase 3 (buying the same plan again). Phase 4 adds the "Renew" button and optional reminder emails (UC-13 step 3).
 
-**Steps**
-1. Frontend calls `POST /me/subscriptions/{id}/cancel`.
-2. Backend sets `cancel_at_period_end = true` and saves the time. Status stays `ACTIVE`.
-3. Stop sending renewal reminder emails for this subscription.
-4. Page shows "Ends on <end_date>".
+#### UC-13 Expire subscriptions
 
-**Undo:** `POST /me/subscriptions/{id}/resume` sets `cancel_at_period_end = false`.
-
-**Result:** User keeps access until `end_date`. Then UC-14 sets it to `CANCELLED`. No refund (refunds only through UC-23).
-
-#### UC-14 Expire subscriptions
-
-- **Who:** Scheduler
-- **When:** Every hour (for example).
+| Who  | Scheduler                     |
+| ---- | ----------------------------- |
+| When | Every hour.                   |
+| PRD  | US-2.4 (status is correct)    |
 
 **Steps**
-1. Find `ACTIVE` subscriptions where `end_date <= now`.
-2. If `cancel_at_period_end = true` → set `CANCELLED`. Otherwise → set `EXPIRED`.
-3. Find `ACTIVE` subscriptions that end in 7 days or 1 day (and are not cancelled). Send a renewal reminder email. Save that the email was sent so it is not sent twice. (Email provider: ADR-005.)
+
+1. Find `ACTIVE` subscriptions where `end_date <= now` and set them to `EXPIRED`.
+2. Only update rows that still have `status = ACTIVE`, so running the job twice changes nothing.
+3. _(Phase 4, optional.)_ Find `ACTIVE` subscriptions that end in 7 days or 1 day and send a renewal reminder email. Save that the email was sent so it is not sent twice. The email provider is chosen in ADR-006.
 
 **Rules**
-- UC-13 checks `end_date` itself. So if this job runs late, nobody gets extra free access.
-- The job must be safe to run twice. Only update rows that still have the expected status.
 
-### 8.4 Admin
+| #   | Rule                                                                                                        |
+| --- | ----------------------------------------------------------------------------------------------------------- |
+| S1  | UC-07 checks `end_date` itself. If this job runs late, nobody gets extra free access.                       |
+| S2  | During a blue/green deploy two API instances run; a database lock (ShedLock) makes sure only one runs the job. |
 
-#### UC-15 Manage users
+### 8.4 Administrator
 
-- **Who:** Admin
-- **When:** Admin opens `/admin/users`.
+#### UC-14 View users
 
-**Steps**
-1. Search by name or email. The list shows name, email, status, joined products, and created date (with pages).
-2. Open a user to see profile, joined products, subscriptions, and transactions.
-3. **Deactivate:** backend sets `status = INACTIVE` and disables the user in Firebase (Firebase Admin SDK). All API calls from this user now return `403`.
-4. **Reactivate:** the opposite of step 3.
-
-**If something goes wrong**
-- Firebase call fails → roll back the database change and show an error.
-- Admin tries to deactivate themself → not allowed.
-
-**Result:** Every change is saved in the audit log.
-
-#### UC-16 Manage a user's subscriptions
-
-- **Who:** Admin
-- **When:** Admin opens a user's subscriptions (from UC-15).
+| Who  | Administrator                    |
+| ---- | -------------------------------- |
+| When | Admin opens `/admin/users`.      |
+| PRD  | A-3.1, persona 4.3               |
 
 **Steps**
-1. Admin sees all subscriptions of the user and their transactions.
-2. Admin picks one action and **must** write a reason:
-   - **Grant** – create an `ACTIVE` subscription with an end date (no payment needed).
-   - **Extend** – move `end_date` later.
-   - **Cancel now** – set `CANCELLED` and `end_date = now`.
-3. Backend saves the change and writes an audit record: admin, user, subscription, action, old value, new value, reason, time.
 
-**If something goes wrong**
-- Grant, but the user already has a current subscription → tell the admin to use Extend.
+1. The admin sees a table of users: name, email, joined products, created date, last sign-in, and a transaction summary (number of paid transactions, total paid in IDR). Search by name or email; filter by product; paged.
+2. The admin opens a user to see the profile, joined products, subscriptions, and transactions.
 
-**Result:** The change shows immediately in UC-08 and UC-13.
+**Result:** The admin knows who uses which product and how much they paid. This screen is read-only.
 
-#### UC-17 View transactions
+#### UC-15 View payment history
 
-- **Who:** Admin
-- **When:** Admin opens `/admin/transactions`.
+| Who  | Administrator                          |
+| ---- | -------------------------------------- |
+| When | Admin opens `/admin/transactions`.     |
+| PRD  | A-3.2, FR-P3                           |
 
 **Steps**
-1. Filter by user, product, status, and date. List is paged, newest first.
+
+1. Filter by user, product, status, and date range. The list is paged, newest first.
 2. Show totals for the filter: number of transactions and total `PAID` amount (IDR).
-3. Open one to see `order_id`, Midtrans reference, amount, method, status history, and linked subscription.
+3. Open one to see `order_id`, Midtrans reference, amount, payment method, status history, and linked subscription.
+4. Transactions flagged by UC-09 (amount mismatch) are marked "Needs review".
 
-**Extra:** If a status looks wrong, admin clicks "Sync with Midtrans". Backend calls the Midtrans Status API and runs UC-07 steps 3–7.
+**Extra:** If a status looks wrong, the admin clicks "Sync with Midtrans". Backend calls the Midtrans Status API and runs UC-09 steps 3–8.
 
-#### UC-18 Create / edit article
+**Refunds:** There is no refund button (OQ6). Dewa refunds in the Midtrans dashboard; Midtrans then sends a `refund` webhook and UC-09 marks the transaction `REFUNDED`.
 
-- **Who:** Admin
-- **When:** Admin clicks "New article" or opens an article.
+#### UC-16 Create / edit article
+
+| Who  | Administrator                                            |
+| ---- | -------------------------------------------------------- |
+| When | Admin clicks "New article" or opens an article.          |
+| PRD  | A-3.3, A-3.4, FR-C3                                      |
 
 **Steps**
-1. Admin writes the article in the editor (Markdown).
-2. Admin fills: title, slug (auto from title, can edit), excerpt, cover image (from UC-21), one category, tags, meta title, meta description.
-3. Admin can insert images from the media library into the body.
-4. Admin saves. A new article is saved as `DRAFT`.
-5. If the article is already `PUBLISHED`, saving also rebuilds the public pages (UC-19 step 3).
+
+1. The admin writes the article in the Markdown editor.
+2. The admin fills: title, slug (auto from title, can edit), excerpt, cover image (from UC-19), one category, tags, meta title, meta description.
+3. The admin can insert images from the media library into the body.
+4. The admin saves. A new article is saved as `DRAFT`.
+5. If the article is already `PUBLISHED`, saving also rebuilds the public pages (UC-17 step 3).
 
 **If something goes wrong**
-- Slug already used → `409`, admin picks another.
-- Required fields missing → `400` with field errors.
-- Slug of a published article changes → keep the old slug and redirect it (`301`) to the new one, so old links still work.
+
+| Case                                    | What happens                                                                          |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| Slug already used                       | `409`; the admin picks another.                                                       |
+| Required fields missing                 | `400` with field errors.                                                              |
+| Slug of a published article changes     | Keep the old slug and redirect it (`301`) to the new one, so old links still work.    |
+| The article was saved in another tab    | `409`; the admin reloads before saving (optimistic lock).                             |
 
 **Result:** The article is saved. The public site only changes if the article is published.
 
-#### UC-19 Publish / unpublish article
+#### UC-17 Publish / unpublish article
 
-- **Who:** Admin
-- **Needs:** Title, slug, excerpt, and category are filled.
-- **When:** Admin clicks "Publish" or "Unpublish".
+| Who   | Administrator                                           |
+| ----- | ------------------------------------------------------- |
+| Needs | Title, slug, excerpt, and category are filled.          |
+| When  | Admin clicks "Publish" or "Unpublish".                  |
+| PRD   | A-3.6, FR-C2, FR-C5                                     |
 
 **Steps**
-1. Backend sets status to `PUBLISHED` (and saves `published_at` the first time), or back to `DRAFT`.
+
+1. Backend sets the status to `PUBLISHED` (and saves `published_at` the first time), or back to `DRAFT`.
 2. Backend commits to the database.
 3. Backend calls the Next.js revalidate endpoint (protected by a secret) for: the article page, blog list, its category and tag pages, and `sitemap.xml`.
 4. The public site shows (or hides) the article on the next request.
 
 **If something goes wrong**
-- Revalidate call fails → the change stays saved. Backend retries a few times and the admin sees a warning. Pages still refresh later by ISR time-based revalidation.
+
+| Case                   | What happens                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Revalidate call fails  | The change stays saved. Backend retries a few times and the admin sees a warning. ISR time-based revalidation refreshes the pages later. |
 
 **Result:** Only published articles are public and in the sitemap.
 
-#### UC-20 Manage article list
+#### UC-18 Manage article list
 
-- **Who:** Admin
-- **When:** Admin opens `/admin/articles`.
+| Who  | Administrator                          |
+| ---- | -------------------------------------- |
+| When | Admin opens `/admin/articles`.         |
+| PRD  | Persona 4.3 "Manage post content"      |
 
 **Steps**
-1. Search by title. Filter by status, category, and tag. List is paged.
-2. Admin can open (UC-18), publish/unpublish (UC-19), or delete an article.
+
+1. Search by title. Filter by status, category, and tag. The list is paged.
+2. The admin can open (UC-16), publish/unpublish (UC-17), or delete an article.
 3. Delete asks for confirmation. If the article is published, unpublish and revalidate it first, then delete.
 
-#### UC-21 Manage media library
+#### UC-19 Manage media library
 
-- **Who:** Admin
-- **When:** Admin opens `/admin/media`, or picks an image in the editor.
+| Who  | Administrator                                           |
+| ---- | ------------------------------------------------------- |
+| When | Admin opens `/admin/media`, or picks an image in the editor. |
+| PRD  | A-3.7, FR-C4                                            |
 
 **Steps**
-1. Admin uploads an image (JPEG, PNG, or WebP, max 10 MB) and writes alt text.
+
+1. The admin uploads an image (JPEG, PNG, or WebP, max 10 MB) and writes alt text.
 2. Backend checks type and size, fixes rotation (EXIF), removes metadata, and makes WebP copies at 480, 960, and 1600 px (Scrimage, limited thread pool).
 3. Backend uploads them to S3 as `images/<content-hash>/<width>.webp` and saves an image record (keys, width, height, alt text).
-4. The library shows thumbnails. Admin can search, copy the CloudFront URL, or insert the image into an article.
-5. Admin can delete an image that is not used.
+4. The library shows thumbnails. The admin can search, copy the CloudFront URL, or insert the image into an article.
+5. The admin can delete an image that is not used.
 
 **If something goes wrong**
-- Wrong type or too big → rejected (by Nginx or the API) with a clear message.
-- Same image uploaded again (same hash) → reuse the old record, don't upload again.
-- Image is used by an article → can't delete; show which articles use it.
 
-#### UC-22 Manage categories & tags
+| Case                                  | What happens                                                    |
+| ------------------------------------- | --------------------------------------------------------------- |
+| Wrong type or too big                 | Rejected (by Nginx or the API) with a clear message.            |
+| Same image uploaded again (same hash) | Reuse the old record; do not upload again.                      |
+| Image is used by an article           | Cannot delete; show which articles use it.                      |
 
-- **Who:** Admin
-- **When:** Admin opens `/admin/categories` or `/admin/tags`.
+#### UC-20 Manage categories & tags
+
+| Who  | Administrator                                    |
+| ---- | ------------------------------------------------ |
+| When | Admin opens `/admin/categories` or `/admin/tags`. |
+| PRD  | A-3.8, FR-C3                                     |
 
 **Steps**
+
 1. Create a category or tag (name; slug is auto, can edit).
 2. Rename one → published pages using it are revalidated.
 3. Delete one.
 
 **If something goes wrong**
-- Name or slug already exists → `409`.
-- Category still has articles → can't delete. Move the articles to another category first (every article needs one category).
-- Deleting a tag removes it from all articles (after confirmation).
 
-#### UC-23 Record refund
+| Case                          | What happens                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------- |
+| Name or slug already exists   | `409`.                                                                                    |
+| Category still has articles   | Cannot delete. Move the articles to another category first (every article needs one category). |
+| Deleting a tag                | Removes it from all articles (after confirmation).                                        |
 
-- **Who:** Admin
-- **Needs:** Transaction is `PAID`, and the money was already refunded in the Midtrans dashboard.
-- **When:** Admin clicks "Record refund" on a transaction (UC-17).
+#### UC-21 Manage products & plans
 
-**Steps**
-1. Admin writes a reason and chooses whether to end the subscription now.
-2. Backend sets the transaction to `REFUNDED`. If chosen, it cancels the subscription (same as UC-16 "Cancel now").
-3. Backend writes an audit record.
-
-**Note:** If Midtrans already sent a `refund` webhook, the transaction is already `REFUNDED`. The admin only decides about the subscription.
-
-#### UC-24 Manage products & plans
-
-- **Who:** Admin
-- **When:** Admin opens `/admin/products`.
+| Who  | Administrator                          |
+| ---- | -------------------------------------- |
+| When | Admin opens `/admin/products`.         |
+| PRD  | G3, NFR Extensibility, release plan phase 4 (onboard more products) |
 
 **Steps**
-1. Create a product: code (for example `document-doctor`), name, description, website URL, active flag. Backend creates a product credential (used in UC-12 and UC-13) and shows it **only once**.
-2. Add plans: code, name, price (IDR), period (monthly / yearly), `features` (JSONB limits), public flag, active flag.
+
+1. Create a product: code (for example `document-doctor`), name, description, website URL, active flag. Backend creates a client credential (used in UC-06 and UC-07) and shows the secret **only once**.
+2. Add plans: code, name, price (IDR), period (monthly / yearly; none for a free plan), `features` (for example `{ "removeAds": true }`), public flag, active flag.
 3. Deactivate a plan to stop new sales.
+4. Create a second credential and revoke the old one to rotate a secret.
 
 **Rules**
-- Never delete or change the price of a plan that was already sold. Make a new plan instead, so old transactions still make sense.
-- Adding a new product needs only these steps – no database schema change.
 
-## 9. PRD to use case mapping
+| #   | Rule                                                                                                     |
+| --- | -------------------------------------------------------------------------------------------------------- |
+| P1  | Never delete or change the price of a plan that was already sold. Make a new plan instead, so old transactions still make sense. |
+| P2  | Adding a new product needs only these steps – no database schema change (NFR Extensibility).            |
 
-| PRD item | Use case(s)          | PRD item | Use case(s)         |
-| -------- | -------------------- | -------- | ------------------- |
-| V-1.1    | UC-01                | A-3.1    | UC-15               |
-| V-1.2    | UC-02                | A-3.2    | UC-16               |
-| V-1.3    | UC-03                | A-3.3    | UC-17               |
-| U-2.1    | UC-05                | A-3.4    | UC-18               |
-| U-2.2    | UC-06, UC-07         | A-3.5    | UC-18               |
-| U-2.3    | UC-09                | A-3.6    | UC-19               |
-| U-2.4    | UC-08                | A-3.7    | UC-20               |
-| U-2.5    | UC-10, UC-11         | A-3.8    | UC-21               |
-| FR-U1    | UC-04, UC-12         | A-3.9    | UC-22               |
-| FR-U2    | UC-13                | FR-S1    | UC-24               |
-| FR-U3    | UC-12, UC-15         | FR-S2    | UC-07, UC-16        |
-| FR-U4    | UC-04, §7            | FR-S3    | UC-07, UC-11, UC-14 |
-| FR-C1    | UC-01                | FR-P1    | UC-06               |
-| FR-C2    | UC-19                | FR-P2    | UC-07               |
-| FR-C3    | UC-18, UC-22         | FR-P3    | UC-06, UC-07, UC-17 |
-| FR-C4    | UC-21                | FR-C5    | UC-01, UC-19        |
+## 9. PRD to Use Case Mapping
 
-## 10. Pros, cons, and next steps
+| PRD item | Use case(s)          | PRD item | Use case(s)          |
+| -------- | -------------------- | -------- | -------------------- |
+| V-1.1    | UC-01                | A-3.1    | UC-14                |
+| V-1.2    | UC-02                | A-3.2    | UC-15                |
+| V-1.3    | UC-03                | A-3.3    | UC-16                |
+| US-2.1   | UC-05                | A-3.4    | UC-16                |
+| US-2.2   | UC-08, UC-09         | A-3.6    | UC-17                |
+| US-2.3   | UC-11                | A-3.7    | UC-19                |
+| US-2.4   | UC-10, UC-13         | A-3.8    | UC-20                |
+| FR-U1    | UC-04, UC-06         | FR-C1    | UC-01                |
+| FR-U2    | UC-07                | FR-C2    | UC-17                |
+| FR-U3    | UC-06, UC-14         | FR-C3    | UC-16, UC-20         |
+| FR-U4    | UC-04, §7            | FR-C4    | UC-19                |
+| FR-P1    | UC-08                | FR-C5    | UC-01, UC-17         |
+| FR-P2    | UC-09                | G3       | UC-21                |
+| FR-P3    | UC-08, UC-09, UC-15  | G5       | UC-08, UC-12         |
 
-**Good**
+## 10. Later (not in this release)
+
+From the PRD non-goals and "need to cover later" list, and features left out of this release:
+
+| Item                                                        | Source           | Note                                                             |
+| ----------------------------------------------------------- | ---------------- | ---------------------------------------------------------------- |
+| Post interactions: up/down vote, comment, tag other users   | PRD §3.2, §11    | Needs visitor accounts on the blog; new use cases and tables.   |
+| Feedback about the application and system                    | PRD §11          | New use case.                                                    |
+| Share a post to social media                                 | PRD §11          | Frontend only (share links + Open Graph, already in UC-01).     |
+| Quotation and freelance flow tools                           | PRD §11          | Separate product; would connect through UC-06 / UC-07.          |
+| Usage per plan                                               | OQ5              | Products report usage to the hub; needs its own ADR.            |
+| Deactivate a user, admin grant/extend of subscriptions, audit log | Earlier draft | Not in the PRD stories. Add when support needs them.       |
+| Refund button in the hub                                     | OQ6              | Refunds stay in the Midtrans dashboard.                          |
+| Automatic recurring payments                                 | G5               | One-time payments only for now.                                  |
+| Change plan in the middle of a period                        | UC-08            | Needs proration rules.                                           |
+
+## 11. Consequences
+
+### 11.1 Positive
+
 - Every PRD story has at least one use case, so nothing is forgotten.
-- Access has one simple rule: `ACTIVE` and `now < end_date`. Only UC-07 (payment) or UC-16 (admin) can give access.
+- Access has one simple rule: `ACTIVE` and `now < end_date`. Only a confirmed payment (UC-09) gives access.
+- One-time payments keep billing simple: no card storage, no retry logic for failed auto-charges.
 - Error cases are decided before coding.
 
-**Risks**
+### 11.2 Negative and risks
 
-| Risk                                                                  | What we do                                                              |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Users can't change plan in the middle of a period.                    | Admin handles special cases with UC-16. Add proration later if needed.  |
-| Manual renewal needs reminder emails, which need an email provider.   | ADR-005 picks the provider before Phase 3 goes live.                    |
-| Products cache entitlement, so access can be a few minutes out of date. | Short cache time; re-check after checkout; details in ADR-003.        |
-| UC-23 and UC-24 are not in the PRD.                                   | Add them to PRD v0.3.                                                   |
-
-**Next steps**
-- ADR-001 planned "ADR-002: Vercel Pro vs. self-hosted Next.js". That topic needs a new number, because ADR-002 is now this document.
-- ADR-003: API details for UC-12 and UC-13 (endpoints, product credentials, response format, caching).
-- ADR-004 (automatic recurring payments), if added, will change UC-10 and UC-11.
-- ADR-005 (email provider) is needed for UC-14 reminders.
+| Risk                                                                    | Mitigation                                                                                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Users must remember to renew, which may lower the renewal rate (PRD §8 G4). | Clear end date in UC-10; reminder emails in phase 4 (UC-13 step 3, ADR-006).                  |
+| Users cannot change plan in the middle of a period.                     | Document Doctor has one paid plan at launch; add proration later if needed.                       |
+| No admin tools to fix a user's access by hand.                          | "Sync with Midtrans" (UC-15) fixes most payment problems; add admin grant/extend if support needs it. |
+| Products cache entitlement, so access can be a few minutes out of date. | Short cache; re-check after checkout (ADR-003 §8.5).                                              |
+| UC-21 and UC-18 have no PRD user story.                                 | Add them to the PRD in the next version.                                                          |

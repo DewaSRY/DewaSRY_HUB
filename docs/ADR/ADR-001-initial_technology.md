@@ -1,18 +1,15 @@
 # ADR-001: Initial Technology Stack
 
-| Field      | Value                                  |
-| ---------- | -------------------------------------- |
-| Author     | Dewa Surya Ariesta                     |
-| Date       | 28 September 2026                      |
-| Status     | Proposed                               |
-| Deciders   | Dewa Surya Ariesta                     |
-| Related    | [PRD v0.2](../PRD.md)                  |
+| Author   | Dewa Surya Ariesta                                                                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Date     | 28 September 2026                                                                                                                   |
+| Status   | Proposed                                                                                                                            |
+| Deciders | Dewa Surya Ariesta                                                                                                                  |
+| Related  | [PRD](../PRD.md), [ADR-002](./ADR-002-usecase.md), [ADR-003](./ADR-003-api-contract.md), [ADR-004](./ADR-004-initial_schema_model.md) |
 
----
+## 1. Overview
 
-## 1. Context
-
-Dewa Surya Hub (see [PRD](../PRD.md)) needs a public, SEO-friendly content site, a central user account shared across Dewa's SaaS products, subscription management, and a payment portal. The first connected product is Document Doctor.
+Dewa Surya Hub (see [PRD](../PRD.md)) needs a public, SEO-friendly content site, a central user account shared across Dewa's SaaS products, subscription management, and a payment portal with one-time payments and QR code (QRIS) payments. The first connected product is Document Doctor.
 
 The platform is built and run by one person, has no revenue at launch, and targets users in Indonesia. The stack must therefore be:
 
@@ -22,16 +19,16 @@ The platform is built and run by one person, has no revenue at launch, and targe
 
 ## 2. Decision Drivers
 
-| #  | Driver                                                                                  | PRD reference            |
-| -- | --------------------------------------------------------------------------------------- | ------------------------ |
-| D1 | Lowest monthly cost; prefer free tiers and pay-per-use over fixed fees.                 | —                        |
-| D2 | Public pages must be server-rendered/static for SEO and fast LCP (< 2.5 s).             | FR-C1, NFR SEO/Perf      |
-| D3 | One identity across all SaaS products, with social sign-in.                             | G2, FR-U1, FR-U2         |
-| D4 | Local payment methods for Indonesian users (bank transfer/VA, QRIS, e-wallets, cards).  | G3, FR-P1                |
-| D5 | Reliable, idempotent handling of payment webhooks.                                      | FR-P2, NFR Reliability   |
-| D6 | Relational data (users, products, plans, subscriptions, transactions, articles).        | FR-S1–S3, FR-P3, FR-C3   |
-| D7 | Images must be small and fast to serve.                                                 | FR-C4, NFR Performance   |
-| D8 | Infrastructure must be reproducible, not hand-clicked in a console.                     | —                        |
+| #   | Driver                                                                                         | PRD reference                |
+| --- | ---------------------------------------------------------------------------------------------- | ---------------------------- |
+| D1  | Lowest monthly cost; prefer free tiers and pay-per-use over fixed fees.                        | —                            |
+| D2  | Public pages must be server-rendered/static for SEO and fast LCP (< 2.5 s).                    | FR-C1, NFR SEO / Performance |
+| D3  | One identity across all SaaS products, with social (Google) sign-in.                           | G2, FR-U1, FR-U2, NFR Security |
+| D4  | One-time payments with local methods for Indonesian users (QRIS, VA, e-wallets, cards).        | G5, FR-P1, OQ1               |
+| D5  | Reliable, idempotent handling of payment webhooks.                                             | FR-P2, NFR Reliability       |
+| D6  | Relational data (users, products, plans, subscriptions, transactions, articles).               | FR-U3, FR-P3, FR-C3          |
+| D7  | Images must be small and fast to serve.                                                        | FR-C4, NFR Performance       |
+| D8  | Infrastructure must be reproducible, not hand-clicked in a console.                            | —                            |
 
 ## 3. Decision Summary
 
@@ -43,8 +40,8 @@ The platform is built and run by one person, has no revenue at launch, and targe
 | Backend hosting       | **AWS EC2** (single small instance)              | Cheapest always-on compute; full control; runs API + DB + Nginx.     |
 | Reverse proxy / LB    | **Nginx** on the EC2 instance                    | Free; replaces AWS ALB (saves ~US$16+/month).                        |
 | Database              | **PostgreSQL** (self-hosted on the EC2 instance) | Free, relational, strong transactions; no RDS fee at launch.         |
-| Authentication        | **Firebase Authentication** (social sign-in)     | Free for social/email sign-in; SDKs for web; shared across products. |
-| Payment gateway       | **Midtrans** (Snap)                              | No monthly fee; supports VA, QRIS, GoPay, cards in IDR.              |
+| Authentication        | **Firebase Authentication** (Google sign-in)     | Free for social sign-in; SDKs for web; shared across products.       |
+| Payment gateway       | **Midtrans** (Snap)                              | No monthly fee; one-time payments with QRIS, VA, GoPay, cards in IDR. |
 | Image storage         | **AWS S3** (+ CloudFront for delivery)           | Cheap storage; CloudFront free tier cheaper than direct S3 egress.   |
 | Image processing      | **Resize on upload** in Spring Boot (Scrimage)   | Store only optimized WebP sizes; no paid resize service.             |
 | Infrastructure as code| **Terraform** (state in S3)                      | Free CLI; reproducible AWS setup; no Terraform Cloud needed.         |
@@ -79,9 +76,9 @@ flowchart LR
 Request flow in short:
 
 1. The user opens the site; Vercel serves server-rendered or statically generated Next.js pages.
-2. The user signs in with Google (or another provider) through Firebase Auth in the browser and receives a Firebase ID token.
+2. The user signs in with Google through Firebase Auth in the browser and receives a Firebase ID token.
 3. The frontend calls the backend API on EC2 with that token. The Spring Boot backend verifies it (Spring Security, see 5.7) and looks up the user's role, products, and subscriptions in PostgreSQL.
-4. For a purchase, the backend creates a Midtrans Snap transaction and returns the Snap token; the user pays in the Midtrans popup.
+4. For a purchase, the backend creates a Midtrans Snap transaction and returns the Snap token; the user pays once in the Midtrans popup (for example by scanning a QRIS code).
 5. Midtrans sends an HTTP notification to the backend. The backend verifies the signature, updates the transaction, and activates the subscription.
 
 ## 5. Decisions in Detail
@@ -94,6 +91,7 @@ Request flow in short:
 - Supports static generation and incremental static regeneration (ISR) for articles, and server rendering where needed, which covers the SEO and LCP requirements (D2).
 - Built-in metadata API, `sitemap.ts`, and `robots.ts` cover FR-C5 and V-1.1.
 - One codebase and one deployment keeps work and cost low for a solo developer.
+- Category and tag pages build their title and description with an async `generateMetadata` that fetches the category or tag from the API (the research note in PRD §4.3; ADR-002 UC-03).
 
 **Alternatives considered.**
 - *Astro:* excellent for content, but the portal and admin need much more interactivity.
@@ -133,6 +131,7 @@ Request flow in short:
 | Images              | **Scrimage** (`scrimage-core` + `scrimage-webp`) for resizing and WebP encoding (see 5.9).           |
 | AWS                 | AWS SDK for Java v2 (S3), credentials from the EC2 instance role; no access keys in config.          |
 | Operations          | Spring Boot Actuator (`/actuator/health` for Nginx and deploy checks; not exposed publicly).         |
+| Scheduling          | `@Scheduled` + **ShedLock** (PostgreSQL lock), so only one instance runs jobs during a deploy.       |
 | Testing             | JUnit 5, Spring Boot Test, **Testcontainers** (real PostgreSQL in tests).                            |
 
 **Structure.** One deployable application (modular monolith), with a package per domain: `content`, `identity`, `product`, `subscription`, `payment`, `media`, `admin`. This keeps one process to run and pay for, while leaving clean seams if a module ever needs to become its own service.
@@ -214,25 +213,25 @@ Request flow in short:
 
 ### 5.7 Authentication: Firebase Authentication
 
-**Decision.** Use Firebase Authentication for sign-up and sign-in, starting with Google sign-in and optionally email/password. Firebase handles **identity only**. Roles, product membership, subscriptions, and entitlements stay in PostgreSQL.
+**Decision.** Use Firebase Authentication for sign-up and sign-in with **Google sign-in** (OAuth 2.0, PRD OQ2). Firebase handles **identity only**. Roles, product membership, subscriptions, and entitlements stay in PostgreSQL.
 
 **How it works.**
 1. The browser signs in with the Firebase Web SDK and gets a short-lived Firebase ID token.
 2. Every API call sends `Authorization: Bearer <ID token>`.
-3. Spring Security (OAuth2 Resource Server) verifies the token as a JWT: signature against Google's public keys (JWK set `https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`), issuer `https://securetoken.google.com/<firebase-project-id>`, audience `<firebase-project-id>`, and expiry. The backend then finds or creates the user row by Firebase `uid` (the token's `sub` claim).
+3. Spring Security (OAuth2 Resource Server) verifies the token as a JWT: signature against Google's public keys (JWK set `https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`), issuer `https://securetoken.google.com/<firebase-project-id>`, audience `<firebase-project-id>`, and expiry. The backend then finds or creates the user row by Firebase `uid` (the token's `sub` claim) and copies name, email, and picture from the token. The profile follows the Google account and is not edited in the hub (PRD US-2.1).
 4. Admin access is decided by a `role` column in PostgreSQL (FR-U4), not by the client.
-5. Connected SaaS products (Document Doctor and later ones) use **the same Firebase project**, so a user has one identity everywhere. Each product calls the hub's entitlement API to check the user's subscription (FR-U2).
+5. Connected SaaS products (Document Doctor and later ones) use **the same Firebase project**, so a user has one identity everywhere and can sign up in either place (PRD OQ4). Each product calls the hub's entitlement API to check the user's subscription (FR-U2, ADR-003 §8).
 
 **Rationale.**
-- Social and email sign-in are free on the standard Firebase Auth plan, which fits D1.
-- No password storage on our servers; Firebase handles hashing, account recovery, and provider integration (NFR Security).
-- This answers PRD Open Question 2: SSO is a shared Firebase project plus the hub's entitlement API.
+- Social sign-in is free on the standard Firebase Auth plan, which fits D1.
+- No passwords at all: Google handles the account, recovery, and verification (NFR Security: "Integrate with social sign in").
+- This implements PRD Open Question 2 ("OAuth 2.0 with Firebase"): SSO is a shared Firebase project plus the hub's entitlement API.
 
 **Rules.**
 - Do not upgrade to Firebase Identity Platform unless a needed feature requires it, and check pricing before doing so.
-- Phone/SMS sign-in is paid per message. Do not enable it without a separate decision.
-- Use the Firebase Admin SDK for Java only for server-side user management (for example, disabling a user from the admin dashboard, A-3.1), not for normal request authentication.
-- Keep the user's own profile data (name, avatar, products) in PostgreSQL so the hub is not locked into Firebase.
+- Email/password and phone/SMS sign-in are not enabled. Phone/SMS is paid per message; adding any provider needs a separate decision.
+- The Firebase Admin SDK is not needed at launch (the admin views users but does not disable them, PRD A-3.1). Add it only if user deactivation is added later.
+- Keep a copy of the user's profile data (name, email, avatar URL, products) in PostgreSQL so the hub is not locked into Firebase.
 
 **Alternatives considered.**
 - *Build auth in the backend (sessions/JWT + OAuth):* free, but more security-sensitive code to write and maintain.
@@ -241,13 +240,13 @@ Request flow in short:
 
 ### 5.8 Payment gateway: Midtrans
 
-**Decision.** Use Midtrans with **Snap** (hosted payment popup/redirect) for all checkouts, charged in **IDR**.
+**Decision.** Use Midtrans with **Snap** (hosted payment popup/redirect) for all checkouts, charged in **IDR**, as **one-time payments** (PRD G5). Each payment buys one period of a plan; nothing is charged automatically.
 
 **Rationale.**
 - No setup or monthly fee; only a per-transaction fee that depends on the payment method (D1).
-- Supports the payment methods Indonesian users expect: bank transfer/virtual account, QRIS, GoPay and other e-wallets, and credit/debit cards (D4).
+- Supports the payment methods Indonesian users expect: QRIS, bank transfer/virtual account, GoPay and other e-wallets, and credit/debit cards (D4).
 - Snap means card data never touches our servers, so card data is not stored on the platform (NFR Security).
-- This answers PRD Open Question 1: Midtrans, IDR only at launch.
+- This implements PRD Open Question 1 ("Midtrans for initial"), with IDR only at launch, and the non-goal of a single payment gateway.
 
 **Integration rules.**
 - The Spring Boot backend creates the transaction with a unique `order_id` and stores it as `pending` before returning the Snap token.
@@ -255,8 +254,8 @@ Request flow in short:
 - Every notification is verified: `signature_key` must equal `SHA512(order_id + status_code + gross_amount + server_key)`. Then fetch the latest status from the Midtrans Status API before changing data.
 - Webhook handling is idempotent: process each `order_id` + status change only once, inside one `@Transactional` method that locks the transaction row (`SELECT ... FOR UPDATE`).
 - Use the Midtrans sandbox for development and staging; keep the server key only on the backend.
-- Renewals (U-2.5) start as manual "renew" purchases. Automatic recurring charges (Midtrans subscription API, cards/GoPay only) are a later decision.
-- Refunds are handled from the Midtrans dashboard at launch and recorded in the platform by the admin (PRD Open Question 6).
+- Renewal is a new one-time purchase of the same plan (ADR-002 UC-12). Automatic recurring charges (Midtrans subscription API) are not planned.
+- Refunds are **not** handled in the platform (PRD Open Question 6). Dewa refunds in the Midtrans dashboard; the hub only receives the `refund` status through the webhook and ends access (ADR-002 UC-09).
 
 **Alternatives considered.**
 - *Xendit:* similar methods and pricing; a valid alternative if Midtrans onboarding is a problem.
@@ -270,7 +269,7 @@ Request flow in short:
 1. Check file type (JPEG, PNG, WebP only) and size (for example, max 10 MB) in Nginx and the API.
 2. In Spring Boot, using **Scrimage**: apply the EXIF orientation, drop all metadata (EXIF/GPS), and generate WebP versions at fixed widths, for example **480, 960, and 1600 px**. Run resizing on a small bounded thread pool (for example 2 threads) so uploads cannot exhaust CPU or memory.
 3. Upload only the resized versions to S3 under a content-hash key, for example `images/<hash>/960.webp`. The original is not kept, which saves storage.
-4. Save the image record (keys, width, height, alt text) in PostgreSQL for the media library (A-3.8).
+4. Save the image record (keys, width, height, alt text) in PostgreSQL for the media library (A-3.7).
 
 **Delivery.**
 - The S3 bucket is private. CloudFront reads it through Origin Access Control.
@@ -298,7 +297,7 @@ Request flow in short:
 
 **Rules.**
 - Remote state in a private, versioned, encrypted S3 bucket, using S3 native state locking (`use_lockfile = true`). No DynamoDB table or Terraform Cloud needed.
-- No secrets in `.tf` files or state where avoidable. Keep secrets (Midtrans server key, Firebase service account, database password) in AWS SSM Parameter Store standard parameters, which are free.
+- No secrets in `.tf` files or state where avoidable. Keep secrets (Midtrans server key, database password, Next.js revalidate secret, product client secret hashes) in AWS SSM Parameter Store standard parameters, which are free.
 - Separate workspaces or folders for `staging` and `production` if a staging environment is added.
 - Vercel and Firebase settings are managed in their consoles at launch; they can be moved to their Terraform providers later.
 
@@ -323,7 +322,7 @@ Approximate figures in USD before tax, for low launch traffic. **Check current p
 | Terraform, Nginx, PostgreSQL, Let's Encrypt | $0                    | $0                              |
 | **Total (approx.)**                    | **~$18–25 / month**        | **~$20–45 / month**             |
 
-Self-hosting Next.js on the same `t4g.small` next to Spring Boot and PostgreSQL will likely not fit in 2 GiB. Choosing that option in ADR-002 probably also means moving to `t4g.medium`, so compare that cost with Vercel Pro.
+Self-hosting Next.js on the same `t4g.small` next to Spring Boot and PostgreSQL will likely not fit in 2 GiB. Choosing that option in ADR-005 probably also means moving to `t4g.medium`, so compare that cost with Vercel Pro.
 
 New AWS accounts may be eligible for free-tier credits that cover part of the first months.
 
@@ -348,7 +347,7 @@ New AWS accounts may be eligible for free-tier credits that cover part of the fi
 | Vercel Hobby does not allow commercial use.                           | Upgrade to Pro or self-host Next.js before payments launch (Phase 3).                               |
 | Dependency on Firebase for identity.                                  | Store profile and roles in PostgreSQL keyed by Firebase `uid`; Firebase users can be exported if needed. |
 | Frontend (Vercel) and API (EC2) on different hosts.                   | Serve API on a subdomain (for example `api.<domain>`), strict CORS allow-list, tokens in headers rather than cross-site cookies. |
-| Manual renewals may lower renewal rates.                              | Send reminder emails before expiry; evaluate Midtrans recurring payments in a later ADR.            |
+| One-time payments may lower renewal rates (PRD §8, G4).               | Show the end date clearly; send reminder emails before expiry (ADR-006).                            |
 
 ## 8. When to Revisit This Decision
 
@@ -363,8 +362,11 @@ Create a new ADR that supersedes the relevant part of this one when any of these
 
 ## 9. Follow-up Decisions
 
-- ADR-002: Vercel Pro vs. self-hosted Next.js before Phase 3.
-- ADR-003: SSO and entitlement API contract for connected SaaS products.
-- ADR-004: Recurring payments and renewal flow with Midtrans.
-- ADR-005: Domain, DNS, and email sending provider.
-- ADR-006: CI/CD pipeline (build Spring Boot ARM image, deploy to EC2).
+| ADR     | Topic                                                          | Status   |
+| ------- | -------------------------------------------------------------- | -------- |
+| ADR-002 | Use cases                                                      | Proposed |
+| ADR-003 | API contract, including SSO and entitlement for connected products | Proposed |
+| ADR-004 | Initial schema model                                           | Proposed |
+| ADR-005 | Vercel Pro vs. self-hosted Next.js before Phase 3              | To do    |
+| ADR-006 | Domain, DNS, and email sending provider                        | To do    |
+| ADR-007 | CI/CD pipeline (build Spring Boot ARM image, deploy to EC2)    | To do    |

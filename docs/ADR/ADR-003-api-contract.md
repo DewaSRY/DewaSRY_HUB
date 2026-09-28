@@ -1,33 +1,32 @@
 # ADR-003: API Contract
 
-| Field    | Value                                                                                              |
-| -------- | -------------------------------------------------------------------------------------------------- |
-| Author   | Dewa Surya Ariesta                                                                                 |
-| Date     | 28 September 2026                                                                                  |
-| Status   | Proposed                                                                                           |
-| Deciders | Dewa Surya Ariesta                                                                                 |
-| Related  | [PRD v0.2](../PRD.md), [ADR-001](./ADR-001-initial_technology.md), [ADR-002](./ADR-002-usecase.md) |
+| Author   | Dewa Surya Ariesta                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Date     | 28 September 2026                                                                                 |
+| Status   | Proposed                                                                                          |
+| Deciders | Dewa Surya Ariesta                                                                                |
+| Related  | [PRD](../PRD.md), [ADR-001](./ADR-001-initial_technology.md), [ADR-002](./ADR-002-usecase.md), [ADR-004](./ADR-004-initial_schema_model.md) |
 
----
+## 1. Overview
 
-## 1. Context
+[ADR-001](./ADR-001-initial_technology.md) chose a single Spring Boot REST API behind Nginx on EC2, called by the Next.js app on Vercel, by connected SaaS products, and by Midtrans. [ADR-002](./ADR-002-usecase.md) describes every flow as a use case. This ADR defines the full contract behind those use cases:
 
-[ADR-001](./ADR-001-initial_technology.md) chose a single Spring Boot REST API behind Nginx on EC2, called by the Next.js app on Vercel, by connected SaaS products, and by Midtrans. [ADR-002](./ADR-002-usecase.md) described every flow as a use case and named some endpoints inline, but left the full contract, and in particular the connected-product contract for UC-12 and UC-13, to this ADR.
-
-This ADR defines:
-
-- the conventions every endpoint follows (base URL, auth, errors, pagination, formats),
-- every endpoint, **grouped by who calls it and which backend module owns it**,
-- the request and response shapes, status codes, and error codes,
-- the contract for connected SaaS products (client credentials, entitlement response, caching),
-- the outbound calls the API makes to other systems (Next.js revalidation).
+| #   | Covered here                                                                                         |
+| --- | ---------------------------------------------------------------------------------------------------- |
+| 1   | The conventions every endpoint follows (base URL, auth, errors, pagination, formats).               |
+| 2   | Every endpoint, **grouped by who calls it and which backend module owns it**.                        |
+| 3   | Request and response shapes, status codes, and error codes.                                         |
+| 4   | The contract for connected SaaS products (client credentials, entitlement response, caching).       |
+| 5   | The outbound calls the API makes to other systems (Next.js revalidation, Midtrans).                 |
 
 ## 2. Decision
 
-1. The API follows the conventions in §3 and the endpoints in §5–§11 (groups 1–7). A new endpoint is added to this document (or a later ADR) before it is built.
-2. Endpoints are grouped into seven groups (§4). Each group maps to one URL prefix and one security rule, so Spring Security can be configured per prefix.
-3. Connected products authenticate with **the user's Firebase ID token plus a per-product client credential**, sent server-to-server (§8).
-4. The OpenAPI document generated from the code (springdoc-openapi, `/v1/openapi.json`, not public in production) must match this ADR; differences are bugs in one of them.
+| #   | Decision                                                                                                                                                 |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | The API follows the conventions in §3 and the endpoints in §5–§11. A new endpoint is added to this document (or a later ADR) before it is built.         |
+| D2  | Endpoints are split into seven groups (§4). Each group has one URL prefix and one security rule, so Spring Security and Nginx are configured per prefix. |
+| D3  | Connected products authenticate with **the user's Firebase ID token plus a per-product client credential**, sent server-to-server (§8).                  |
+| D4  | The OpenAPI document generated from the code (springdoc-openapi, `/v1/openapi.json`, not public in production) must match this ADR; differences are bugs. |
 
 ## 3. Conventions
 
@@ -50,29 +49,31 @@ Each endpoint lists one of these types in the **Auth** column.
 | Auth       | What the caller sends                                                                  | Checked by                                                                              |
 | ---------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `None`     | Nothing.                                                                               | —                                                                                       |
-| `User`     | `Authorization: Bearer <Firebase ID token>`                                            | Spring Security resource server (ADR-001 §5.7); user `status = ACTIVE`.                 |
+| `User`     | `Authorization: Bearer <Firebase ID token>`                                            | Spring Security resource server (ADR-001 §5.7).                                         |
 | `Admin`    | Same as `User`.                                                                        | As `User`, plus `role = ADMIN` in PostgreSQL.                                           |
 | `Product`  | `Authorization: Bearer <user's Firebase ID token>` + `X-Client-Id` + `X-Client-Secret` | As `User`, plus a valid, active product credential that matches `{productCode}` (§8.1). |
-| `Midtrans` | Midtrans notification body with `signature_key`.                                       | Signature check (ADR-002 UC-07 step 1).                                                 |
+| `Midtrans` | Midtrans notification body with `signature_key`.                                       | Signature check (ADR-002 UC-09 step 1).                                                 |
 
-Rules for every authenticated endpoint (from ADR-002 §7):
+Rules for every authenticated endpoint (ADR-002 §7):
 
-- Invalid, expired, or missing token → `401 UNAUTHENTICATED`. The frontend refreshes the token with the Firebase SDK and retries **once**.
-- Deactivated user → `403 ACCOUNT_DISABLED` on every endpoint.
-- Email/password user whose email is not verified → `403 EMAIL_NOT_VERIFIED`.
-- Non-admin on `/admin/**` → `403 FORBIDDEN`.
-- A user is always taken from the token, never from a request parameter. `/me/**` endpoints never accept a `userId`.
+| #   | Rule                                                                                                                                   |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | Invalid, expired, or missing token → `401 UNAUTHENTICATED`. The frontend refreshes the token with the Firebase SDK and retries **once**. |
+| A2  | Non-admin on `/admin/**` → `403 FORBIDDEN`.                                                                                            |
+| A3  | The user is always taken from the token, never from a request parameter. `/me/**` endpoints never accept a `userId`.                   |
+
+Sign-in is **Google only** (PRD OQ2), so every token has a verified email; there is no email-verification check.
 
 ### 3.3 Request and response format
 
 - Content type is `application/json; charset=utf-8`, except file uploads (`multipart/form-data`) and errors (`application/problem+json`).
-- JSON field names are `camelCase`. Enum values are `UPPER_SNAKE_CASE` (for example `PUBLISHED`, `CANCELLED`).
+- JSON field names are `camelCase`. Enum values are `UPPER_SNAKE_CASE` (for example `PUBLISHED`, `EXPIRED`).
 - IDs are UUID strings, except transactions, which are addressed by their `orderId` (for example `DSH-20261028-7F3K9Q`), and products and plans, which also have a stable human `code` (for example `document-doctor`).
 - Timestamps are ISO-8601 in UTC with a `Z` suffix: `"2026-10-28T03:15:00Z"`. The frontend converts to the user's time zone (default `Asia/Jakarta`).
 - Money is an **integer number of rupiah** plus a currency code; there are no decimals in IDR:
 
   ```json
-  { "amount": 150000, "currency": "IDR" }
+  { "amount": 49000, "currency": "IDR" }
   ```
 
 - `null` fields are included in responses (not omitted), so the shape is stable.
@@ -113,13 +114,13 @@ Errors use RFC 9457 Problem Details (`application/problem+json`) with a stable m
   "status": 400,
   "code": "VALIDATION_FAILED",
   "detail": "One or more fields are invalid.",
-  "instance": "/v1/me",
+  "instance": "/v1/admin/articles",
   "traceId": "6f1c2a9e4b7d3c10",
   "errors": [
     {
-      "field": "name",
+      "field": "title",
       "code": "SIZE",
-      "message": "Must be between 1 and 80 characters."
+      "message": "Must be between 1 and 200 characters."
     }
   ]
 }
@@ -138,15 +139,13 @@ Common error codes:
 | 401  | `UNAUTHENTICATED`        | Missing, invalid, or expired Firebase token.                    |
 | 401  | `INVALID_CLIENT`         | Missing or wrong product client credential (§8).                |
 | 403  | `FORBIDDEN`              | Signed in but not allowed (for example not an admin).           |
-| 403  | `ACCOUNT_DISABLED`       | User `status = INACTIVE` (UC-15).                               |
-| 403  | `EMAIL_NOT_VERIFIED`     | Email/password sign-in without a verified email (UC-04 4a).     |
 | 404  | `NOT_FOUND`              | Resource does not exist **or the caller may not see it**.       |
 | 409  | `CONFLICT`               | Generic state conflict; specific codes are listed per endpoint. |
 | 413  | `PAYLOAD_TOO_LARGE`      | Upload over the limit (Nginx or API).                           |
 | 415  | `UNSUPPORTED_MEDIA_TYPE` | Upload is not JPEG, PNG, or WebP.                               |
 | 429  | `RATE_LIMITED`           | Nginx `limit_req` hit (§3.7). Includes `Retry-After`.           |
 | 500  | `INTERNAL_ERROR`         | Unexpected error. Safe to retry `GET`s.                         |
-| 502  | `UPSTREAM_ERROR`         | Midtrans, Firebase Admin SDK, or S3 call failed.                |
+| 502  | `UPSTREAM_ERROR`         | Midtrans or S3 call failed.                                     |
 
 A user asking for another user's resource gets `404`, not `403`, so IDs cannot be probed.
 
@@ -170,7 +169,7 @@ A user asking for another user's resource gets `404`, not `403`, so IDs cannot b
 
 ### 3.8 Idempotency
 
-`POST /checkout` accepts an optional `Idempotency-Key` header (UUID generated by the frontend per "Subscribe" click). A repeat with the same key and same user within 24 hours returns the first response instead of creating a new transaction. ADR-002 UC-06 3b (reuse a pending transaction for the same plan) applies even without the header.
+`POST /checkout` accepts an optional `Idempotency-Key` header (UUID generated by the frontend per "Buy" click). A repeat with the same key and same user within 24 hours returns the first response instead of creating a new transaction. Reusing an unexpired pending transaction for the same plan (ADR-002 UC-08) applies even without the header.
 
 ## 4. Endpoint Groups
 
@@ -184,97 +183,86 @@ flowchart LR
 
     subgraph API [Spring Boot API /v1]
         G1["1 · Public<br/>/public/**"]
-        G2["2 · Account<br/>/me/**"]
+        G2["2 · Account<br/>/me, /me/session"]
         G3["3 · Billing<br/>/checkout, /me/transactions, /me/subscriptions"]
         G4["4 · Connected products<br/>/products/{code}/**"]
         G5["5 · Webhooks<br/>/webhooks/**"]
         G6["6 · Admin<br/>/admin/**"]
     end
 
-    API -. outbound .-> G7["7 · Outbound<br/>Next.js revalidate, Midtrans, Firebase, S3"]
+    API -. outbound .-> G7["7 · Outbound<br/>Next.js revalidate, Midtrans, Firebase keys, S3"]
 ```
 
-| #   | Group              | Prefix                                                     | Auth       | Caller                                   | Backend module(s)                         |
-| --- | ------------------ | ---------------------------------------------------------- | ---------- | ---------------------------------------- | ----------------------------------------- |
-| 1   | Public             | `/public/**`                                               | `None`     | Next.js (server), crawlers               | `content`, `product`                      |
-| 2   | Account            | `/me`, `/me/session`                                       | `User`     | Next.js (browser)                        | `identity`                                |
-| 3   | Billing            | `/checkout`, `/me/transactions/**`, `/me/subscriptions/**` | `User`     | Next.js (browser)                        | `payment`, `subscription`                 |
-| 4   | Connected products | `/products/{productCode}/**`                               | `Product`  | Document Doctor backend, future products | `identity`, `subscription`                |
-| 5   | Webhooks           | `/webhooks/**`                                             | `Midtrans` | Midtrans                                 | `payment`, `subscription`                 |
-| 6   | Admin              | `/admin/**`                                                | `Admin`    | Next.js admin dashboard                  | `admin` + owning module                   |
-| 7   | Outbound           | (calls made **by** the API)                                | —          | —                                        | `content`, `payment`, `identity`, `media` |
+| #   | Group              | Prefix                                                     | Auth       | Caller                                   | Backend module(s)             |
+| --- | ------------------ | ---------------------------------------------------------- | ---------- | ---------------------------------------- | ----------------------------- |
+| 1   | Public             | `/public/**`                                               | `None`     | Next.js (server), crawlers               | `content`, `product`          |
+| 2   | Account            | `/me`, `/me/session`                                       | `User`     | Next.js (browser)                        | `identity`                    |
+| 3   | Billing            | `/checkout`, `/me/transactions/**`, `/me/subscriptions`    | `User`     | Next.js (browser)                        | `payment`, `subscription`     |
+| 4   | Connected products | `/products/{productCode}/**`                               | `Product`  | Document Doctor backend, future products | `identity`, `subscription`    |
+| 5   | Webhooks           | `/webhooks/**`                                             | `Midtrans` | Midtrans                                 | `payment`, `subscription`     |
+| 6   | Admin              | `/admin/**`                                                | `Admin`    | Next.js admin dashboard                  | `admin` + owning module       |
+| 7   | Outbound           | (calls made **by** the API)                                | —          | —                                        | `content`, `payment`, `media` |
 
-Group 6 is split into sub-groups: 6.1 Users, 6.2 Subscriptions, 6.3 Transactions, 6.4 Articles, 6.5 Media, 6.6 Categories, 6.7 Tags, 6.8 Products & Plans, 6.9 Audit log.
+Group 6 is split into sub-groups: 6.1 Users, 6.2 Transactions, 6.3 Articles, 6.4 Media, 6.5 Categories, 6.6 Tags, 6.7 Products & Plans.
 
 ### 4.1 All endpoints at a glance
 
-| Group | Method | Path                                          | Use case            | Phase |
-| ----- | ------ | --------------------------------------------- | ------------------- | ----- |
-| 1     | GET    | `/public/articles`                            | UC-01, UC-03        | 1     |
-| 1     | GET    | `/public/articles/{slug}`                     | UC-01               | 1     |
-| 1     | GET    | `/public/categories`                          | UC-03               | 1     |
-| 1     | GET    | `/public/tags`                                | UC-03               | 1     |
-| 1     | GET    | `/public/sitemap`                             | UC-01, FR-C5        | 1     |
-| 1     | GET    | `/public/products`                            | UC-02               | 1     |
-| 1     | GET    | `/public/products/{productCode}`              | UC-02               | 1     |
-| 2     | POST   | `/me/session`                                 | UC-04               | 2     |
-| 2     | GET    | `/me`                                         | UC-05               | 2     |
-| 2     | PATCH  | `/me`                                         | UC-05               | 2     |
-| 2     | PUT    | `/me/avatar`                                  | UC-05               | 2     |
-| 2     | DELETE | `/me/avatar`                                  | UC-05               | 2     |
-| 3     | POST   | `/checkout`                                   | UC-06, UC-10        | 3     |
-| 3     | GET    | `/me/transactions`                            | UC-09               | 3     |
-| 3     | GET    | `/me/transactions/{orderId}`                  | UC-06, UC-09        | 3     |
-| 3     | GET    | `/me/subscriptions`                           | UC-08               | 3     |
-| 3     | POST   | `/me/subscriptions/{id}/cancel`               | UC-11               | 4     |
-| 3     | POST   | `/me/subscriptions/{id}/resume`               | UC-11               | 4     |
-| 4     | POST   | `/products/{productCode}/members`             | UC-12               | 2     |
-| 4     | GET    | `/products/{productCode}/entitlements/me`     | UC-13               | 2–3   |
-| 5     | POST   | `/webhooks/midtrans`                          | UC-07               | 3     |
-| 6.1   | GET    | `/admin/users`                                | UC-15               | 2     |
-| 6.1   | GET    | `/admin/users/{id}`                           | UC-15               | 2     |
-| 6.1   | POST   | `/admin/users/{id}/deactivate`                | UC-15               | 2     |
-| 6.1   | POST   | `/admin/users/{id}/reactivate`                | UC-15               | 2     |
-| 6.1   | GET    | `/admin/users/{id}/transactions`              | UC-15, UC-17        | 3     |
-| 6.2   | GET    | `/admin/users/{id}/subscriptions`             | UC-16               | 3     |
-| 6.2   | POST   | `/admin/users/{id}/subscriptions`             | UC-16 Grant         | 3     |
-| 6.2   | POST   | `/admin/subscriptions/{id}/extend`            | UC-16 Extend        | 3     |
-| 6.2   | POST   | `/admin/subscriptions/{id}/cancel`            | UC-16 Cancel        | 3     |
-| 6.3   | GET    | `/admin/transactions`                         | UC-17               | 3     |
-| 6.3   | GET    | `/admin/transactions/{orderId}`               | UC-17               | 3     |
-| 6.3   | POST   | `/admin/transactions/{orderId}/sync`          | UC-17 3a            | 3     |
-| 6.3   | POST   | `/admin/transactions/{orderId}/refund`        | UC-23               | 3     |
-| 6.4   | GET    | `/admin/articles`                             | UC-20               | 1     |
-| 6.4   | POST   | `/admin/articles`                             | UC-18               | 1     |
-| 6.4   | GET    | `/admin/articles/{id}`                        | UC-18               | 1     |
-| 6.4   | PUT    | `/admin/articles/{id}`                        | UC-18               | 1     |
-| 6.4   | DELETE | `/admin/articles/{id}`                        | UC-20               | 1     |
-| 6.4   | POST   | `/admin/articles/{id}/publish`                | UC-19               | 1     |
-| 6.4   | POST   | `/admin/articles/{id}/unpublish`              | UC-19               | 1     |
-| 6.5   | GET    | `/admin/media`                                | UC-21               | 1     |
-| 6.5   | POST   | `/admin/media`                                | UC-21               | 1     |
-| 6.5   | GET    | `/admin/media/{id}`                           | UC-21               | 1     |
-| 6.5   | PATCH  | `/admin/media/{id}`                           | UC-21               | 1     |
-| 6.5   | DELETE | `/admin/media/{id}`                           | UC-21               | 1     |
-| 6.6   | GET    | `/admin/categories`                           | UC-22               | 1     |
-| 6.6   | POST   | `/admin/categories`                           | UC-22               | 1     |
-| 6.6   | PATCH  | `/admin/categories/{id}`                      | UC-22               | 1     |
-| 6.6   | DELETE | `/admin/categories/{id}`                      | UC-22               | 1     |
-| 6.7   | GET    | `/admin/tags`                                 | UC-22               | 1     |
-| 6.7   | POST   | `/admin/tags`                                 | UC-22               | 1     |
-| 6.7   | PATCH  | `/admin/tags/{id}`                            | UC-22               | 1     |
-| 6.7   | DELETE | `/admin/tags/{id}`                            | UC-22               | 1     |
-| 6.8   | GET    | `/admin/products`                             | UC-24               | 3     |
-| 6.8   | POST   | `/admin/products`                             | UC-24               | 3     |
-| 6.8   | GET    | `/admin/products/{id}`                        | UC-24               | 3     |
-| 6.8   | PATCH  | `/admin/products/{id}`                        | UC-24               | 3     |
-| 6.8   | POST   | `/admin/products/{id}/credentials`            | UC-24               | 3     |
-| 6.8   | DELETE | `/admin/products/{id}/credentials/{clientId}` | UC-24               | 3     |
-| 6.8   | POST   | `/admin/products/{id}/plans`                  | UC-24               | 3     |
-| 6.8   | PATCH  | `/admin/plans/{id}`                           | UC-24               | 3     |
-| 6.9   | GET    | `/admin/audit-logs`                           | UC-15, UC-16, UC-23 | 3     |
+| Group | Method | Path                                          | Use case      | Phase |
+| ----- | ------ | --------------------------------------------- | ------------- | ----- |
+| 1     | GET    | `/public/articles`                            | UC-01, UC-03  | 1     |
+| 1     | GET    | `/public/articles/{slug}`                     | UC-01         | 1     |
+| 1     | GET    | `/public/categories`                          | UC-03         | 1     |
+| 1     | GET    | `/public/categories/{slug}`                   | UC-03         | 1     |
+| 1     | GET    | `/public/tags`                                | UC-03         | 1     |
+| 1     | GET    | `/public/tags/{slug}`                         | UC-03         | 1     |
+| 1     | GET    | `/public/sitemap`                             | UC-01, FR-C5  | 1     |
+| 1     | GET    | `/public/products`                            | UC-02         | 1     |
+| 1     | GET    | `/public/products/{productCode}`              | UC-02         | 1     |
+| 2     | POST   | `/me/session`                                 | UC-04         | 2     |
+| 2     | GET    | `/me`                                         | UC-05         | 2     |
+| 3     | POST   | `/checkout`                                   | UC-08, UC-12  | 3     |
+| 3     | GET    | `/me/transactions`                            | UC-11         | 3     |
+| 3     | GET    | `/me/transactions/{orderId}`                  | UC-08, UC-11  | 3     |
+| 3     | GET    | `/me/subscriptions`                           | UC-10         | 3     |
+| 4     | POST   | `/products/{productCode}/members`             | UC-06         | 2     |
+| 4     | GET    | `/products/{productCode}/entitlements/me`     | UC-07         | 2–3   |
+| 5     | POST   | `/webhooks/midtrans`                          | UC-09         | 3     |
+| 6.1   | GET    | `/admin/users`                                | UC-14         | 2     |
+| 6.1   | GET    | `/admin/users/{id}`                           | UC-14         | 2     |
+| 6.1   | GET    | `/admin/users/{id}/transactions`              | UC-14, UC-15  | 3     |
+| 6.2   | GET    | `/admin/transactions`                         | UC-15         | 3     |
+| 6.2   | GET    | `/admin/transactions/{orderId}`               | UC-15         | 3     |
+| 6.2   | POST   | `/admin/transactions/{orderId}/sync`          | UC-15         | 3     |
+| 6.3   | GET    | `/admin/articles`                             | UC-18         | 1     |
+| 6.3   | POST   | `/admin/articles`                             | UC-16         | 1     |
+| 6.3   | GET    | `/admin/articles/{id}`                        | UC-16         | 1     |
+| 6.3   | PUT    | `/admin/articles/{id}`                        | UC-16         | 1     |
+| 6.3   | DELETE | `/admin/articles/{id}`                        | UC-18         | 1     |
+| 6.3   | POST   | `/admin/articles/{id}/publish`                | UC-17         | 1     |
+| 6.3   | POST   | `/admin/articles/{id}/unpublish`              | UC-17         | 1     |
+| 6.4   | GET    | `/admin/media`                                | UC-19         | 1     |
+| 6.4   | POST   | `/admin/media`                                | UC-19         | 1     |
+| 6.4   | GET    | `/admin/media/{id}`                           | UC-19         | 1     |
+| 6.4   | PATCH  | `/admin/media/{id}`                           | UC-19         | 1     |
+| 6.4   | DELETE | `/admin/media/{id}`                           | UC-19         | 1     |
+| 6.5   | GET    | `/admin/categories`                           | UC-20         | 1     |
+| 6.5   | POST   | `/admin/categories`                           | UC-20         | 1     |
+| 6.5   | PATCH  | `/admin/categories/{id}`                      | UC-20         | 1     |
+| 6.5   | DELETE | `/admin/categories/{id}`                      | UC-20         | 1     |
+| 6.6   | GET    | `/admin/tags`                                 | UC-20         | 1     |
+| 6.6   | POST   | `/admin/tags`                                 | UC-20         | 1     |
+| 6.6   | PATCH  | `/admin/tags/{id}`                            | UC-20         | 1     |
+| 6.6   | DELETE | `/admin/tags/{id}`                            | UC-20         | 1     |
+| 6.7   | GET    | `/admin/products`                             | UC-21         | 3     |
+| 6.7   | POST   | `/admin/products`                             | UC-21         | 3     |
+| 6.7   | GET    | `/admin/products/{id}`                        | UC-21         | 3     |
+| 6.7   | PATCH  | `/admin/products/{id}`                        | UC-21         | 3     |
+| 6.7   | POST   | `/admin/products/{id}/credentials`            | UC-21         | 3     |
+| 6.7   | DELETE | `/admin/products/{id}/credentials/{clientId}` | UC-21         | 3     |
+| 6.7   | POST   | `/admin/products/{id}/plans`                  | UC-21         | 3     |
+| 6.7   | PATCH  | `/admin/plans/{id}`                           | UC-21         | 3     |
 
-Phase 1 needs the product endpoints in group 1 (`/products` page) before the admin can edit products (6.8, Phase 3). Until then, Document Doctor and its plans are seeded by a Flyway migration.
+Phase 1 needs the product endpoints in group 1 (`/products` page) before the admin can edit products (6.7, phase 3). Until then, Document Doctor, its plans, and its first client credential are seeded by a Flyway migration (ADR-004 §8).
 
 ## 5. Group 1 — Public (`/public/**`)
 
@@ -303,7 +291,7 @@ Read-only, no auth. Called mainly by Next.js on the server during ISR/SSG, so re
 }
 ```
 
-**Image** (also used by admin media and avatars)
+**Image** (also used by admin media)
 
 ```json
 {
@@ -328,7 +316,9 @@ The frontend builds `srcset` from `variants`. URLs are CloudFront URLs and never
 | GET    | `/public/articles`               | Paged list of `PUBLISHED` articles, newest first. Query: `category` (slug), `tag` (slug), `page`, `size`. Returns `Page<ArticleSummary>`.                      |
 | GET    | `/public/articles/{slug}`        | One published article: `ArticleSummary` + `body` (Markdown), `bodyHtml` (sanitized), `metaTitle`, `metaDescription`, `canonicalUrl`.                           |
 | GET    | `/public/categories`             | All categories that have at least one published article: `[{ slug, name, articleCount }]`.                                                                     |
-| GET    | `/public/tags`                   | Same for tags.                                                                                                                                                 |
+| GET    | `/public/categories/{slug}`      | One category `{ slug, name, articleCount }`. Used by `generateMetadata` on the category page (UC-03 step 3).                                                  |
+| GET    | `/public/tags`                   | Same as categories, for tags.                                                                                                                                  |
+| GET    | `/public/tags/{slug}`            | Same as one category, for a tag.                                                                                                                               |
 | GET    | `/public/sitemap`                | Every URL Next.js must put in `sitemap.xml`: `{ articles: [{ slug, updatedAt }], categories: [{ slug, updatedAt }], tags: [{ slug, updatedAt }] }`. Not paged. |
 | GET    | `/public/products`               | Active products with their **public, active** plans (see Product shape).                                                                                       |
 | GET    | `/public/products/{productCode}` | One active product with its public, active plans.                                                                                                              |
@@ -343,33 +333,43 @@ The frontend builds `srcset` from `variants`. URLs are CloudFront URLs and never
   "websiteUrl": "https://documentdoctor.<domain>",
   "plans": [
     {
+      "id": "b04f...",
+      "code": "dd-free",
+      "name": "Free",
+      "price": { "amount": 0, "currency": "IDR" },
+      "billingPeriod": null,
+      "features": { "removeAds": false }
+    },
+    {
       "id": "c1a9...",
       "code": "dd-pro-monthly",
       "name": "Pro",
       "price": { "amount": 49000, "currency": "IDR" },
       "billingPeriod": "MONTHLY",
-      "features": { "maxDocumentsPerMonth": 500, "maxFileSizeMb": 50 }
+      "features": { "removeAds": true }
     }
   ]
 }
 ```
 
+Per PRD OQ3, the only difference between Free and Pro at launch is `removeAds`. Prices here are examples.
+
 ### 5.3 Status codes and rules
 
 | Case                                                        | Response                                                                                                                                                                                        |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unknown slug, draft article, or unknown category/tag filter | `404 NOT_FOUND` → Next.js `notFound()` (UC-01 1a, UC-03 1a).                                                                                                                                    |
-| Old slug of a renamed published article (UC-18 5a)          | `301 Moved Permanently`, `Location: /v1/public/articles/{newSlug}`, body `{ "slug": "<newSlug>" }`. Next.js fetches with `redirect: "manual"` and calls `permanentRedirect("/blog/<newSlug>")`. |
+| Unknown slug, draft article, or unknown category/tag        | `404 NOT_FOUND` → Next.js `notFound()` (UC-01, UC-03).                                                                                                                                          |
+| Old slug of a renamed published article (UC-16)             | `301 Moved Permanently`, `Location: /v1/public/articles/{newSlug}`, body `{ "slug": "<newSlug>" }`. Next.js fetches with `redirect: "manual"` and calls `permanentRedirect("/blog/<newSlug>")`. |
 | Unknown or inactive product                                 | `404 NOT_FOUND`.                                                                                                                                                                                |
-| Filter matches but no articles                              | `200` with empty `items` (UC-03 1b).                                                                                                                                                            |
+| Filter matches but no articles                              | `200` with empty `items` (UC-03).                                                                                                                                                               |
 
-## 6. Group 2 — Account (`/me/**`)
+## 6. Group 2 — Account (`/me`, `/me/session`)
 
-The signed-in user's own identity and profile. Owned by `identity`. Auth `User`.
+The signed-in user's own identity and profile. Owned by `identity`. Auth `User`. The profile comes from the Google account and is **read-only** in the hub (PRD US-2.1).
 
 ### 6.1 `POST /me/session` — sign in / sign up (UC-04)
 
-Called once after Firebase sign-in. Finds or creates the user row by Firebase `uid`, and refreshes `email`, `emailVerified`, and (only if the user never set their own) `name`/avatar from the token claims. No body.
+Called once after Firebase sign-in. Finds or creates the user row by Firebase `uid`, then copies `email`, `name`, and `picture` from the token claims and sets `lastSignInAt`. No body.
 
 `200 OK` for an existing user, `201 Created` for a new one. Body is `Me`:
 
@@ -378,13 +378,9 @@ Called once after Firebase sign-in. Finds or creates the user row by Firebase `u
   "id": "9d3b...",
   "firebaseUid": "u8Kx...",
   "email": "user@example.com",
-  "emailVerified": true,
   "name": "Putu Ayu",
-  "avatar": {
-    /* Image with 96 and 256 px variants, or null */
-  },
+  "avatarUrl": "https://lh3.googleusercontent.com/a/...",
   "role": "USER",
-  "status": "ACTIVE",
   "products": [
     {
       "code": "document-doctor",
@@ -392,31 +388,28 @@ Called once after Firebase sign-in. Finds or creates the user row by Firebase `u
       "joinedAt": "2026-10-01T02:00:00Z"
     }
   ],
-  "createdAt": "2026-10-01T02:00:00Z"
+  "createdAt": "2026-10-01T02:00:00Z",
+  "lastSignInAt": "2026-10-28T02:00:00Z"
 }
 ```
 
-Errors: `401 UNAUTHENTICATED`, `403 EMAIL_NOT_VERIFIED`, `403 ACCOUNT_DISABLED`.
+Errors: `401 UNAUTHENTICATED`.
 
-Any other `/me/**` call also creates the user row if it is missing (ADR-002 OQ4), so `POST /me/session` is a convenience, not a requirement.
+Any other `/me/**` call also creates the user row if it is missing (PRD OQ4), so `POST /me/session` is a convenience, not a requirement.
 
-### 6.2 Profile endpoints (UC-05)
+### 6.2 `GET /me` — view profile (UC-05)
 
-| Method | Path         | Body                                                          | Success                    | Errors                               |
-| ------ | ------------ | ------------------------------------------------------------- | -------------------------- | ------------------------------------ |
-| GET    | `/me`        | —                                                             | `200` `Me`                 | —                                    |
-| PATCH  | `/me`        | `{ "name": "Putu Ayu" }` (1–80 chars, trimmed)                | `200` `Me`                 | `400 VALIDATION_FAILED`              |
-| PUT    | `/me/avatar` | `multipart/form-data`, field `file` (JPEG/PNG/WebP, max 5 MB) | `200` `Me`                 | `413`, `415`, `400 IMAGE_UNREADABLE` |
-| DELETE | `/me/avatar` | —                                                             | `200` `Me` (avatar `null`) | —                                    |
+| Method | Path  | Body | Success    | Errors |
+| ------ | ----- | ---- | ---------- | ------ |
+| GET    | `/me` | —    | `200` `Me` | —      |
 
-- ADR-002 UC-05 sends the avatar inside `PATCH /me` as multipart. This ADR splits it into `PUT /me/avatar` so `PATCH /me` stays plain JSON.
-- Avatars are processed like UC-21 at 96 and 256 px and stored under `avatars/<hash>/`.
-- Email is not editable here; it changes in Firebase and is synced on the next `POST /me/session` (UC-05 2a).
+- There is no `PATCH /me` and no avatar upload. Name, email, and avatar change in the Google account and are synced on the next `POST /me/session`.
+- `avatarUrl` is the Google profile picture URL, used as is (not copied to S3).
 - Sign out needs no API call (UC-04).
 
-## 7. Group 3 — Billing (`/checkout`, `/me/transactions/**`, `/me/subscriptions/**`)
+## 7. Group 3 — Billing (`/checkout`, `/me/transactions/**`, `/me/subscriptions`)
 
-Purchases, payment status, and subscription self-service for the signed-in user. Owned by `payment` and `subscription`. Auth `User`.
+Purchases, payment status, and subscription status for the signed-in user. Owned by `payment` and `subscription`. Auth `User`. All purchases are **one-time payments** (PRD G5); nothing is charged automatically.
 
 ### 7.1 Shared shapes
 
@@ -449,7 +442,7 @@ Purchases, payment status, and subscription self-service for the signed-in user.
 
 - `status`: `PENDING` | `PAID` | `FAILED` | `REFUNDED` (ADR-002 §6.1).
 - `snap` is present only while `status = PENDING` and not expired; otherwise `null`.
-- `paymentMethod` is filled from Midtrans once known (`BANK_TRANSFER`, `QRIS`, `GOPAY`, `SHOPEEPAY`, `CREDIT_CARD`, `OTHER`), else `null`.
+- `paymentMethod` is filled from Midtrans once known (`QRIS`, `BANK_TRANSFER`, `GOPAY`, `SHOPEEPAY`, `CREDIT_CARD`, `OTHER`), else `null`.
 
 **Subscription**
 
@@ -468,16 +461,15 @@ Purchases, payment status, and subscription self-service for the signed-in user.
   "status": "ACTIVE",
   "startDate": "2026-10-28T03:20:00Z",
   "endDate": "2026-11-28T03:20:00Z",
-  "cancelAtPeriodEnd": false,
   "entitled": true
 }
 ```
 
-- `status`: `ACTIVE` | `EXPIRED` | `CANCELLED` (ADR-002 §6.2).
+- `status`: `ACTIVE` | `EXPIRED` | `CANCELLED` (ADR-002 §6.2). `CANCELLED` only happens after a refund.
 - `entitled` = `status = ACTIVE` and `now < endDate`, computed by the server so the frontend never re-implements the rule.
-- `plan.active = false` tells the frontend the plan is no longer sold, so "Renew" must ask for another plan (UC-10 1a).
+- `plan.active = false` tells the frontend the plan is no longer sold, so "Renew" must ask for another plan (UC-12).
 
-### 7.2 `POST /checkout` — start a purchase or renewal (UC-06, UC-10)
+### 7.2 `POST /checkout` — start a purchase or renewal (UC-08, UC-12)
 
 Request:
 
@@ -492,46 +484,42 @@ Content-Type: application/json
 
 Responses:
 
-| Status                          | When                                                                                              | Body                                   |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `201 Created`                   | New `PENDING` transaction created and Snap token obtained.                                        | `Transaction` (with `snap`)            |
-| `200 OK`                        | Reused an unexpired `PENDING` transaction for the same plan (UC-06 3b) or same `Idempotency-Key`. | `Transaction` (with `snap`)            |
-| `400 VALIDATION_FAILED`         | `planId` missing.                                                                                 | Problem                                |
-| `404 NOT_FOUND`                 | Plan does not exist.                                                                              | Problem                                |
-| `409 PLAN_NOT_PURCHASABLE`      | Plan inactive, product inactive, or price is 0 (free plans skip checkout, ADR-002 OQ3).           | Problem                                |
-| `409 PLAN_CHANGE_NOT_SUPPORTED` | User has an entitled subscription to the same product on a **different** plan (UC-06 3a).         | Problem                                |
-| `502 UPSTREAM_ERROR`            | Midtrans Snap call failed; the transaction is saved as `FAILED` (UC-06 5a).                       | Problem with `orderId` extension field |
+| Status                          | When                                                                                          | Body                                   |
+| ------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `201 Created`                   | New `PENDING` transaction created and Snap token obtained.                                    | `Transaction` (with `snap`)            |
+| `200 OK`                        | Reused an unexpired `PENDING` transaction for the same plan, or same `Idempotency-Key`.       | `Transaction` (with `snap`)            |
+| `400 VALIDATION_FAILED`         | `planId` missing.                                                                             | Problem                                |
+| `404 NOT_FOUND`                 | Plan does not exist.                                                                          | Problem                                |
+| `409 PLAN_NOT_PURCHASABLE`      | Plan inactive, product inactive, or price is 0 (free plans are never bought, ADR-002 R4).     | Problem                                |
+| `409 PLAN_CHANGE_NOT_SUPPORTED` | User has an entitled subscription to the same product on a **different** plan (UC-08).        | Problem                                |
+| `502 UPSTREAM_ERROR`            | Midtrans Snap call failed; the transaction is saved as `FAILED` (UC-08).                      | Problem with `orderId` extension field |
 
-Buying the **same** plan while entitled is a renewal (UC-10) and is allowed; UC-07 extends `endDate` from `max(now, endDate)`.
+Buying the **same** plan while entitled is a renewal (UC-12) and is allowed; UC-09 extends `endDate` from `max(now, endDate)`.
 
 The frontend opens Snap with `snap.token`, then polls `GET /me/transactions/{orderId}` (§7.3). The browser callback from Snap **never** grants access (FR-P2).
 
 ### 7.3 Transaction and subscription endpoints
 
-| Method | Path                            | Description                                                                                                                                 | Success                                                              | Errors                                     |
-| ------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------ |
-| GET    | `/me/transactions`              | Own transactions, newest first. Query: `status`, `page`, `size`. `sort`: `createdAt`. (UC-09)                                               | `200` `Page<Transaction>`                                            | —                                          |
-| GET    | `/me/transactions/{orderId}`    | One own transaction. Used for polling after Snap closes (UC-06 step 7): poll every 3 s for up to 2 min, then show the pending instructions. | `200` `Transaction`                                                  | `404` if not found **or not the caller's** |
-| GET    | `/me/subscriptions`             | Own subscriptions, one per product, current first. (UC-08)                                                                                  | `200` `{ "items": [Subscription] }` (not paged; one row per product) | —                                          |
-| POST   | `/me/subscriptions/{id}/cancel` | Set `cancelAtPeriodEnd = true`; status stays `ACTIVE`. No body. (UC-11)                                                                     | `200` `Subscription`                                                 | `404`, `409 SUBSCRIPTION_NOT_ACTIVE`       |
-| POST   | `/me/subscriptions/{id}/resume` | Set `cancelAtPeriodEnd = false`. No body. (UC-11 1a)                                                                                        | `200` `Subscription`                                                 | `404`, `409 SUBSCRIPTION_NOT_ACTIVE`       |
+| Method | Path                         | Description                                                                                                                                  | Success                                                              | Errors                                     |
+| ------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------ |
+| GET    | `/me/transactions`           | Own transactions, newest first. Query: `status`, `page`, `size`. `sort`: `createdAt`. (UC-11)                                                | `200` `Page<Transaction>`                                            | —                                          |
+| GET    | `/me/transactions/{orderId}` | One own transaction. Used for polling after Snap closes (UC-08 step 7): poll every 3 s for up to 2 min, then show the pending instructions. | `200` `Transaction`                                                  | `404` if not found **or not the caller's** |
+| GET    | `/me/subscriptions`          | Own subscriptions, one per product, entitled first. (UC-10)                                                                                  | `200` `{ "items": [Subscription] }` (not paged; one row per product) | —                                          |
 
-`cancel` and `resume` are idempotent: cancelling an already-cancelling subscription returns `200` with no change.
-
-ADR-002 UC-06 uses `GET /transactions/{orderId}`. This ADR moves it under `/me/transactions/{orderId}` so every user-owned resource is under `/me`.
+There are no cancel or resume endpoints: with one-time payments a subscription simply ends at `endDate` if it is not renewed (ADR-002 §4).
 
 ## 8. Group 4 — Connected Products (`/products/{productCode}/**`)
 
-The contract for Document Doctor and every future product (resolves ADR-002 OQ2 and the ADR-001 §9 follow-up). Owned by `identity` (membership) and `subscription` (entitlement). Auth `Product`.
+The contract for Document Doctor and every future product (PRD OQ2, FR-U1–FR-U3). Owned by `identity` (membership) and `subscription` (entitlement). Auth `Product`.
 
 ### 8.1 Client credentials
 
-- Each product has one or more client credentials created by the admin (§10.8). A credential is a pair:
-  - `clientId`: public, for example `dd_live_4F7K2M9Q`,
-  - `clientSecret`: 40+ random characters, shown **once** on creation; the hub stores only an Argon2id hash.
-- A credential belongs to exactly one product. A request whose `X-Client-Id` belongs to a different product than `{productCode}` → `403 FORBIDDEN`.
-- Two credentials may be active at once so a product can rotate its secret without downtime: create new → deploy product with the new one → revoke old.
-- Credentials are **server-side only**. The product's frontend never holds `clientSecret`; the product's backend forwards the user's Firebase ID token to the hub.
+| Rule | Description                                                                                                                                  |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1   | Each product has one or two client credentials created by the admin (§10.7). `clientId` is public (for example `dd_live_4F7K2M9Q`); `clientSecret` is 40+ random characters, shown **once**. The hub stores only an Argon2id hash. |
+| C2   | A credential belongs to exactly one product. A request whose `X-Client-Id` belongs to a different product than `{productCode}` → `403 FORBIDDEN`. |
+| C3   | Two credentials may be active at once so a product can rotate its secret without downtime: create new → deploy product with the new one → revoke old. |
+| C4   | Credentials are **server-side only**. The product's frontend never holds `clientSecret`; the product's backend forwards the user's Firebase ID token to the hub. |
 
 ### 8.2 Request headers
 
@@ -541,20 +529,20 @@ X-Client-Id: dd_live_4F7K2M9Q
 X-Client-Secret: <secret>
 ```
 
-Check order: client credential (→ `401 INVALID_CLIENT`), product active (→ `403 PRODUCT_INACTIVE`), user token (→ `401 UNAUTHENTICATED`), user status (→ `403 ACCOUNT_DISABLED`).
+Check order: client credential (→ `401 INVALID_CLIENT`), product active (→ `403 PRODUCT_INACTIVE`), user token (→ `401 UNAUTHENTICATED`).
 
-Because both apps use the same Firebase project (ADR-001 §5.7), the product's own backend can verify the same token itself; it calls the hub only for identity sync and entitlements.
+Because both apps use the same Firebase project (ADR-001 §5.7), the product's own backend can verify the same token itself; it calls the hub only for membership and entitlements.
 
-### 8.3 `POST /products/{productCode}/members` — join a product (UC-12)
+### 8.3 `POST /products/{productCode}/members` — join a product (UC-06)
 
-Called by the product backend the first time a user signs in to the product (and safe to call on every sign-in). No body.
+Called by the product backend when a user signs in to the product (safe to call on every sign-in). No body.
 
-Behaviour: find or create the user (as `POST /me/session`), create the `user_product` membership if missing, then return the profile and current entitlement.
+Behaviour: find or create the user (as `POST /me/session`), create the membership if missing, then return the profile and current entitlement.
 
-| Status        | When                                   |
-| ------------- | -------------------------------------- |
-| `201 Created` | Membership created now.                |
-| `200 OK`      | Membership already existed (UC-12 4a). |
+| Status        | When                          |
+| ------------- | ----------------------------- |
+| `201 Created` | Membership created now.       |
+| `200 OK`      | Membership already existed.   |
 
 Body:
 
@@ -565,7 +553,7 @@ Body:
     "firebaseUid": "u8Kx...",
     "email": "user@example.com",
     "name": "Putu Ayu",
-    "avatarUrl": "https://cdn.<domain>/avatars/ef56/256.webp"
+    "avatarUrl": "https://lh3.googleusercontent.com/a/..."
   },
   "membership": {
     "productCode": "document-doctor",
@@ -577,13 +565,13 @@ Body:
 }
 ```
 
-The product should key its own user records by `user.id` (hub ID) or `firebaseUid`; both are stable. Email is not stable (UC-05 2a).
+The product should key its own user records by `user.id` (hub ID) or `firebaseUid`; both are stable. Email is not stable (it follows the Google account).
 
-### 8.4 `GET /products/{productCode}/entitlements/me` — check entitlement (UC-13)
+### 8.4 `GET /products/{productCode}/entitlements/me` — check entitlement (UC-07)
 
 Returns whether the user may use paid features right now.
 
-**Entitlement**
+**Entitlement** (entitled):
 
 ```json
 {
@@ -597,8 +585,7 @@ Returns whether the user may use paid features right now.
     "billingPeriod": "MONTHLY"
   },
   "endDate": "2026-11-28T03:20:00Z",
-  "cancelAtPeriodEnd": false,
-  "features": { "maxDocumentsPerMonth": 500, "maxFileSizeMb": 50 },
+  "features": { "removeAds": true },
   "checkedAt": "2026-10-28T04:00:00Z"
 }
 ```
@@ -613,18 +600,19 @@ Not entitled (no subscription, expired, or cancelled):
   "status": "EXPIRED",
   "plan": { "code": "dd-free", "name": "Free", "billingPeriod": null },
   "endDate": "2026-09-28T03:20:00Z",
-  "cancelAtPeriodEnd": false,
-  "features": { "maxDocumentsPerMonth": 10, "maxFileSizeMb": 5 },
+  "features": { "removeAds": false },
   "checkedAt": "2026-10-28T04:00:00Z"
 }
 ```
 
-- `status` is `null` when the user never had a subscription.
-- When not entitled, `plan` and `features` are the product's **free plan** (a public, active plan with price 0) if one exists; otherwise both are `null` and the product must deny paid features (UC-13 2a).
-- `features` is the plan's JSONB object passed through unchanged. Its keys are defined by each product; the hub does not interpret them.
-- A user who has not joined the product still gets a valid response (`entitled: false`); joining is not a precondition for asking.
+| Rule | Description                                                                                                                                     |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| N1   | `status` and `endDate` are `null` when the user never had a subscription.                                                                      |
+| N2   | When not entitled, `plan` and `features` are the product's **free plan** (a public, active plan with price 0) if one exists; otherwise both are `null` and the product must deny paid features. |
+| N3   | `features` is the plan's JSONB object passed through unchanged. Its keys are defined by each product; the hub does not interpret them.        |
+| N4   | A user who has not joined the product still gets a valid response (`entitled: false`); joining is not a precondition for asking.              |
 
-Errors: `401 INVALID_CLIENT`, `401 UNAUTHENTICATED`, `403 FORBIDDEN`, `403 PRODUCT_INACTIVE`, `403 ACCOUNT_DISABLED`, `404` unknown `productCode`.
+Errors: `401 INVALID_CLIENT`, `401 UNAUTHENTICATED`, `403 FORBIDDEN`, `403 PRODUCT_INACTIVE`, `404` unknown `productCode`.
 
 ### 8.5 Caching rules for products
 
@@ -632,15 +620,14 @@ Errors: `401 INVALID_CLIENT`, `401 UNAUTHENTICATED`, `403 FORBIDDEN`, `403 PRODU
 - A product **may** cache the entitlement per user for up to 5 minutes.
 - A product **must** drop its cache and re-check when:
   - the user returns from the hub's checkout or subscription pages (the hub links back with `?entitlement=refresh`),
-  - the cached `endDate` is in the past,
-  - the product receives `403 ACCOUNT_DISABLED` for that user.
-- Products must not store their own copy of the subscription (UC-13 rule). Push notifications from the hub to products (webhooks) are out of scope; if needed, a later ADR adds them.
+  - the cached `endDate` is in the past.
+- Products must not store their own copy of the subscription (ADR-002 rule E2). Push notifications from the hub to products (webhooks) are out of scope; if needed, a later ADR adds them.
 
 ## 9. Group 5 — Webhooks (`/webhooks/**`)
 
 Owned by `payment`, which calls `subscription`. Auth `Midtrans`.
 
-### 9.1 `POST /webhooks/midtrans` — payment notification (UC-07)
+### 9.1 `POST /webhooks/midtrans` — payment notification (UC-09)
 
 Configured as the **Payment Notification URL** in the Midtrans dashboard: `https://api.<domain>/v1/webhooks/midtrans`.
 
@@ -659,7 +646,7 @@ Request (fields used by the hub; Midtrans sends more):
 }
 ```
 
-Processing follows ADR-002 UC-07 exactly: verify signature → fetch Midtrans Status API → lock row → map status → check amount → update → create/extend subscription.
+Processing follows ADR-002 UC-09 exactly: verify signature → fetch Midtrans Status API → lock row → map status → check amount → update → create/extend the subscription on `PAID`, or cancel it on `REFUNDED`.
 
 | Status          | When                                                                                                        | Midtrans behaviour                           |
 | --------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
@@ -669,47 +656,50 @@ Processing follows ADR-002 UC-07 exactly: verify signature → fetch Midtrans St
 
 Response body is always `{ "received": true }` (Midtrans ignores it). This endpoint does **not** use Problem Details, and the field names are Midtrans's `snake_case`, not the hub's `camelCase`.
 
+Refunds are made in the Midtrans dashboard (PRD OQ6). The resulting `refund` / `partial_refund` notification is the only way a transaction becomes `REFUNDED`.
+
 ## 10. Group 6 — Admin (`/admin/**`)
 
-The admin dashboard. Auth `Admin`. Every state-changing admin endpoint writes an audit record (admin, target, action, old and new values, reason, timestamp) in the same database transaction.
+The admin dashboard. Auth `Admin`. Admin screens for users and payments are **read-only** (PRD A-3.1, A-3.2); the admin changes only content, media, and products.
 
-### 10.1 Users (UC-15)
+### 10.1 Users (UC-14)
 
-| Method | Path                             | Description                                                                                                                                                  | Success                        | Errors                                                                                      |
-| ------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------- |
-| GET    | `/admin/users`                   | Query: `q` (name or email, contains, case-insensitive), `status` (`ACTIVE`/`INACTIVE`), `productCode`, `page`, `size`. `sort`: `createdAt`, `name`, `email`. | `200` `Page<AdminUserSummary>` | —                                                                                           |
-| GET    | `/admin/users/{id}`              | Profile, joined products, role, status, last sign-in.                                                                                                        | `200` `AdminUser`              | `404`                                                                                       |
-| POST   | `/admin/users/{id}/deactivate`   | Body `{ "reason": "..." }` (required). Sets `INACTIVE` and disables the Firebase user.                                                                       | `200` `AdminUser`              | `404`, `409 CANNOT_DEACTIVATE_SELF`, `502 UPSTREAM_ERROR` (Firebase failed, DB rolled back) |
-| POST   | `/admin/users/{id}/reactivate`   | Body `{ "reason": "..." }`. Reverse of deactivate.                                                                                                           | `200` `AdminUser`              | `404`, `502 UPSTREAM_ERROR`                                                                 |
-| GET    | `/admin/users/{id}/transactions` | Same as `GET /admin/transactions?userId={id}`.                                                                                                               | `200` `Page<AdminTransaction>` | `404`                                                                                       |
+| Method | Path                             | Description                                                                                                                                              | Success                        | Errors |
+| ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------ |
+| GET    | `/admin/users`                   | Query: `q` (name or email, contains, case-insensitive), `productCode`, `page`, `size`. `sort`: `createdAt`, `name`, `email`, `lastSignInAt`, `paidAmount`. | `200` `Page<AdminUserSummary>` | —      |
+| GET    | `/admin/users/{id}`              | Profile, joined products, subscriptions, transaction summary.                                                                                            | `200` `AdminUser`              | `404`  |
+| GET    | `/admin/users/{id}/transactions` | Same as `GET /admin/transactions?userId={id}`.                                                                                                           | `200` `Page<AdminTransaction>` | `404`  |
 
-Deactivate and reactivate are idempotent (`200`, no audit record if nothing changed).
+**AdminUserSummary**
 
-**AdminUserSummary**: `{ id, email, name, status, role, products: [{ code, name }], createdAt }`. **AdminUser** adds `firebaseUid`, `emailVerified`, `avatar`, `products[].joinedAt`, `lastSignInAt`.
+```json
+{
+  "id": "9d3b...",
+  "email": "user@example.com",
+  "name": "Putu Ayu",
+  "role": "USER",
+  "products": [{ "code": "document-doctor", "name": "Document Doctor" }],
+  "paymentSummary": {
+    "paidCount": 3,
+    "paidAmount": { "amount": 147000, "currency": "IDR" },
+    "lastPaidAt": "2026-10-28T03:20:00Z"
+  },
+  "createdAt": "2026-10-01T02:00:00Z",
+  "lastSignInAt": "2026-10-28T02:00:00Z"
+}
+```
 
-### 10.2 User subscriptions (UC-16)
+**AdminUser** = `AdminUserSummary` + `{ firebaseUid, avatarUrl, products[].joinedAt, subscriptions: [Subscription] }`.
 
-All three actions need a `reason` (1–500 chars).
+### 10.2 Transactions (UC-15)
 
-| Method | Path                               | Body                                                                                                                                       | Success                                                                            | Errors                                                                                     |
-| ------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| GET    | `/admin/users/{id}/subscriptions`  | —                                                                                                                                          | `200` `{ items: [AdminSubscription] }` (includes ended rows and linked `orderId`s) | `404`                                                                                      |
-| POST   | `/admin/users/{id}/subscriptions`  | **Grant:** `{ "planId": "...", "endDate": "2027-01-01T00:00:00Z", "reason": "Beta tester" }`                                               | `201` `AdminSubscription`                                                          | `404`, `409 SUBSCRIPTION_EXISTS` (use Extend, UC-16 2a), `400` `endDate` not in the future |
-| POST   | `/admin/subscriptions/{id}/extend` | `{ "endDate": "2027-02-01T00:00:00Z", "reason": "..." }` — new date must be later than the current one. Sets `ACTIVE` if it was `EXPIRED`. | `200` `AdminSubscription`                                                          | `404`, `400` date not later, `409 SUBSCRIPTION_CANCELLED`                                  |
-| POST   | `/admin/subscriptions/{id}/cancel` | `{ "reason": "..." }` — **Cancel now**: `CANCELLED`, `endDate = now`.                                                                      | `200` `AdminSubscription`                                                          | `404`, `409 SUBSCRIPTION_NOT_ACTIVE`                                                       |
+| Method | Path                                 | Description                                                                                                                                                                                                    | Success                                                | Errors                      |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------- |
+| GET    | `/admin/transactions`                | Query: `userId`, `productCode`, `status` (repeatable), `from`, `to` (ISO dates, on `createdAt`), `q` (`orderId` or email), `needsReview` (bool), `page`, `size`. `sort`: `createdAt` (default desc), `amount`. | `200` `Page<AdminTransaction>` + `summary`             | —                           |
+| GET    | `/admin/transactions/{orderId}`      | Full detail incl. status history and linked subscription.                                                                                                                                                      | `200` `AdminTransactionDetail`                         | `404`                       |
+| POST   | `/admin/transactions/{orderId}/sync` | Fetch Midtrans Status API and apply UC-09 steps 3–8. No body.                                                                                                                                                  | `200` `AdminTransactionDetail` (`changed: true/false`) | `404`, `502 UPSTREAM_ERROR` |
 
-**AdminSubscription** = `Subscription` + `{ userId, grantedBy: "PAYMENT" | "ADMIN", transactions: [{ orderId, status, price, paidAt }] }`.
-
-### 10.3 Transactions (UC-17, UC-23)
-
-| Method | Path                                   | Description                                                                                                                                                                                                    | Success                                                | Errors                                                          |
-| ------ | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
-| GET    | `/admin/transactions`                  | Query: `userId`, `productCode`, `status` (repeatable), `from`, `to` (ISO dates, on `createdAt`), `q` (`orderId` or email), `needsReview` (bool), `page`, `size`. `sort`: `createdAt` (default desc), `amount`. | `200` `Page<AdminTransaction>` + `summary`             | —                                                               |
-| GET    | `/admin/transactions/{orderId}`        | Full detail incl. status history and linked subscription.                                                                                                                                                      | `200` `AdminTransactionDetail`                         | `404`                                                           |
-| POST   | `/admin/transactions/{orderId}/sync`   | Fetch Midtrans Status API and apply UC-07 steps 3–7. No body.                                                                                                                                                  | `200` `AdminTransactionDetail` (`changed: true/false`) | `404`, `502 UPSTREAM_ERROR`                                     |
-| POST   | `/admin/transactions/{orderId}/refund` | Record a refund done in the Midtrans dashboard. Body `{ "reason": "...", "cancelSubscription": true }`.                                                                                                        | `200` `AdminTransactionDetail`                         | `404`, `409 TRANSACTION_NOT_REFUNDABLE` (not `PAID`/`REFUNDED`) |
-
-List response adds a summary for the whole filtered set (UC-17 step 2):
+List response adds a summary for the whole filtered set (UC-15 step 2):
 
 ```json
 {
@@ -728,19 +718,19 @@ List response adds a summary for the whole filtered set (UC-17 step 2):
 }
 ```
 
-**AdminTransaction** = `Transaction` (without `snap`) + `{ user: { id, email, name }, gatewayTransactionId, needsReview }`. **AdminTransactionDetail** adds `statusHistory: [{ status, source: "WEBHOOK" | "SYNC" | "ADMIN" | "CHECKOUT", at, note }]`, `subscription` (or `null`), and `refund: { reason, recordedBy, recordedAt }` (or `null`).
+**AdminTransaction** = `Transaction` (without `snap`) + `{ user: { id, email, name }, gatewayTransactionId, needsReview }`. **AdminTransactionDetail** adds `statusHistory: [{ status, source: "CHECKOUT" | "WEBHOOK" | "SYNC", at, note }]` and `subscription` (or `null`).
 
-Refund on an already `REFUNDED` transaction (UC-23 2a) is allowed: it only applies `cancelSubscription` and records the reason.
+There is no refund endpoint (PRD OQ6).
 
-### 10.4 Articles (UC-18, UC-19, UC-20)
+### 10.3 Articles (UC-16, UC-17, UC-18)
 
 | Method | Path                             | Description                                                                                                                                                  | Success                                 | Errors                                                                |
 | ------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | --------------------------------------------------------------------- |
 | GET    | `/admin/articles`                | Query: `q` (title), `status` (`DRAFT`/`PUBLISHED`), `category` (id), `tag` (id), `page`, `size`. `sort`: `updatedAt` (default desc), `publishedAt`, `title`. | `200` `Page<AdminArticleSummary>`       | —                                                                     |
 | POST   | `/admin/articles`                | Create; always saved as `DRAFT`. Body `ArticleInput`.                                                                                                        | `201` `AdminArticle`, `Location` header | `400`, `409 SLUG_TAKEN`                                               |
 | GET    | `/admin/articles/{id}`           | Full article for the editor.                                                                                                                                 | `200` `AdminArticle`                    | `404`                                                                 |
-| PUT    | `/admin/articles/{id}`           | Replace editable fields. If published, triggers revalidation (§11.1); a slug change on a published article keeps the old slug as a redirect (UC-18 5a).      | `200` `AdminArticle` (+ `revalidation`) | `400`, `404`, `409 SLUG_TAKEN`, `409 VERSION_CONFLICT`                |
-| DELETE | `/admin/articles/{id}`           | Unpublish + revalidate if needed, then delete (UC-20 step 3).                                                                                                | `204`                                   | `404`                                                                 |
+| PUT    | `/admin/articles/{id}`           | Replace editable fields. If published, triggers revalidation (§11.1); a slug change on a published article keeps the old slug as a redirect (UC-16).         | `200` `AdminArticle` (+ `revalidation`) | `400`, `404`, `409 SLUG_TAKEN`, `409 VERSION_CONFLICT`                |
+| DELETE | `/admin/articles/{id}`           | Unpublish + revalidate if needed, then delete (UC-18 step 3).                                                                                                | `204`                                   | `404`                                                                 |
 | POST   | `/admin/articles/{id}/publish`   | `DRAFT → PUBLISHED`; sets `publishedAt` on first publish; revalidates.                                                                                       | `200` `AdminArticle` (+ `revalidation`) | `404`, `422 ARTICLE_INCOMPLETE` (missing title/slug/excerpt/category) |
 | POST   | `/admin/articles/{id}/unpublish` | `PUBLISHED → DRAFT`; revalidates.                                                                                                                            | `200` `AdminArticle` (+ `revalidation`) | `404`                                                                 |
 
@@ -763,49 +753,51 @@ Publish/unpublish are idempotent (`200`, no revalidation if nothing changed).
 }
 ```
 
-- `slug` is optional on create (generated from `title`); lowercase `a-z0-9-`, max 120 chars.
-- `version` is the optimistic-lock version returned by the last `GET`; a stale value → `409 VERSION_CONFLICT`, so two browser tabs cannot overwrite each other. Not required on create.
-- Drafts may be saved with missing `excerpt`/`categoryId`; they are required only to publish.
+| Field     | Rule                                                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `slug`    | Optional on create (generated from `title`); lowercase `a-z0-9-`, max 120 chars.                                               |
+| `version` | Optimistic-lock version returned by the last `GET`; a stale value → `409 VERSION_CONFLICT`, so two browser tabs cannot overwrite each other. Not required on create. |
+| `excerpt`, `categoryId` | May be empty on a draft; required only to publish.                                                               |
 
 **AdminArticle** = `ArticleInput` fields + `{ id, status, coverImage, category, tags, publishedAt, createdAt, updatedAt, previousSlugs: [] }`.
 
-**Revalidation result** (on responses that changed the public site): `"revalidation": { "status": "OK" | "PENDING_RETRY", "paths": ["/blog/deploy-spring-boot-on-graviton", "/blog", "/sitemap.xml"] }`. `PENDING_RETRY` shows the warning from UC-19 3a; the save itself succeeded.
+**Revalidation result** (on responses that changed the public site): `"revalidation": { "status": "OK" | "PENDING_RETRY", "paths": ["/blog/deploy-spring-boot-on-graviton", "/blog", "/sitemap.xml"] }`. `PENDING_RETRY` shows the warning from UC-17; the save itself succeeded.
 
-### 10.5 Media (UC-21)
+### 10.4 Media (UC-19)
 
-| Method | Path                | Description                                                                                              | Success                                                                                  | Errors                                                                |
-| ------ | ------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| GET    | `/admin/media`      | Query: `q` (alt text or file name), `unused` (bool), `page`, `size`. `sort`: `createdAt` (default desc). | `200` `Page<AdminImage>`                                                                 | —                                                                     |
-| POST   | `/admin/media`      | `multipart/form-data`: `file` (JPEG/PNG/WebP, max 10 MB), `alt` (required, 1–250 chars).                 | `201` `AdminImage` new; `200` `AdminImage` if the content hash already exists (UC-21 3a) | `400`, `413`, `415`, `400 IMAGE_UNREADABLE`                           |
-| GET    | `/admin/media/{id}` | Image with usage.                                                                                        | `200` `AdminImage`                                                                       | `404`                                                                 |
-| PATCH  | `/admin/media/{id}` | `{ "alt": "..." }`                                                                                       | `200` `AdminImage`                                                                       | `400`, `404`                                                          |
-| DELETE | `/admin/media/{id}` | Delete record and S3 objects.                                                                            | `204`                                                                                    | `404`, `409 IMAGE_IN_USE` with `articles: [{ id, title }]` (UC-21 5a) |
+| Method | Path                | Description                                                                                              | Success                                                                                | Errors                                                              |
+| ------ | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| GET    | `/admin/media`      | Query: `q` (alt text or file name), `unused` (bool), `page`, `size`. `sort`: `createdAt` (default desc). | `200` `Page<AdminImage>`                                                               | —                                                                   |
+| POST   | `/admin/media`      | `multipart/form-data`: `file` (JPEG/PNG/WebP, max 10 MB), `alt` (required, 1–250 chars).                 | `201` `AdminImage` new; `200` `AdminImage` if the content hash already exists (UC-19) | `400`, `413`, `415`, `400 IMAGE_UNREADABLE`                         |
+| GET    | `/admin/media/{id}` | Image with usage.                                                                                        | `200` `AdminImage`                                                                     | `404`                                                               |
+| PATCH  | `/admin/media/{id}` | `{ "alt": "..." }`                                                                                       | `200` `AdminImage`                                                                     | `400`, `404`                                                        |
+| DELETE | `/admin/media/{id}` | Delete record and S3 objects.                                                                            | `204`                                                                                  | `404`, `409 IMAGE_IN_USE` with `articles: [{ id, title }]` (UC-19) |
 
 **AdminImage** = `Image` (§5.1) + `{ fileName, contentHash, sizeBytes, usedBy: [{ id, title, usage: "COVER" | "BODY" }], createdAt }`.
 
-Nginx allows `client_max_body_size 11m` on `/v1/admin/media` and `6m` on `/v1/me/avatar`; the API checks again.
+Nginx allows `client_max_body_size 11m` on `/v1/admin/media`; the API checks again.
 
-### 10.6 Categories (UC-22)
+### 10.5 Categories (UC-20)
 
-| Method | Path                     | Body / query                                             | Success                                                               | Errors                                                      |
-| ------ | ------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------- |
-| GET    | `/admin/categories`      | — (not paged)                                            | `200` `{ items: [{ id, name, slug, articleCount, publishedCount }] }` | —                                                           |
-| POST   | `/admin/categories`      | `{ "name": "DevOps", "slug": "devops" }` (slug optional) | `201` Category                                                        | `400`, `409 NAME_TAKEN`, `409 SLUG_TAKEN`                   |
-| PATCH  | `/admin/categories/{id}` | `{ "name"?, "slug"? }` — revalidates pages that use it   | `200` Category (+ `revalidation`)                                     | `400`, `404`, `409`                                         |
-| DELETE | `/admin/categories/{id}` | —                                                        | `204`                                                                 | `404`, `409 CATEGORY_IN_USE` with `articleCount` (UC-22 3a) |
+| Method | Path                     | Body / query                                             | Success                                                               | Errors                                                  |
+| ------ | ------------------------ | -------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------- |
+| GET    | `/admin/categories`      | — (not paged)                                            | `200` `{ items: [{ id, name, slug, articleCount, publishedCount }] }` | —                                                       |
+| POST   | `/admin/categories`      | `{ "name": "DevOps", "slug": "devops" }` (slug optional) | `201` Category                                                        | `400`, `409 NAME_TAKEN`, `409 SLUG_TAKEN`               |
+| PATCH  | `/admin/categories/{id}` | `{ "name"?, "slug"? }` — revalidates pages that use it   | `200` Category (+ `revalidation`)                                     | `400`, `404`, `409`                                     |
+| DELETE | `/admin/categories/{id}` | —                                                        | `204`                                                                 | `404`, `409 CATEGORY_IN_USE` with `articleCount` (UC-20) |
 
-### 10.7 Tags (UC-22)
+### 10.6 Tags (UC-20)
 
 Same shape as categories, with one difference:
 
-| Method | Path               | Notes                                                                                                                                                     |
-| ------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/admin/tags`      | `{ items: [{ id, name, slug, articleCount, publishedCount }] }`                                                                                           |
-| POST   | `/admin/tags`      | `409 NAME_TAKEN` / `409 SLUG_TAKEN`                                                                                                                       |
-| PATCH  | `/admin/tags/{id}` | Revalidates pages that use it.                                                                                                                            |
-| DELETE | `/admin/tags/{id}` | Removes the tag from all articles and revalidates them (UC-22 3b). The frontend shows the confirmation using `articleCount`; the API does not ask. `204`. |
+| Method | Path               | Notes                                                                                                                                                  |
+| ------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/admin/tags`      | `{ items: [{ id, name, slug, articleCount, publishedCount }] }`                                                                                        |
+| POST   | `/admin/tags`      | `409 NAME_TAKEN` / `409 SLUG_TAKEN`                                                                                                                    |
+| PATCH  | `/admin/tags/{id}` | Revalidates pages that use it.                                                                                                                         |
+| DELETE | `/admin/tags/{id}` | Removes the tag from all articles and revalidates them (UC-20). The frontend shows the confirmation using `articleCount`; the API does not ask. `204`. |
 
-### 10.8 Products & plans (UC-24)
+### 10.7 Products & plans (UC-21)
 
 | Method | Path                                          | Description                                                                                                                                                  | Success                                                                   | Errors                                                |
 | ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------- |
@@ -826,31 +818,25 @@ Same shape as categories, with one difference:
   "name": "Pro",
   "price": { "amount": 49000, "currency": "IDR" },
   "billingPeriod": "MONTHLY",
-  "features": { "maxDocumentsPerMonth": 500, "maxFileSizeMb": 50 },
+  "features": { "removeAds": true },
   "public": true,
   "active": true
 }
 ```
 
-- `billingPeriod`: `MONTHLY` | `YEARLY`, or `null` for a free plan (`price.amount = 0`).
-- `features` must be a JSON object (max 8 KB); its keys are owned by the product.
-- Plans are never deleted; deactivate them instead (UC-24 rules).
+| Field           | Rule                                                                              |
+| --------------- | --------------------------------------------------------------------------------- |
+| `billingPeriod` | `MONTHLY` \| `YEARLY` for a paid plan; `null` for a free plan (`price.amount = 0`). It is the length of access one payment buys, not a recurring charge. |
+| `features`      | Must be a JSON object (max 8 KB); its keys are owned by the product.             |
+| —               | Plans are never deleted; deactivate them instead (ADR-002 rule P1).              |
 
 **AdminProduct** = `{ id, code, name, description, websiteUrl, active, plans: [AdminPlan], credentials: [{ clientId, createdAt, lastUsedAt }], memberCount, createdAt }`. **AdminPlan** = `PlanInput` + `{ id, sold: boolean, activeSubscriptions, createdAt }`.
-
-### 10.9 Audit log
-
-| Method | Path                | Description                                                                                                                                                                             | Success                  |
-| ------ | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| GET    | `/admin/audit-logs` | Query: `actorId`, `targetType` (`USER`, `SUBSCRIPTION`, `TRANSACTION`, `PRODUCT`, `PLAN`, `ARTICLE`, ...), `targetId`, `action`, `from`, `to`, `page`, `size`. Newest first. Read-only. | `200` `Page<AuditEntry>` |
-
-**AuditEntry** = `{ id, actor: { id, email }, action, targetType, targetId, oldValue, newValue, reason, at }`. `oldValue`/`newValue` are JSON snapshots of the changed fields only.
 
 ## 11. Group 7 — Outbound Calls (made by the API)
 
 Not endpoints of the hub, but part of its contract with other systems.
 
-### 11.1 Next.js on-demand revalidation (UC-19, UC-18, UC-22)
+### 11.1 Next.js on-demand revalidation (UC-16, UC-17, UC-20)
 
 Implemented as a Next.js Route Handler.
 
@@ -863,73 +849,64 @@ X-Revalidate-Secret: <shared secret from SSM>
 ```
 
 - Next.js calls `revalidatePath()` for each path and returns `200 { "revalidated": true }`; wrong secret → `401`.
-- The API sends it **after** the database commit, retries 3 times with backoff (1 s, 5 s, 30 s), and reports `PENDING_RETRY` to the admin if all fail (UC-19 3a). ISR time-based revalidation is the fallback.
+- The API sends it **after** the database commit, retries 3 times with backoff (1 s, 5 s, 30 s), and reports `PENDING_RETRY` to the admin if all fail (UC-17). ISR time-based revalidation is the fallback.
 - Old slugs are included when a slug changes, so the old page turns into the redirect.
 
 ### 11.2 Other outbound calls
 
-| Target                      | Call                                                                                                                         | Used by                     |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| Midtrans Snap API           | `POST /snap/v1/transactions`                                                                                                 | `POST /checkout`            |
-| Midtrans Status API         | `GET /v2/{order_id}/status`                                                                                                  | Webhook, admin sync         |
-| Firebase public keys (JWKS) | `GET https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com` (cached per `Cache-Control`) | Every authenticated request |
-| Firebase Admin SDK          | `updateUser(uid, disabled=true/false)`                                                                                       | Admin deactivate/reactivate |
-| AWS S3                      | `PutObject`, `DeleteObject` on the image bucket                                                                              | Media, avatars              |
-| Email provider (ADR-005)    | Renewal reminders                                                                                                            | Scheduler (UC-14)           |
+| Target                      | Call                                                                                                                         | Used by                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Midtrans Snap API           | `POST /snap/v1/transactions`                                                                                                 | `POST /checkout`                 |
+| Midtrans Status API         | `GET /v2/{order_id}/status`                                                                                                  | Webhook, admin sync              |
+| Firebase public keys (JWKS) | `GET https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com` (cached per `Cache-Control`) | Every authenticated request      |
+| AWS S3                      | `PutObject`, `DeleteObject` on the image bucket                                                                              | Media                            |
+| Email provider (ADR-006)    | Renewal reminders                                                                                                            | Scheduler (UC-13, phase 4, optional) |
 
-The scheduler (UC-14) has no HTTP endpoint; it runs inside the API with `@Scheduled`.
+The scheduler (UC-13) has no HTTP endpoint; it runs inside the API with `@Scheduled`.
 
 ## 12. Error Code Catalog
 
 Endpoint-specific codes, in addition to §3.5:
 
-| HTTP | `code`                                   | Endpoint(s)                                              |
-| ---- | ---------------------------------------- | -------------------------------------------------------- |
-| 400  | `IMAGE_UNREADABLE`                       | `PUT /me/avatar`, `POST /admin/media`                    |
-| 403  | `PRODUCT_INACTIVE`                       | Group 4                                                  |
-| 409  | `PLAN_NOT_PURCHASABLE`                   | `POST /checkout`                                         |
-| 409  | `PLAN_CHANGE_NOT_SUPPORTED`              | `POST /checkout`                                         |
-| 409  | `SUBSCRIPTION_NOT_ACTIVE`                | `/me/subscriptions/{id}/cancel` / `resume`, admin cancel |
-| 409  | `SUBSCRIPTION_EXISTS`                    | Admin grant                                              |
-| 409  | `SUBSCRIPTION_CANCELLED`                 | Admin extend                                             |
-| 409  | `TRANSACTION_NOT_REFUNDABLE`             | Admin refund                                             |
-| 409  | `CANNOT_DEACTIVATE_SELF`                 | Admin deactivate                                         |
-| 409  | `SLUG_TAKEN`, `NAME_TAKEN`, `CODE_TAKEN` | Articles, categories, tags, products, plans              |
-| 409  | `VERSION_CONFLICT`                       | `PUT /admin/articles/{id}`                               |
-| 409  | `IMAGE_IN_USE`                           | `DELETE /admin/media/{id}`                               |
-| 409  | `CATEGORY_IN_USE`                        | `DELETE /admin/categories/{id}`                          |
-| 409  | `PLAN_SOLD`                              | `PATCH /admin/plans/{id}`                                |
-| 409  | `CREDENTIAL_LIMIT`, `LAST_CREDENTIAL`    | Product credentials                                      |
-| 422  | `ARTICLE_INCOMPLETE`                     | `POST /admin/articles/{id}/publish`                      |
+| HTTP | `code`                                   | Endpoint(s)                                 |
+| ---- | ---------------------------------------- | ------------------------------------------- |
+| 400  | `IMAGE_UNREADABLE`                       | `POST /admin/media`                         |
+| 403  | `PRODUCT_INACTIVE`                       | Group 4                                     |
+| 409  | `PLAN_NOT_PURCHASABLE`                   | `POST /checkout`                            |
+| 409  | `PLAN_CHANGE_NOT_SUPPORTED`              | `POST /checkout`                            |
+| 409  | `SLUG_TAKEN`, `NAME_TAKEN`, `CODE_TAKEN` | Articles, categories, tags, products, plans |
+| 409  | `VERSION_CONFLICT`                       | `PUT /admin/articles/{id}`                  |
+| 409  | `IMAGE_IN_USE`                           | `DELETE /admin/media/{id}`                  |
+| 409  | `CATEGORY_IN_USE`                        | `DELETE /admin/categories/{id}`             |
+| 409  | `PLAN_SOLD`                              | `PATCH /admin/plans/{id}`                   |
+| 409  | `CREDENTIAL_LIMIT`, `LAST_CREDENTIAL`    | Product credentials                         |
+| 422  | `ARTICLE_INCOMPLETE`                     | `POST /admin/articles/{id}/publish`         |
 
 ## 13. Traceability
 
-| Use case | Endpoint(s)                                                                         | Group    |
-| -------- | ----------------------------------------------------------------------------------- | -------- |
-| UC-01    | `GET /public/articles/{slug}`, `GET /public/sitemap`                                | 1        |
-| UC-02    | `GET /public/products`, `GET /public/products/{productCode}`                        | 1        |
-| UC-03    | `GET /public/articles?category=&tag=`, `GET /public/categories`, `GET /public/tags` | 1        |
-| UC-04    | `POST /me/session`                                                                  | 2        |
-| UC-05    | `GET /me`, `PATCH /me`, `PUT /me/avatar`, `DELETE /me/avatar`                       | 2        |
-| UC-06    | `POST /checkout`, `GET /me/transactions/{orderId}`                                  | 3        |
-| UC-07    | `POST /webhooks/midtrans`                                                           | 5        |
-| UC-08    | `GET /me/subscriptions`                                                             | 3        |
-| UC-09    | `GET /me/transactions`, `GET /me/transactions/{orderId}`                            | 3        |
-| UC-10    | `POST /checkout` (same plan)                                                        | 3        |
-| UC-11    | `POST /me/subscriptions/{id}/cancel`, `.../resume`                                  | 3        |
-| UC-12    | `POST /products/{productCode}/members`                                              | 4        |
-| UC-13    | `GET /products/{productCode}/entitlements/me`                                       | 4        |
-| UC-14    | — (internal scheduler)                                                              | —        |
-| UC-15    | `/admin/users/**`, `GET /admin/audit-logs`                                          | 6.1, 6.9 |
-| UC-16    | `/admin/users/{id}/subscriptions`, `/admin/subscriptions/{id}/**`                   | 6.2      |
-| UC-17    | `/admin/transactions/**` (list, detail, sync)                                       | 6.3      |
-| UC-18    | `POST/GET/PUT /admin/articles[/{id}]`                                               | 6.4      |
-| UC-19    | `POST /admin/articles/{id}/publish` / `unpublish`, outbound revalidate              | 6.4, 7   |
-| UC-20    | `GET /admin/articles`, `DELETE /admin/articles/{id}`                                | 6.4      |
-| UC-21    | `/admin/media/**`                                                                   | 6.5      |
-| UC-22    | `/admin/categories/**`, `/admin/tags/**`                                            | 6.6, 6.7 |
-| UC-23    | `POST /admin/transactions/{orderId}/refund`                                         | 6.3      |
-| UC-24    | `/admin/products/**`, `/admin/plans/{id}`                                           | 6.8      |
+| Use case | Endpoint(s)                                                                                                   | Group |
+| -------- | ------------------------------------------------------------------------------------------------------------- | ----- |
+| UC-01    | `GET /public/articles/{slug}`, `GET /public/sitemap`                                                          | 1     |
+| UC-02    | `GET /public/products`, `GET /public/products/{productCode}`                                                  | 1     |
+| UC-03    | `GET /public/articles?category=&tag=`, `GET /public/categories[/{slug}]`, `GET /public/tags[/{slug}]`         | 1     |
+| UC-04    | `POST /me/session`                                                                                            | 2     |
+| UC-05    | `GET /me`                                                                                                     | 2     |
+| UC-06    | `POST /products/{productCode}/members`                                                                        | 4     |
+| UC-07    | `GET /products/{productCode}/entitlements/me`                                                                 | 4     |
+| UC-08    | `POST /checkout`, `GET /me/transactions/{orderId}`                                                            | 3     |
+| UC-09    | `POST /webhooks/midtrans`                                                                                     | 5     |
+| UC-10    | `GET /me/subscriptions`                                                                                       | 3     |
+| UC-11    | `GET /me/transactions`, `GET /me/transactions/{orderId}`                                                      | 3     |
+| UC-12    | `POST /checkout` (same plan)                                                                                  | 3     |
+| UC-13    | — (internal scheduler)                                                                                        | —     |
+| UC-14    | `/admin/users/**`                                                                                             | 6.1   |
+| UC-15    | `/admin/transactions/**` (list, detail, sync)                                                                 | 6.2   |
+| UC-16    | `POST/GET/PUT /admin/articles[/{id}]`                                                                         | 6.3   |
+| UC-17    | `POST /admin/articles/{id}/publish` / `unpublish`, outbound revalidate                                        | 6.3, 7 |
+| UC-18    | `GET /admin/articles`, `DELETE /admin/articles/{id}`                                                          | 6.3   |
+| UC-19    | `/admin/media/**`                                                                                             | 6.4   |
+| UC-20    | `/admin/categories/**`, `/admin/tags/**`                                                                      | 6.5, 6.6 |
+| UC-21    | `/admin/products/**`, `/admin/plans/{id}`                                                                     | 6.7   |
 
 ## 14. Consequences
 
@@ -939,27 +916,24 @@ Endpoint-specific codes, in addition to §3.5:
 - Connected products get a small, stable contract (two endpoints) that does not change when the hub's internals do.
 - Problem Details with stable `code`s let the frontend show the right message without parsing text.
 - `entitled` is computed only on the server, so the access rule from ADR-002 §6.2 lives in one place.
+- Read-only admin screens for users and payments mean fewer endpoints that can change money or access.
 
 ### 14.2 Negative and risks
 
-| Risk                                                                                  | Mitigation                                                                                                             |
-| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Client secrets in connected products can leak.                                        | Server-side only; hashed in the hub; two active credentials for rotation; `lastUsedAt` shown to the admin.             |
-| Up to 5 minutes of stale entitlement in products (for example after an admin cancel). | Short cache; forced refresh after checkout; admin cancel is rare. Add hub → product webhooks in a later ADR if needed. |
-| Polling `GET /me/transactions/{orderId}` adds load after each checkout.               | 3 s interval, 2 min cap; the endpoint is a single indexed lookup.                                                      |
-| This document and the generated OpenAPI can drift.                                    | Contract tests (Spring REST Docs or OpenAPI diff in CI, ADR-006) fail the build on mismatch.                           |
-
-### 14.3 Changes to ADR-002
-
-| ADR-002 text                                   | This ADR                                             |
-| ---------------------------------------------- | ---------------------------------------------------- |
-| UC-05: avatar sent as multipart in `PATCH /me` | Separate `PUT /me/avatar`; `PATCH /me` is JSON only. |
-| UC-06: `GET /transactions/{orderId}`           | `GET /me/transactions/{orderId}`.                    |
-| UC-12/UC-13: "client credential" (undefined)   | `X-Client-Id` + `X-Client-Secret` headers, §8.1.     |
+| Risk                                                                    | Mitigation                                                                                                   |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Client secrets in connected products can leak.                          | Server-side only; hashed in the hub; two active credentials for rotation; `lastUsedAt` shown to the admin.   |
+| Up to 5 minutes of stale entitlement in products (for example after a refund). | Short cache; forced refresh after checkout; refunds are rare. Add hub → product webhooks later if needed. |
+| Polling `GET /me/transactions/{orderId}` adds load after each checkout. | 3 s interval, 2 min cap; the endpoint is a single indexed lookup.                                            |
+| No admin endpoint to fix a user's access by hand.                       | `POST /admin/transactions/{orderId}/sync` fixes missed webhooks; add grant/extend endpoints if support needs them. |
+| This document and the generated OpenAPI can drift.                      | Contract tests (Spring REST Docs or OpenAPI diff in CI, ADR-007) fail the build on mismatch.                 |
 
 ## 15. Follow-up
 
-- ADR-004 (recurring payments) may add `POST /me/subscriptions/{id}/auto-renew` and a Midtrans subscription webhook.
-- ADR-005 (email provider) adds the reminder email contract for UC-14.
-- ADR-006 (CI/CD) must include a contract test step that compares the generated OpenAPI with this ADR.
-- If connected products need push updates, a later ADR adds hub → product webhooks (`subscription.updated`, `user.disabled`).
+| ADR     | Topic                                   | Effect on this contract                                                              |
+| ------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| ADR-004 | Initial schema model                    | Tables behind every shape in this document.                                          |
+| ADR-006 | Domain, DNS, and email provider         | Adds the reminder email contract for UC-13.                                          |
+| ADR-007 | CI/CD pipeline                          | Must include a contract test step that compares the generated OpenAPI with this ADR. |
+| Later   | Hub → product webhooks                  | `subscription.updated` events if products need push updates.                         |
+| Later   | Usage per plan (PRD OQ5)                | Endpoint for products to report usage.                                               |
