@@ -1,10 +1,13 @@
 # Base configuration shared by every profile. Profile files (application-local.yaml,
 # application-test.yaml, application-prod.yaml) override the external integrations.
 spring:
+  config:
+    # Load local .env (KEY=VALUE) as a properties file; real env vars still win.
+    import: optional:file:.env[.properties]
   application:
     name: coreservices
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5434/hub}
+    url: ${DB_URL:jdbc:postgresql://localhost:5437/hub}
     username: ${DB_USERNAME:hub}
     password: ${DB_PASSWORD:hub}
     hikari:
