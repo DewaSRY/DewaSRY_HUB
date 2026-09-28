@@ -18,8 +18,8 @@ export const PUBLIC_REVALIDATE_SECONDS = 3600;
 
 /** Server-side base URL. `API_INTERNAL_URL` lets the Worker skip the public hostname. */
 export const PUBLIC_API_BASE_URL = (
-  process.env.API_INTERNAL_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
+  process.env.API_INTERNAL_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:8080/v1"
 ).replace(/\/+$/, "");
 

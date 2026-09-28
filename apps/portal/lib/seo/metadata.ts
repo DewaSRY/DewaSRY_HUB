@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { locales, type AppLocale } from "@/i18n/settings";
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(
   /\/+$/,
   "",
 );

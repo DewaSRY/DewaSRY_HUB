@@ -1,4 +1,4 @@
-CORE_SERVICE_DIR := apps/core-service
+CORE_SERVICE_DIR := apps/coreservices
 
 TF_DIR := infra/terraform
 TF_KEY := $(TF_DIR)/core-service-key.pem

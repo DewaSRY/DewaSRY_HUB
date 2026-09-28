@@ -14,19 +14,21 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hub}
       POSTGRES_DB: ${POSTGRES_DB:-hub}
     ports:
-      - "${HUB_DB_PORT:-5434}:5432"
+      - "${HUB_DB_PORT}:5432"
     volumes:
       - hub_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hub} -d ${POSTGRES_DB:-hub}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-hub} -d ${POSTGRES_DB:-hub}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
 
   core-services:
-    build:
-      context: ./apps/coreservices
-    image: dewa-hub/coreservices:local
+    image: sdewa/hub-coreservices:local
     restart: unless-stopped
     depends_on:
       postgres:
