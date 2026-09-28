@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -44,8 +45,8 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-overlay: var(--overlay);
 
-  /* Brand identity — wallet-icon green (#12AE52). Decorative/identity use
-     only (logo glows, auth backdrop); interactive UI uses `primary`. */
+  /* Brand identity green. Decorative/identity use only (logo glows, auth
+     backdrop); interactive UI uses `primary`. */
   --color-brand: var(--brand);
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
@@ -140,6 +141,34 @@
   --warning-foreground: oklch(0.99 0 0);
   --info: oklch(0.54 0.16 256);
   --info-foreground: oklch(0.99 0 0);
+
+  /* Article palette (ADR-009 §4.5): text colours and highlight backgrounds,
+     stored in content as a key, never as hex. */
+  --content-gray: oklch(0.5 0.02 258);
+  --content-red: oklch(0.55 0.2 27);
+  --content-orange: oklch(0.6 0.16 50);
+  --content-yellow: oklch(0.58 0.12 85);
+  --content-green: oklch(0.52 0.13 150);
+  --content-blue: oklch(0.52 0.16 256);
+  --content-purple: oklch(0.52 0.18 300);
+  --content-pink: oklch(0.57 0.19 355);
+  --content-gray-bg: oklch(0.93 0.005 258);
+  --content-red-bg: oklch(0.93 0.04 27);
+  --content-orange-bg: oklch(0.94 0.05 60);
+  --content-yellow-bg: oklch(0.95 0.09 95);
+  --content-green-bg: oklch(0.94 0.05 150);
+  --content-blue-bg: oklch(0.93 0.04 250);
+  --content-purple-bg: oklch(0.93 0.04 300);
+  --content-pink-bg: oklch(0.93 0.04 355);
+
+  /* Code highlighting (lowlight / highlight.js classes). */
+  --code-keyword: oklch(0.5 0.18 300);
+  --code-string: oklch(0.5 0.13 150);
+  --code-number: oklch(0.55 0.15 50);
+  --code-comment: oklch(0.55 0.02 258);
+  --code-function: oklch(0.5 0.16 256);
+  --code-attr: oklch(0.52 0.14 25);
+  --code-type: oklch(0.52 0.12 200);
 }
 
 .dark {
@@ -204,6 +233,31 @@
   --warning-foreground: oklch(0.22 0.05 70);
   --info: oklch(0.72 0.13 252);
   --info-foreground: oklch(0.19 0.04 252);
+
+  --content-gray: oklch(0.72 0.015 258);
+  --content-red: oklch(0.72 0.16 25);
+  --content-orange: oklch(0.76 0.14 55);
+  --content-yellow: oklch(0.84 0.13 90);
+  --content-green: oklch(0.76 0.14 150);
+  --content-blue: oklch(0.74 0.12 252);
+  --content-purple: oklch(0.74 0.14 300);
+  --content-pink: oklch(0.76 0.14 355);
+  --content-gray-bg: oklch(0.32 0.01 258);
+  --content-red-bg: oklch(0.34 0.07 25);
+  --content-orange-bg: oklch(0.35 0.07 55);
+  --content-yellow-bg: oklch(0.38 0.07 90);
+  --content-green-bg: oklch(0.33 0.06 150);
+  --content-blue-bg: oklch(0.33 0.06 252);
+  --content-purple-bg: oklch(0.33 0.07 300);
+  --content-pink-bg: oklch(0.34 0.07 355);
+
+  --code-keyword: oklch(0.76 0.13 300);
+  --code-string: oklch(0.78 0.13 150);
+  --code-number: oklch(0.8 0.12 60);
+  --code-comment: oklch(0.62 0.02 258);
+  --code-function: oklch(0.76 0.12 252);
+  --code-attr: oklch(0.76 0.12 25);
+  --code-type: oklch(0.78 0.1 200);
 }
 
 @utility bg-brand-surface {
@@ -245,4 +299,224 @@
   to {
     transform: scaleX(1);
   }
+}
+/* ---------------------------------------------------------------------------
+   Article body (ADR-009 §7). Shared by /blog/[slug], the admin preview, and
+   the editor canvas, so all three look the same in light and dark mode.
+   ------------------------------------------------------------------------- */
+
+.article-body {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+  --tw-prose-invert-body: var(--foreground);
+  --tw-prose-invert-headings: var(--foreground);
+  --tw-prose-invert-links: var(--primary);
+  --tw-prose-invert-bold: var(--foreground);
+  --tw-prose-invert-quotes: var(--foreground);
+  --tw-prose-invert-code: var(--foreground);
+  --tw-prose-invert-hr: var(--border);
+  --tw-prose-invert-bullets: var(--muted-foreground);
+  --tw-prose-invert-counters: var(--muted-foreground);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  overflow-wrap: break-word;
+}
+
+.article-body :where(p, li) {
+  text-wrap: pretty;
+}
+
+.article-body :where(code):not(:where(pre code)) {
+  border-radius: 0.375rem;
+  background: var(--muted);
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+.article-body :where(code):not(:where(pre code))::before,
+.article-body :where(code):not(:where(pre code))::after {
+  content: none;
+}
+
+.article-body a {
+  text-underline-offset: 3px;
+}
+
+.content-color[data-color="gray"] { color: var(--content-gray); }
+.content-color[data-color="red"] { color: var(--content-red); }
+.content-color[data-color="orange"] { color: var(--content-orange); }
+.content-color[data-color="yellow"] { color: var(--content-yellow); }
+.content-color[data-color="green"] { color: var(--content-green); }
+.content-color[data-color="blue"] { color: var(--content-blue); }
+.content-color[data-color="purple"] { color: var(--content-purple); }
+.content-color[data-color="pink"] { color: var(--content-pink); }
+
+.content-highlight {
+  border-radius: 0.2em;
+  padding: 0.05em 0.15em;
+  color: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.content-highlight[data-color="gray"] { background: var(--content-gray-bg); }
+.content-highlight[data-color="red"] { background: var(--content-red-bg); }
+.content-highlight[data-color="orange"] { background: var(--content-orange-bg); }
+.content-highlight[data-color="yellow"] { background: var(--content-yellow-bg); }
+.content-highlight[data-color="green"] { background: var(--content-green-bg); }
+.content-highlight[data-color="blue"] { background: var(--content-blue-bg); }
+.content-highlight[data-color="purple"] { background: var(--content-purple-bg); }
+.content-highlight[data-color="pink"] { background: var(--content-pink-bg); }
+
+/* Images: `content` stays in the ~70ch column, `wide` and `full` break out. */
+.article-figure {
+  margin: 2rem 0;
+}
+.article-figure[data-width="wide"] {
+  width: min(960px, 100vw - 2rem);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.article-figure[data-width="full"] {
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.article-figure[data-width="full"] img {
+  border-radius: 0;
+}
+@media (min-width: 1024px) {
+  .article-layout .article-figure[data-width="wide"],
+  .article-layout .article-figure[data-width="full"] {
+    /* Inside the two-column article layout, stay within the main column. */
+    width: 100%;
+    margin-left: 0;
+    transform: none;
+  }
+}
+
+.article-callout {
+  margin: 1.5rem 0;
+  display: flex;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  padding: 0.875rem 1rem;
+  background: color-mix(in oklch, var(--muted) 60%, transparent);
+}
+.article-callout-icon {
+  margin-top: 0.3rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+.article-callout[data-tone="info"] { border-color: color-mix(in oklch, var(--info) 35%, transparent); background: color-mix(in oklch, var(--info) 8%, transparent); }
+.article-callout[data-tone="info"] .article-callout-icon { color: var(--info); }
+.article-callout[data-tone="tip"] { border-color: color-mix(in oklch, var(--success) 35%, transparent); background: color-mix(in oklch, var(--success) 8%, transparent); }
+.article-callout[data-tone="tip"] .article-callout-icon { color: var(--success); }
+.article-callout[data-tone="warning"] { border-color: color-mix(in oklch, var(--warning) 40%, transparent); background: color-mix(in oklch, var(--warning) 9%, transparent); }
+.article-callout[data-tone="warning"] .article-callout-icon { color: var(--warning); }
+.article-callout[data-tone="danger"] { border-color: color-mix(in oklch, var(--destructive) 35%, transparent); background: color-mix(in oklch, var(--destructive) 8%, transparent); }
+.article-callout[data-tone="danger"] .article-callout-icon { color: var(--destructive); }
+
+.article-toggle {
+  margin: 1.25rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  padding: 0.25rem 1rem;
+}
+.article-toggle > summary {
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-weight: 600;
+  list-style-position: outside;
+}
+.article-toggle-content > :first-child { margin-top: 0.25rem; }
+
+.article-body ul.task-list {
+  list-style: none;
+  padding-left: 0.25rem;
+}
+.article-body li.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding-left: 0;
+}
+.article-body li.task-item > input {
+  margin-top: 0.45rem;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+}
+.article-body li.task-item > .task-item-content > :first-child { margin-top: 0; }
+.article-body li.task-item > .task-item-content > :last-child { margin-bottom: 0; }
+.article-body li.task-item[data-checked="true"] > .task-item-content {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+/* Tables scroll sideways with edge shadows (background-attachment trick). */
+.article-table {
+  margin: 1.75rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background:
+    linear-gradient(to right, var(--background) 30%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--background) 30%, transparent) right / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in oklch, var(--foreground) 14%, transparent), transparent) left / 0.75rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in oklch, var(--foreground) 14%, transparent), transparent) right / 0.75rem 100% no-repeat scroll;
+}
+.article-table:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.article-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.article-table :where(th, td) {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 6rem;
+}
+.article-table :where(th, td):last-child { border-right: 0; }
+.article-table tbody tr:last-child :where(th, td) { border-bottom: 0; }
+.article-table th { background: var(--muted); font-weight: 600; }
+.article-table :where(th, td) > :first-child { margin-top: 0; }
+.article-table :where(th, td) > :last-child { margin-bottom: 0; }
+.article-table :where(p) { margin: 0.25rem 0; }
+
+/* highlight.js token colours. */
+.hljs-comment, .hljs-quote { color: var(--code-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-meta .hljs-keyword, .hljs-doctag, .hljs-section { color: var(--code-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition, .hljs-meta .hljs-string { color: var(--code-string); }
+.hljs-number, .hljs-literal, .hljs-symbol, .hljs-bullet { color: var(--code-number); }
+.hljs-title, .hljs-title.function_, .hljs-function .hljs-title { color: var(--code-function); }
+.hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-selector-attr { color: var(--code-attr); }
+.hljs-type, .hljs-built_in, .hljs-title.class_, .hljs-class .hljs-title, .hljs-name, .hljs-tag { color: var(--code-type); }
+.hljs-deletion { color: var(--content-red); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+.hljs-subst { color: var(--foreground); }
+
+/* Ad slots reserve their space so late or empty ads cause no layout shift. */
+.ad-slot {
+  display: block;
+  width: 100%;
+  overflow: hidden;
 }

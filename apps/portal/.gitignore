@@ -1,0 +1,6 @@
+# OpenNext / Wrangler build output and local state
+.open-next/
+.wrangler/
+.dev.vars
+*.tsbuildinfo
+coverage/

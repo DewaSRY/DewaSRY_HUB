@@ -4,8 +4,11 @@ import {
   QueryClient,
   type Mutation,
 } from "@tanstack/react-query";
-import axios from "axios";
-import { getApiErrorMessage } from "@/lib/api/error";
+import {
+  getApiErrorMessage,
+  getTraceId,
+  isRetryableError,
+} from "@/lib/api/error";
 import { pushToast, type ToastText } from "@/lib/toast/store";
 
 const MAX_QUERY_RETRIES = 2;
@@ -40,14 +43,10 @@ declare module "@tanstack/react-query" {
 
 function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   if (failureCount >= MAX_QUERY_RETRIES) return false;
-  if (axios.isAxiosError(error)) {
-    const status = error.response?.status;
-    return status === undefined || status >= 500;
-  }
-  return false;
+  return isRetryableError(error);
 }
 
-// A Server Action's redirect() is navigation, not a failure.
+// A redirect() thrown during render is navigation, not a failure.
 function isRedirectError(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -65,10 +64,14 @@ function toastError(
 ) {
   if (title === false || isRedirectError(error)) return;
   const message = getApiErrorMessage(error, "");
+  const traceId = getTraceId(error);
+  const description = [message, traceId ? `Trace ID: ${traceId}` : ""]
+    .filter(Boolean)
+    .join(" · ");
   pushToast({
     variant: "error",
     title: title ?? fallback,
-    description: message || undefined,
+    description: description || undefined,
   });
 }
 

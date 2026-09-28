@@ -1,0 +1,17 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "codeBlock",
+      "attrs": {
+        "language": "brainfuck"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "+++"
+        }
+      ]
+    }
+  ]
+}

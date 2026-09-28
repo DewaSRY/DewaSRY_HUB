@@ -1,0 +1,65 @@
+{
+  "blog": {
+    "metaTitle": "Blog",
+    "metaTitlePage": "Blog — page {{page}}",
+    "pageSuffix": "page {{page}}",
+    "metaDescription": "Articles and tutorials by Dewa Surya Ariesta on web development, backend engineering, and cloud infrastructure.",
+    "eyebrow": "Articles & tutorials",
+    "title": "Blog",
+    "description": "Practical, tested notes on building and running web products.",
+    "all": "All",
+    "categories": "Categories",
+    "empty": "No articles yet",
+    "emptyDescription": "New articles will appear here as soon as they are published.",
+    "unavailable": "Articles can't be loaded right now. Please try again in a moment.",
+    "backToBlog": "Back to the blog"
+  },
+  "category": {
+    "label": "Category",
+    "metaTitle": "{{name}} articles",
+    "metaDescription_one": "{{count}} article about {{name}} by Dewa Surya Ariesta.",
+    "metaDescription_other": "{{count}} articles about {{name}} by Dewa Surya Ariesta.",
+    "count_one": "{{count}} article",
+    "count_other": "{{count}} articles",
+    "empty": "No articles in this category yet",
+    "emptyDescription": "Check back soon, or browse all articles."
+  },
+  "tag": {
+    "label": "Tag",
+    "metaTitle": "Articles tagged {{name}}",
+    "metaDescription_one": "{{count}} article tagged {{name}} by Dewa Surya Ariesta.",
+    "metaDescription_other": "{{count}} articles tagged {{name}} by Dewa Surya Ariesta.",
+    "count_one": "{{count}} article",
+    "count_other": "{{count}} articles",
+    "empty": "No articles with this tag yet",
+    "emptyDescription": "Check back soon, or browse all articles."
+  },
+  "article": {
+    "breadcrumb": "Breadcrumb",
+    "readingTime_one": "{{count}} min read",
+    "readingTime_other": "{{count}} min read",
+    "updated": "Updated",
+    "onThisPage": "On this page",
+    "tags": "Tags",
+    "related": "Related articles"
+  },
+  "body": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "codeLanguage": "Language",
+    "plainText": "Plain text",
+    "loadEmbed": "Load {{provider}}",
+    "embedNotice": "Click to load {{provider}}",
+    "opensInNewTab": "(opens in a new tab)",
+    "callout": {
+      "info": "Note",
+      "tip": "Tip",
+      "warning": "Warning",
+      "danger": "Danger"
+    },
+    "headingAnchor": "Link to this section",
+    "advertisement": "Advertisement",
+    "taskDone": "Done",
+    "taskTodo": "To do"
+  }
+}

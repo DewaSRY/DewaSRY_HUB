@@ -1,22 +1,24 @@
+/**
+ * `feature/auth` barrel — client-safe exports only. Firebase session wiring,
+ * the session store, the guard, and the sign-in / sign-out screens.
+ */
+export type * from "./type";
+export { authKeys, meQuery } from "./queries";
+export { useMe } from "./hooks";
+export { useSession, useSessionStore } from "./session-store";
 export {
-  authQueryKeys,
-  useLoginMutation,
-  useRegisterMutation,
-  useProfileQuery,
-  useLogoutMutation,
-} from "./hooks/query";
-export {
-  createLoginSchema,
-  type LoginFormScreenValues,
-  createRegisterSchema,
-  type RegisterFormScreenValues,
-} from "./schemas";
-export { SessionGuard } from "./components/session-guard";
-
-// `verifySession` (./dal) is intentionally NOT re-exported here: it's
-// marked "server-only" (reads next/headers), and re-exporting it from this
-// barrel would pull that server-only module into the graph of every client
-// component that imports anything else from "@/feature/auth" (Next.js
-// taints the whole barrel module, not just the used export) — breaking the
-// client bundle. Its one consumer, the protected layout Server Component,
-// imports it directly from "@/feature/auth/dal" instead.
+  isFirebaseConfigured,
+  retrySession,
+  signInWithGoogle,
+  signOut,
+  startSession,
+  waitForSession,
+  type SignInResult,
+} from "./session";
+export { DEFAULT_AFTER_SIGN_IN, GOOGLE_ACCOUNT_URL, initials, loginHref, safeNextPath } from "./utils";
+export { AuthGate } from "./components/auth-gate";
+export { AuthBackdrop } from "./components/auth-backdrop";
+export { GoogleIcon } from "./components/google-icon";
+export { LoginScreen } from "./components/login-screen";
+export { LogoutScreen } from "./components/logout-screen";
+export { UserMenu } from "./components/user-menu";

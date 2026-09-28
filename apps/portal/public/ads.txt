@@ -1,0 +1,3 @@
+# ads.txt for Dewa Surya Hub (ADR-001 §5.2 "Ads rules").
+# Replace the line below with the record from your ad network (ADR-005), e.g.:
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

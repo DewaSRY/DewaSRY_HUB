@@ -1,0 +1,22 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "click",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "//evil.example/path"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

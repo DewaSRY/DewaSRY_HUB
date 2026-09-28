@@ -1,21 +1,29 @@
-export type LoginRequest = {
-  email: string;
-};
+export type Role = "USER" | "ADMIN";
 
-export type AuthResponse = {
-  access_token: string;
-  expires_in: number;
-  token_type: string;
-};
+export interface MeProduct {
+  code: string;
+  name: string;
+  joinedAt: string;
+}
 
-export type RegisterRequest = {
-  username: string;
+/** `Me` (ADR-003 §6.1) — the profile follows the Google account and is read-only. */
+export interface Me {
+  id: string;
+  firebaseUid: string;
   email: string;
-};
+  name: string | null;
+  avatarUrl: string | null;
+  role: Role;
+  products: MeProduct[];
+  createdAt: string;
+  lastSignInAt: string | null;
+}
 
-export type ProfileResponse = {
-  id: number;
-  username: string;
-  email: string;
-  created_at: string;
-};
+export type SessionStatus = "loading" | "signed-in" | "signed-out";
+
+export interface FirebaseProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}

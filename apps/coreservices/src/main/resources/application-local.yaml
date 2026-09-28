@@ -1,0 +1,30 @@
+# Local development: runs without any real external credentials.
+# - ID tokens: HS256 dev tokens from POST /v1/dev/token (see README)
+# - Midtrans: fake gateway (logs; simulate payments with POST /v1/dev/midtrans/simulate)
+# - Images: stored on the local disk and served from /local-media/**
+# - Revalidation: no-op unless HUB_REVALIDATE_URL is set
+# - Firebase custom tokens (SSO): fake minter
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/hub}
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /v1/swagger-ui.html
+
+hub:
+  bootstrap-admin-uid: ${HUB_BOOTSTRAP_ADMIN_UID:local-admin}
+  cors:
+    allowed-origins: ${HUB_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  firebase:
+    dev-jwt-secret: ${HUB_DEV_JWT_SECRET:local-dev-jwt-secret-please-change-0123456789}
+    token-minter: fake
+  midtrans:
+    mode: ${MIDTRANS_MODE:fake}
+  storage:
+    type: ${HUB_STORAGE_TYPE:local}
+  sso:
+    allow-localhost-redirects: true
+  local-seed:
+    enabled: true

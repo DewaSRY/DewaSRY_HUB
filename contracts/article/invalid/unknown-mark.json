@@ -1,0 +1,22 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "x",
+          "marks": [
+            {
+              "type": "fontFamily",
+              "attrs": {
+                "fontFamily": "Comic Sans"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

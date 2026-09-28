@@ -2,15 +2,19 @@ import "server-only";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next/initReactI18next";
 import {
+  CLIENT_NAMESPACES,
   getI18nOptions,
   namespaces,
   type AppLocale,
   type AppNamespace,
 } from "./settings";
 
-async function loadMessages(locale: AppLocale) {
+async function loadMessages(
+  locale: AppLocale,
+  only: readonly AppNamespace[] = namespaces,
+) {
   const entries = await Promise.all(
-    namespaces.map(async (ns) => {
+    only.map(async (ns) => {
       const mod = await import(`../messages/${locale}/${ns}.json`);
       return [ns, mod.default] as const;
     }),
@@ -19,8 +23,15 @@ async function loadMessages(locale: AppLocale) {
   return Object.fromEntries(entries);
 }
 
-export async function getMessages(locale: AppLocale) {
-  return loadMessages(locale);
+/**
+ * Messages sent to the browser. The root layout sends every namespace except
+ * `admin`; the `(admin)` layout adds `admin` so visitors never download it.
+ */
+export async function getMessages(
+  locale: AppLocale,
+  only: readonly AppNamespace[] = CLIENT_NAMESPACES,
+) {
+  return loadMessages(locale, only);
 }
 
 export async function getTranslation(

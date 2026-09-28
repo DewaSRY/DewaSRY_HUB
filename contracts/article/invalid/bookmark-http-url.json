@@ -1,0 +1,12 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "bookmark",
+      "attrs": {
+        "url": "http://insecure.example",
+        "title": "x"
+      }
+    }
+  ]
+}

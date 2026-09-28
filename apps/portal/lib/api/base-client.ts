@@ -1,19 +1,17 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { ApiInterceptor } from "./api-interceptor";
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { browserClient } from "./browser-client";
 
-export type SafeParamValue = string | number | boolean | string[];
+export type SafeParamValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | null
+  | undefined;
 
 export interface RequestParams {
   [key: string]: SafeParamValue;
 }
-
-export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10_000,
-});
 
 export interface RequestOptions {
   endpoint: string;
@@ -28,96 +26,79 @@ export interface GetRequestOptions {
   config?: AxiosRequestConfig;
 }
 
-const interceptedInstances = new WeakSet<AxiosInstance>();
+/** Drops `undefined`, `null`, and `""` so they never reach the query string. */
+export function cleanParams(params?: RequestParams): RequestParams | undefined {
+  if (!params) return undefined;
+  const result: RequestParams = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    result[key] = value;
+  }
+  return result;
+}
 
+/** Repeats array params (`status=PAID&status=FAILED`), as Spring expects. */
+function serializeParams(params: RequestParams): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) value.forEach((v) => search.append(key, v));
+    else if (value !== undefined && value !== null) search.append(key, String(value));
+  }
+  return search.toString();
+}
+
+/**
+ * Base for every browser feature client (`class BillingClient extends
+ * BaseClient`). Methods take one options object and return the Axios
+ * response whose `data` is the ADR-003 envelope.
+ */
 export class BaseClient {
   protected readonly instance: AxiosInstance;
 
-  constructor(instance: AxiosInstance = apiClient) {
+  constructor(instance: AxiosInstance = browserClient) {
     this.instance = instance;
+  }
 
-    if (!interceptedInstances.has(instance)) {
-      new ApiInterceptor(instance);
-      interceptedInstances.add(instance);
-    }
+  private withParams(config: AxiosRequestConfig = {}, params?: RequestParams) {
+    const cleaned = cleanParams(params);
+    return cleaned
+      ? { ...config, params: cleaned, paramsSerializer: serializeParams }
+      : config;
   }
 
   protected get<TResponse = unknown>(
     options: GetRequestOptions,
   ): Promise<AxiosResponse<TResponse>> {
-    const { endpoint, params, config = {} } = options;
-
-    return this.instance.get<TResponse>(endpoint, {
-      ...config,
-      params,
-    });
+    const { endpoint, params, config } = options;
+    return this.instance.get<TResponse>(endpoint, this.withParams(config, params));
   }
 
   protected post<TResponse = unknown>(
     options: RequestOptions,
   ): Promise<AxiosResponse<TResponse>> {
-    const { endpoint, body, params, config = {} } = options;
-
-    return this.instance.post<TResponse>(endpoint, body, {
-      ...config,
-      params,
-    });
+    const { endpoint, body, params, config } = options;
+    return this.instance.post<TResponse>(endpoint, body, this.withParams(config, params));
   }
 
   protected put<TResponse = unknown>(
     options: RequestOptions,
   ): Promise<AxiosResponse<TResponse>> {
-    const { endpoint, body, params, config = {} } = options;
-
-    return this.instance.put<TResponse>(endpoint, body, {
-      ...config,
-      params,
-    });
+    const { endpoint, body, params, config } = options;
+    return this.instance.put<TResponse>(endpoint, body, this.withParams(config, params));
   }
 
   protected patch<TResponse = unknown>(
     options: RequestOptions,
   ): Promise<AxiosResponse<TResponse>> {
-    const { endpoint, body, params, config = {} } = options;
-
-    return this.instance.patch<TResponse>(endpoint, body, {
-      ...config,
-      params,
-    });
+    const { endpoint, body, params, config } = options;
+    return this.instance.patch<TResponse>(endpoint, body, this.withParams(config, params));
   }
 
   protected delete<TResponse = unknown>(
     options: Omit<RequestOptions, "body">,
   ): Promise<AxiosResponse<TResponse>> {
-    const { endpoint, params, config = {} } = options;
-
-    return this.instance.delete<TResponse>(endpoint, {
-      ...config,
-      params,
-    });
+    const { endpoint, params, config } = options;
+    return this.instance.delete<TResponse>(endpoint, this.withParams(config, params));
   }
 }
-
-export interface ProxyRequestOptions {
-  url: string;
-  method: string;
-  data?: unknown;
-  params?: Record<string, unknown>;
-  headers?: Record<string, string>;
-}
-
-/**
- * Generic passthrough to `apiClient.request`, used by the proxy route
- * handler to forward any method/endpoint without going through a specific
- * feature client. `new BaseClient()` below guarantees the interceptor is
- * attached even if this is the first thing to touch `apiClient` in a given
- * server process.
- */
-export function requestViaApiClient<TResponse = unknown>(
-  options: ProxyRequestOptions,
-): Promise<AxiosResponse<TResponse>> {
-  const { url, method, data, params, headers } = options;
-  return apiClient.request<TResponse>({ url, method, data, params, headers });
-}
-
-new BaseClient();

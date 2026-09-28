@@ -1,59 +1,36 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { locales, defaultLocale, type AppLocale } from "./i18n/settings";
-import { SESSION_COOKIE_NAME } from "./feature/auth/constants";
+import { locales, defaultLocale, isAppLocale, type AppLocale } from "./i18n/settings";
 
-export const PROTECTED_PATH_PREFIXES = ["/dashboard"];
-export const AUTH_ONLY_PATHS = ["/login", "/register", "/logout"];
+/**
+ * Locale redirect only (ADR-008 §7.2). There is no session cookie: portal and
+ * admin pages are guarded in the browser by `<AuthGate>`, and the API checks
+ * every request.
+ */
 
-function splitLocale(pathname: string): {
-  locale: AppLocale | null;
-  path: string;
-} {
-  for (const locale of locales) {
-    if (pathname === `/${locale}`) {
-      return { locale, path: "/" };
-    }
-    if (pathname.startsWith(`/${locale}/`)) {
-      return { locale, path: pathname.slice(`/${locale}`.length) };
-    }
+function preferredLocale(request: NextRequest): AppLocale {
+  const header = request.headers.get("accept-language") ?? "";
+  for (const part of header.split(",")) {
+    const tag = part.split(";")[0]?.trim().toLowerCase().slice(0, 2);
+    if (tag && isAppLocale(tag)) return tag;
   }
-  return { locale: null, path: pathname };
+  return defaultLocale;
+}
+
+function hasLocale(pathname: string): boolean {
+  return locales.some((locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`));
 }
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const { locale, path } = splitLocale(pathname);
-  const activeLocale = locale ?? defaultLocale;
+  if (hasLocale(pathname)) return NextResponse.next();
 
-  if (!locale) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${activeLocale}${path === "/" ? "" : path}`;
-    return NextResponse.redirect(url);
-  }
-
-  const isAuthenticated = Boolean(
-    request.cookies.get(SESSION_COOKIE_NAME)?.value,
-  );
-
-  if (
-    !isAuthenticated &&
-    PROTECTED_PATH_PREFIXES.some((p) => path.startsWith(p))
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${activeLocale}/login`;
-    return NextResponse.redirect(url);
-  }
-
-  if (isAuthenticated && path !== "/logout" && AUTH_ONLY_PATHS.includes(path)) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${activeLocale}/dashboard`;
-    return NextResponse.redirect(url);
-  }
-
-  return NextResponse.next();
+  const url = request.nextUrl.clone();
+  url.pathname = `/${preferredLocale(request)}${pathname === "/" ? "" : pathname}`;
+  return NextResponse.redirect(url);
 }
 
 export const config = {
+  // Skip API routes, Next internals, and files with an extension (sitemap.xml, ads.txt, …).
   matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

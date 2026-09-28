@@ -1,0 +1,12 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "bookmark",
+      "attrs": {
+        "url": "javascript:alert(1)",
+        "title": "x"
+      }
+    }
+  ]
+}

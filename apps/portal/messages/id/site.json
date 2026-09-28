@@ -1,0 +1,172 @@
+{
+  "nav": {
+    "label": "Utama",
+    "home": "Beranda",
+    "blog": "Blog",
+    "products": "Produk",
+    "about": "Tentang",
+    "account": "Akun",
+    "menu": "Buka menu"
+  },
+  "footer": {
+    "tagline": "Rumah tulisan dan produk SaaS Dewa Surya Ariesta — satu akun untuk semua aplikasi.",
+    "explore": "Jelajahi",
+    "account": "Akun",
+    "signIn": "Masuk",
+    "subscriptions": "Langganan",
+    "transactions": "Riwayat pembayaran",
+    "rights": "Hak cipta dilindungi."
+  },
+  "home": {
+    "metaTitle": "Dewa Surya Hub — pengembangan full-stack, artikel, dan produk SaaS",
+    "metaDescription": "Artikel dan tutorial dari Dewa Surya Ariesta, developer full-stack, serta produk SaaS di Dewa Surya Hub seperti Document Doctor.",
+    "hero": {
+      "badge": "Developer full-stack · terbuka untuk kerja sama",
+      "title": "Saya membangun produk web dari hulu ke hilir —",
+      "highlight": "dari database sampai piksel terakhir.",
+      "description": "Saya Dewa Surya Ariesta. Saya menulis tentang membangun dan menjalankan software sungguhan, dan membangun produk SaaS seperti Document Doctor di atas hub ini.",
+      "primaryCta": "Baca blog",
+      "secondaryCta": "Lihat produk",
+      "stackLabel": "Stack sehari-hari"
+    },
+    "latest": {
+      "eyebrow": "Blog",
+      "title": "Artikel terbaru",
+      "description": "Catatan praktis tentang pengembangan web, desain backend, dan infrastruktur cloud.",
+      "viewAll": "Semua artikel",
+      "empty": "Belum ada artikel — yang pertama segera hadir.",
+      "unavailable": "Artikel belum dapat dimuat. Silakan cek kembali nanti."
+    },
+    "skills": {
+      "eyebrow": "Yang saya kerjakan",
+      "title": "Benar-benar full stack",
+      "description": "Satu developer, seluruh produk: antarmuka, API, data, pembayaran, dan infrastrukturnya."
+    },
+    "products": {
+      "eyebrow": "Produk",
+      "title": "Tools yang dibangun di atas hub",
+      "description": "Masuk sekali dengan Google dan gunakan semua produk dengan akun yang sama.",
+      "viewAll": "Semua produk",
+      "empty": "Produk segera hadir.",
+      "unavailable": "Produk belum dapat dimuat. Silakan cek kembali nanti."
+    },
+    "cta": {
+      "title": "Mari membangun sesuatu yang berguna",
+      "description": "Ingin tahu cara saya bekerja, atau butuh developer untuk produk Anda berikutnya?",
+      "about": "Tentang saya",
+      "signIn": "Buat akun Anda"
+    }
+  },
+  "skills": {
+    "frontend": {
+      "title": "Rekayasa frontend",
+      "description": "Aplikasi Next.js dan React yang cepat, aksesibel, dan mudah diubah — server components, ISR, dan design system untuk mode terang dan gelap."
+    },
+    "backend": {
+      "title": "Backend & API",
+      "description": "Layanan Spring Boot dan Go dengan batas modul yang jelas, kontrak yang ketat, serta alur pembayaran dan webhook yang idempoten."
+    },
+    "data": {
+      "title": "Pemodelan data",
+      "description": "Skema PostgreSQL dengan constraint yang menjaga uang dan akses, dikelola lewat migrasi Flyway."
+    },
+    "cloud": {
+      "title": "Cloud & infrastruktur",
+      "description": "AWS, Cloudflare Workers, Nginx, dan Terraform — setup produksi yang tetap hemat untuk developer tunggal."
+    },
+    "security": {
+      "title": "Keamanan",
+      "description": "Login Firebase, SSO dengan PKCE, webhook bertanda tangan, peran dengan hak minimum, dan tanpa HTML mentah di halaman."
+    },
+    "craft": {
+      "title": "Kualitas produk",
+      "description": "Dari PRD dan ADR hingga empty state terakhir: keputusan terdokumentasi, pengujian di bagian penting, dan UI yang rapi."
+    }
+  },
+  "about": {
+    "metaTitle": "Tentang Dewa Surya Ariesta",
+    "metaDescription": "Dewa Surya Ariesta adalah developer full-stack yang membangun produk web dari hulu ke hilir: frontend Next.js, API Spring Boot dan Go, PostgreSQL, dan infrastruktur cloud.",
+    "eyebrow": "Tentang",
+    "title": "Halo, saya Dewa — developer full-stack.",
+    "intro": "Saya merancang, membangun, dan menjalankan produk web dari awal sampai akhir. Saya peduli pada software yang cepat bagi pengunjung, aman untuk uang dan data, dan cukup hemat untuk dijalankan sendiri.",
+    "body": "Hub ini tempat semuanya bertemu: blog tempat saya berbagi pelajaran, akun yang membuat Anda masuk ke semua produk saya, dan penagihan yang menjaga semuanya tetap berjalan.",
+    "contact": "Kirim email",
+    "skillsEyebrow": "Keahlian",
+    "facts": {
+      "focus": {
+        "label": "Fokus",
+        "value": "Web full-stack"
+      },
+      "stack": {
+        "label": "Stack",
+        "value": "Next.js · Spring Boot · Go"
+      },
+      "location": {
+        "label": "Berbasis di",
+        "value": "Indonesia"
+      },
+      "writing": {
+        "label": "Menulis tentang",
+        "value": "Web, API & cloud"
+      }
+    },
+    "portfolioEyebrow": "Portofolio",
+    "portfolioTitle": "Proyek pilihan",
+    "portfolioDescription": "Hal-hal yang saya rancang dan bangun dari dokumen pertama sampai produksi.",
+    "projects": {
+      "hub": {
+        "title": "Dewa Surya Hub",
+        "description": "Platform ini: situs konten, satu akun Google untuk semua produk, langganan, dan pembayaran Midtrans — Next.js di Cloudflare Workers dengan API Spring Boot."
+      },
+      "documentDoctor": {
+        "title": "Document Doctor",
+        "description": "Perbaiki, konversi, dan periksa dokumen di browser. Produk pertama yang terhubung ke hub lewat SSO dan entitlement."
+      },
+      "simpleBank": {
+        "title": "Simple Bank",
+        "description": "Demo core banking berbasis ledger dengan Go: akun, setoran, dan transfer — studi tentang perpindahan uang yang konsisten."
+      }
+    },
+    "approachEyebrow": "Cara saya bekerja",
+    "approachTitle": "Dari ide ke produksi",
+    "approach": {
+      "one": {
+        "title": "Tulis dulu",
+        "description": "PRD singkat dan keputusan arsitektur lebih dulu, agar setiap kompromi jelas dan bisa ditinjau."
+      },
+      "two": {
+        "title": "Modelkan datanya",
+        "description": "Skema dan kontrak API yang membuat keadaan tidak valid mustahil — terutama untuk pembayaran dan akses."
+      },
+      "three": {
+        "title": "Bangun per irisan",
+        "description": "Kirim irisan tipis end-to-end: UI, API, data, dan tes bersama, satu use case setiap kali."
+      },
+      "four": {
+        "title": "Jalankan dengan hemat",
+        "description": "Statis dan ter-cache sebisa mungkin, terukur, dan di-deploy dengan infrastructure as code."
+      }
+    }
+  },
+  "portal": {
+    "navLabel": "Akun",
+    "profile": "Profil",
+    "subscriptions": "Langganan",
+    "transactions": "Riwayat pembayaran"
+  },
+  "adminNav": {
+    "tagline": "Admin",
+    "overview": "Ringkasan",
+    "dashboard": "Dasbor",
+    "content": "Konten",
+    "articles": "Artikel",
+    "media": "Media",
+    "categories": "Kategori",
+    "tags": "Tag",
+    "business": "Bisnis",
+    "users": "Pengguna",
+    "transactions": "Transaksi",
+    "products": "Produk & paket",
+    "viewSite": "Lihat situs"
+  }
+}

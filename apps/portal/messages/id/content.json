@@ -1,0 +1,65 @@
+{
+  "blog": {
+    "metaTitle": "Blog",
+    "metaTitlePage": "Blog — halaman {{page}}",
+    "pageSuffix": "halaman {{page}}",
+    "metaDescription": "Artikel dan tutorial dari Dewa Surya Ariesta tentang pengembangan web, rekayasa backend, dan infrastruktur cloud.",
+    "eyebrow": "Artikel & tutorial",
+    "title": "Blog",
+    "description": "Catatan praktis yang sudah diuji tentang membangun dan menjalankan produk web.",
+    "all": "Semua",
+    "categories": "Kategori",
+    "empty": "Belum ada artikel",
+    "emptyDescription": "Artikel baru akan muncul di sini segera setelah terbit.",
+    "unavailable": "Artikel belum dapat dimuat. Silakan coba lagi sebentar lagi.",
+    "backToBlog": "Kembali ke blog"
+  },
+  "category": {
+    "label": "Kategori",
+    "metaTitle": "Artikel {{name}}",
+    "metaDescription_one": "{{count}} artikel tentang {{name}} oleh Dewa Surya Ariesta.",
+    "metaDescription_other": "{{count}} artikel tentang {{name}} oleh Dewa Surya Ariesta.",
+    "count_one": "{{count}} artikel",
+    "count_other": "{{count}} artikel",
+    "empty": "Belum ada artikel di kategori ini",
+    "emptyDescription": "Cek lagi nanti, atau lihat semua artikel."
+  },
+  "tag": {
+    "label": "Tag",
+    "metaTitle": "Artikel dengan tag {{name}}",
+    "metaDescription_one": "{{count}} artikel dengan tag {{name}} oleh Dewa Surya Ariesta.",
+    "metaDescription_other": "{{count}} artikel dengan tag {{name}} oleh Dewa Surya Ariesta.",
+    "count_one": "{{count}} artikel",
+    "count_other": "{{count}} artikel",
+    "empty": "Belum ada artikel dengan tag ini",
+    "emptyDescription": "Cek lagi nanti, atau lihat semua artikel."
+  },
+  "article": {
+    "breadcrumb": "Remah roti",
+    "readingTime_one": "{{count}} menit baca",
+    "readingTime_other": "{{count}} menit baca",
+    "updated": "Diperbarui",
+    "onThisPage": "Di halaman ini",
+    "tags": "Tag",
+    "related": "Artikel terkait"
+  },
+  "body": {
+    "copy": "Salin",
+    "copied": "Tersalin",
+    "codeLanguage": "Bahasa",
+    "plainText": "Teks biasa",
+    "loadEmbed": "Muat {{provider}}",
+    "embedNotice": "Klik untuk memuat {{provider}}",
+    "opensInNewTab": "(terbuka di tab baru)",
+    "callout": {
+      "info": "Catatan",
+      "tip": "Tips",
+      "warning": "Peringatan",
+      "danger": "Bahaya"
+    },
+    "headingAnchor": "Tautan ke bagian ini",
+    "advertisement": "Iklan",
+    "taskDone": "Selesai",
+    "taskTodo": "Belum"
+  }
+}

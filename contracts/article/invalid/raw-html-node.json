@@ -1,0 +1,14 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "html",
+      "content": [
+        {
+          "type": "text",
+          "text": "<script>alert(1)</script>"
+        }
+      ]
+    }
+  ]
+}

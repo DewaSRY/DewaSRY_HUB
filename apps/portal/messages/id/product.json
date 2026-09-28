@@ -1,0 +1,58 @@
+{
+  "price": {
+    "free": "Gratis",
+    "perMonth": "/ bulan",
+    "perYear": "/ tahun"
+  },
+  "period": {
+    "monthly": "Bulanan",
+    "yearly": "Tahunan",
+    "free": "Gratis"
+  },
+  "plan": {
+    "oneTime": "Sekali bayar, tanpa perpanjangan otomatis",
+    "buy": "Beli",
+    "useFree": "Pakai gratis",
+    "popular": "Rekomendasi"
+  },
+  "features": {
+    "removeAds": "Tanpa iklan"
+  },
+  "card": {
+    "learnMore": "Pelajari",
+    "getStarted": "Mulai",
+    "details": "Detail",
+    "from": "Paket berbayar mulai",
+    "plans_one": "{{count}} paket",
+    "plans_other": "{{count}} paket"
+  },
+  "list": {
+    "metaTitle": "Produk",
+    "metaDescription": "Produk SaaS dari Dewa Surya Ariesta. Satu akun Google untuk semuanya; bayar sekali per periode dengan QRIS, e-wallet, transfer bank, atau kartu.",
+    "eyebrow": "Produk",
+    "title": "Produk",
+    "description": "Tools yang dibangun di atas hub. Masuk sekali dan gunakan semuanya dengan akun yang sama.",
+    "empty": "Belum ada produk yang tersedia.",
+    "unavailable": "Produk belum dapat dimuat. Silakan coba lagi sebentar lagi."
+  },
+  "detail": {
+    "breadcrumb": "Remah roti",
+    "plansTitle": "Paket",
+    "plansDescription": "Harga dalam rupiah. Setiap pembayaran berlaku untuk satu periode.",
+    "noPlans": "Belum ada paket publik untuk produk ini.",
+    "points": {
+      "oneTime": {
+        "title": "Bayar sekali per periode",
+        "description": "Tanpa menyimpan kartu dan tanpa tagihan otomatis — perpanjang hanya saat Anda mau."
+      },
+      "secure": {
+        "title": "Pembayaran aman",
+        "description": "Pembayaran diproses Midtrans. Akses aktif hanya setelah pembayaran terkonfirmasi."
+      },
+      "sso": {
+        "title": "Satu akun",
+        "description": "Masuk dengan Google di hub dan gunakan akun yang sama di setiap produk."
+      }
+    }
+  }
+}

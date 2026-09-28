@@ -1,0 +1,36 @@
+# Production: every external integration is real and every secret comes from the
+# environment (filled from SSM Parameter Store at deploy). No defaults for secrets.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+springdoc:
+  api-docs:
+    enabled: false
+
+hub:
+  bootstrap-admin-uid: ${HUB_BOOTSTRAP_ADMIN_UID:}
+  site-base-url: ${HUB_SITE_BASE_URL}
+  cors:
+    allowed-origins: ${HUB_CORS_ALLOWED_ORIGINS}
+  firebase:
+    project-id: ${FIREBASE_PROJECT_ID}
+    dev-jwt-secret: ""
+    token-minter: admin-sdk
+    service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+  midtrans:
+    mode: live
+    server-key: ${MIDTRANS_SERVER_KEY}
+    sandbox: ${MIDTRANS_SANDBOX:false}
+  storage:
+    type: s3
+    public-base-url: ${HUB_STORAGE_PUBLIC_BASE_URL}
+    s3-bucket: ${HUB_S3_BUCKET}
+    s3-region: ${HUB_S3_REGION:ap-southeast-1}
+  revalidate:
+    url: ${HUB_REVALIDATE_URL}
+    secret: ${HUB_REVALIDATE_SECRET}
+  sso:
+    allow-localhost-redirects: false

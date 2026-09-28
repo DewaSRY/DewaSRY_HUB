@@ -1,0 +1,22 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "click",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

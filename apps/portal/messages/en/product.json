@@ -1,0 +1,58 @@
+{
+  "price": {
+    "free": "Free",
+    "perMonth": "/ month",
+    "perYear": "/ year"
+  },
+  "period": {
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "free": "Free"
+  },
+  "plan": {
+    "oneTime": "One-time payment, no automatic renewal",
+    "buy": "Buy",
+    "useFree": "Use for free",
+    "popular": "Recommended"
+  },
+  "features": {
+    "removeAds": "No ads"
+  },
+  "card": {
+    "learnMore": "Learn more",
+    "getStarted": "Get started",
+    "details": "Details",
+    "from": "Paid plans from",
+    "plans_one": "{{count}} plan",
+    "plans_other": "{{count}} plans"
+  },
+  "list": {
+    "metaTitle": "Products",
+    "metaDescription": "SaaS products by Dewa Surya Ariesta. One Google account for all of them; pay once per period with QRIS, e-wallet, bank transfer, or card.",
+    "eyebrow": "Products",
+    "title": "Products",
+    "description": "Tools built on the hub. Sign in once and use them all with the same account.",
+    "empty": "No products are available yet.",
+    "unavailable": "Products can't be loaded right now. Please try again in a moment."
+  },
+  "detail": {
+    "breadcrumb": "Breadcrumb",
+    "plansTitle": "Plans",
+    "plansDescription": "Prices are in Indonesian rupiah. Each payment buys one period.",
+    "noPlans": "There are no public plans for this product yet.",
+    "points": {
+      "oneTime": {
+        "title": "Pay once per period",
+        "description": "No card on file and no automatic charge — renew only when you want to."
+      },
+      "secure": {
+        "title": "Secure checkout",
+        "description": "Payments run through Midtrans. Access starts only after the payment is confirmed."
+      },
+      "sso": {
+        "title": "One account",
+        "description": "Sign in with Google on the hub and use the same account in every product."
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "red",
+          "marks": [
+            {
+              "type": "textColor",
+              "attrs": {
+                "color": "#ff0000; background:url(javascript:alert(1))"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

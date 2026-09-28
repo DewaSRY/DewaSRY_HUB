@@ -1,0 +1,77 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": {
+        "textAlign": null,
+        "onclick": "alert(1)",
+        "style": "color:red"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "link",
+          "marks": [
+            {
+              "type": "link",
+              "attrs": {
+                "href": "https://example.com",
+                "target": "_blank",
+                "rel": "noopener noreferrer nofollow",
+                "class": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "textAlign": null,
+        "id": "custom"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Title"
+        }
+      ]
+    },
+    {
+      "type": "orderedList",
+      "attrs": {
+        "start": 1,
+        "type": null
+      },
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "attrs": {
+        "imageId": "5b2e0c1a-8d3f-4a6b-9c7e-1f2a3b4c5d6e",
+        "src": "https://evil.example/x.png",
+        "alt": null,
+        "caption": null,
+        "width": "content"
+      }
+    }
+  ]
+}

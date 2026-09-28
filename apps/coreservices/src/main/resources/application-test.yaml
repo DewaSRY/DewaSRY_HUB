@@ -1,0 +1,24 @@
+# Automated tests. The datasource comes from Testcontainers (@ServiceConnection).
+hub:
+  bootstrap-admin-uid: test-bootstrap-admin
+  site-base-url: https://hub.test
+  cors:
+    allowed-origins: http://localhost:3000,https://hub.test
+  firebase:
+    project-id: hub-test
+    dev-jwt-secret: test-jwt-secret-0123456789-0123456789-0123456789
+    token-minter: fake
+  midtrans:
+    mode: fake
+    server-key: test-server-key
+  storage:
+    type: local
+    local-dir: ./build/test-media
+    public-base-url: https://cdn.hub.test
+  revalidate:
+    url: ""
+    retry-delays: 10ms,10ms,10ms
+  sso:
+    allow-localhost-redirects: true
+  jobs:
+    enabled: false

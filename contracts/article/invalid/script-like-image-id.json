@@ -1,0 +1,12 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "image",
+      "attrs": {
+        "imageId": "x\" onerror=\"alert(1)",
+        "width": "content"
+      }
+    }
+  ]
+}

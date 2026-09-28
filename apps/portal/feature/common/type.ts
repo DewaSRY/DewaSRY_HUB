@@ -1,18 +1,6 @@
-type CommonMeta = {
-  page: number;
-  limit: number;
-  total: number;
-};
+export type { ApiPage, ApiResponse, Money, PageMeta, PageParams } from "@/lib/api/envelope";
 
-export type CommonSuccessResponse<T = unknown> = {
-  message?: string;
-  meta?: CommonMeta;
-  data: T;
-};
+/** Translate function shape passed into pure helpers. */
+export type Translate = (key: string, options?: Record<string, unknown>) => string;
 
-export type Translate = (key: string) => string;
-
-export type PaginationParams = {
-  page: number;
-  limit: number;
-};
+export type SearchParamsRecord = Record<string, string | string[] | undefined>;

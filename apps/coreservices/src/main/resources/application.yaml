@@ -1,3 +1,117 @@
+# Base configuration shared by every profile. Profile files (application-local.yaml,
+# application-test.yaml, application-prod.yaml) override the external integrations.
 spring:
   application:
     name: coreservices
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/hub}
+    username: ${DB_USERNAME:hub}
+    password: ${DB_PASSWORD:hub}
+    hikari:
+      # Small pool (ADR-001 §5.3): stays inside the Supabase connection limit during blue/green.
+      maximum-pool-size: ${DB_POOL_SIZE:8}
+      minimum-idle: 2
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    placeholders:
+      # V5 seeds the first Document Doctor credential only when a hash is supplied (from SSM at deploy).
+      dd_client_id: ${DD_CLIENT_ID:dd_live_SEED0001}
+      dd_client_secret_hash: ${DD_CLIENT_SECRET_HASH:}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true
+  mvc:
+    problemdetails:
+      enabled: false
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: native
+  error:
+    whitelabel:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /v1/openapi.json
+  swagger-ui:
+    enabled: false
+  packages-to-scan: com.sdewa.coreservices
+
+logging:
+  pattern:
+    level: "%5p [trace=%X{traceId:-}]"
+
+hub:
+  # Firebase uid that becomes ADMIN on sign-in (ADR-004 §6). Empty = nobody.
+  bootstrap-admin-uid: ${HUB_BOOTSTRAP_ADMIN_UID:}
+  # Public site, used for canonical URLs.
+  site-base-url: ${HUB_SITE_BASE_URL:http://localhost:3000}
+  cors:
+    allowed-origins: ${HUB_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  firebase:
+    project-id: ${FIREBASE_PROJECT_ID:dewa-surya-hub-local}
+    # When set, ID tokens are verified as HS256 JWTs signed with this secret instead of
+    # Google's JWKS. Only for local/test; never set it in prod.
+    dev-jwt-secret: ${HUB_DEV_JWT_SECRET:}
+    # fake | admin-sdk
+    token-minter: ${HUB_FIREBASE_TOKEN_MINTER:fake}
+    service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+  midtrans:
+    # fake | live
+    mode: ${MIDTRANS_MODE:fake}
+    server-key: ${MIDTRANS_SERVER_KEY:local-fake-server-key}
+    sandbox: ${MIDTRANS_SANDBOX:true}
+    snap-base-url: ${MIDTRANS_SNAP_BASE_URL:}
+    api-base-url: ${MIDTRANS_API_BASE_URL:}
+    snap-expiry-minutes: ${MIDTRANS_SNAP_EXPIRY_MINUTES:1440}
+    timeout: 10s
+  storage:
+    # local | s3
+    type: ${HUB_STORAGE_TYPE:local}
+    public-base-url: ${HUB_STORAGE_PUBLIC_BASE_URL:http://localhost:8080/local-media}
+    local-dir: ${HUB_STORAGE_LOCAL_DIR:./build/local-media}
+    s3-bucket: ${HUB_S3_BUCKET:}
+    s3-region: ${HUB_S3_REGION:ap-southeast-1}
+  media:
+    max-bytes: 10485760
+    widths: 480,960,1600
+    threads: 2
+  revalidate:
+    # Empty URL = revalidation is a no-op (logged).
+    url: ${HUB_REVALIDATE_URL:}
+    secret: ${HUB_REVALIDATE_SECRET:}
+    timeout: 3s
+    retry-delays: 1s,5s,30s
+  sso:
+    code-ttl: 60s
+    # Allow http://localhost redirect URIs (development only).
+    allow-localhost-redirects: ${HUB_SSO_ALLOW_LOCALHOST:false}
+  jobs:
+    enabled: ${HUB_JOBS_ENABLED:true}

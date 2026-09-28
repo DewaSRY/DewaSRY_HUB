@@ -1,0 +1,31 @@
+package com.sdewa.coreservices.config;
+
+import net.javacrumbs.shedlock.core.LockProvider;
+import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
+import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import javax.sql.DataSource;
+
+/**
+ * {@code @Scheduled} + ShedLock on PostgreSQL (ADR-002 rule S2): during a blue/green deploy only
+ * one instance runs a job. Disabled with {@code hub.jobs.enabled=false} (tests call jobs directly).
+ */
+@Configuration
+@EnableScheduling
+@EnableSchedulerLock(defaultLockAtMostFor = "PT10M")
+@ConditionalOnProperty(prefix = "hub.jobs", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class SchedulingConfig {
+
+    @Bean
+    public LockProvider lockProvider(DataSource dataSource) {
+        return new JdbcTemplateLockProvider(JdbcTemplateLockProvider.Configuration.builder()
+                .withJdbcTemplate(new JdbcTemplate(dataSource))
+                .usingDbTime()
+                .build());
+    }
+}

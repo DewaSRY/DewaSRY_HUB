@@ -1,0 +1,221 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2, "textAlign": "left" },
+      "content": [{ "type": "text", "text": "Why Graviton" }]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": "left" },
+      "content": [
+        { "type": "text", "text": "It is " },
+        { "type": "text", "text": "cheaper", "marks": [{ "type": "bold" }, { "type": "highlight", "attrs": { "color": "yellow" } }] },
+        { "type": "text", "text": ", " },
+        { "type": "text", "text": "faster", "marks": [{ "type": "italic" }] },
+        { "type": "text", "text": ", " },
+        { "type": "text", "text": "greener", "marks": [{ "type": "underline" }, { "type": "textColor", "attrs": { "color": "green" } }] },
+        { "type": "text", "text": " and " },
+        { "type": "text", "text": "not x86", "marks": [{ "type": "strike" }] },
+        { "type": "text", "text": ". Run " },
+        { "type": "text", "text": "uname -m", "marks": [{ "type": "code" }] },
+        { "type": "text", "text": " to check. H" },
+        { "type": "text", "text": "2", "marks": [{ "type": "subscript" }] },
+        { "type": "text", "text": "O and E = mc" },
+        { "type": "text", "text": "2", "marks": [{ "type": "superscript" }] },
+        { "type": "hardBreak" },
+        { "type": "text", "text": "Read the " },
+        { "type": "text", "text": "AWS docs", "marks": [{ "type": "link", "attrs": { "href": "https://aws.amazon.com/ec2/graviton/" } }] },
+        { "type": "text", "text": ", the " },
+        { "type": "text", "text": "about page", "marks": [{ "type": "link", "attrs": { "href": "/about" } }] },
+        { "type": "text", "text": ", the " },
+        { "type": "text", "text": "setup section", "marks": [{ "type": "link", "attrs": { "href": "#setup" } }] },
+        { "type": "text", "text": " or " },
+        { "type": "text", "text": "email me", "marks": [{ "type": "link", "attrs": { "href": "mailto:hello@example.com" } }] },
+        { "type": "text", "text": "." }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": "center" },
+      "content": [{ "type": "text", "text": "Centered text." }]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": "right" },
+      "content": [{ "type": "text", "text": "Right-aligned text." }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3, "textAlign": "center" },
+      "content": [{ "type": "text", "text": "Setup" }]
+    },
+    {
+      "type": "bulletList",
+      "content": [
+        { "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Terraform" }] }] },
+        {
+          "type": "listItem",
+          "content": [
+            { "type": "paragraph", "content": [{ "type": "text", "text": "Docker Compose" }] },
+            {
+              "type": "bulletList",
+              "content": [{ "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Nested item" }] }] }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "orderedList",
+      "attrs": { "start": 3 },
+      "content": [
+        { "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Third step" }] }] },
+        { "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Fourth step" }] }] }
+      ]
+    },
+    {
+      "type": "taskList",
+      "content": [
+        { "type": "taskItem", "attrs": { "checked": true }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Create the bucket" }] }] },
+        { "type": "taskItem", "attrs": { "checked": false }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Deploy the worker" }] }] }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4, "textAlign": "right" },
+      "content": [{ "type": "text", "text": "Terraform" }]
+    },
+    {
+      "type": "blockquote",
+      "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Make it work, make it right, make it fast." }] }]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": { "language": "typescript" },
+      "content": [{ "type": "text", "text": "export function add(a: number, b: number): number {\n  return a + b;\n}" }]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": { "language": null },
+      "content": [{ "type": "text", "text": "plain text without a language" }]
+    },
+    { "type": "horizontalRule" },
+    {
+      "type": "callout",
+      "attrs": { "tone": "info" },
+      "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "An info callout." }] }]
+    },
+    {
+      "type": "callout",
+      "attrs": { "tone": "tip" },
+      "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "A tip callout." }] }]
+    },
+    {
+      "type": "callout",
+      "attrs": { "tone": "warning" },
+      "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "A warning callout." }] }]
+    },
+    {
+      "type": "callout",
+      "attrs": { "tone": "danger" },
+      "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "A danger callout." }] }]
+    },
+    {
+      "type": "details",
+      "attrs": { "open": true },
+      "content": [
+        { "type": "detailsSummary", "content": [{ "type": "text", "text": "Show the full config" }] },
+        { "type": "detailsContent", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Hidden until opened." }] }] }
+      ]
+    },
+    {
+      "type": "image",
+      "attrs": {
+        "imageId": "5b2e0c1a-8d3f-4a6b-9c7e-1f2a3b4c5d6e",
+        "alt": "Architecture diagram override",
+        "caption": "Architecture",
+        "width": "wide"
+      }
+    },
+    {
+      "type": "image",
+      "attrs": { "imageId": "6c3f1d2b-9e4a-4b7c-8d8f-2a3b4c5d6e7f", "alt": null, "caption": null, "width": "content" }
+    },
+    {
+      "type": "image",
+      "attrs": { "imageId": "7d4a2e3c-0f5b-4c8d-9e9a-3b4c5d6e7f80", "width": "full" }
+    },
+    {
+      "type": "embed",
+      "attrs": { "provider": "youtube", "id": "dQw4w9WgXcQ", "caption": "A talk" }
+    },
+    {
+      "type": "embed",
+      "attrs": { "provider": "vimeo", "id": "76979871", "caption": null }
+    },
+    {
+      "type": "embed",
+      "attrs": { "provider": "codesandbox", "id": "new-react-demo-x1y2z3" }
+    },
+    {
+      "type": "embed",
+      "attrs": { "provider": "figma", "id": "AbCdEf1234567890" }
+    },
+    {
+      "type": "bookmark",
+      "attrs": {
+        "url": "https://opennext.js.org/cloudflare",
+        "title": "OpenNext for Cloudflare",
+        "description": "Deploy Next.js apps to Cloudflare.",
+        "siteName": "OpenNext"
+      }
+    },
+    {
+      "type": "table",
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            { "type": "tableHeader", "attrs": { "colspan": 1, "rowspan": 1, "colwidth": [160] }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Instance" }] }] },
+            { "type": "tableHeader", "attrs": { "colspan": 1, "rowspan": 1, "colwidth": null }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "vCPU" }] }] },
+            { "type": "tableHeader", "attrs": { "colspan": 1, "rowspan": 1, "colwidth": null }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Price" }] }] }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            { "type": "tableCell", "attrs": { "colspan": 1, "rowspan": 2, "colwidth": [160] }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "t4g.small", "marks": [{ "type": "bold" }] }] }] },
+            { "type": "tableCell", "attrs": { "colspan": 2, "rowspan": 1, "colwidth": null }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "2 vCPU, merged cell" }] }] }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            { "type": "tableCell", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "2" }] }] },
+            {
+              "type": "tableCell",
+              "content": [
+                { "type": "paragraph", "content": [{ "type": "text", "text": "Cheap" }, { "type": "hardBreak" }, { "type": "text", "text": "and good" }] },
+                { "type": "orderedList", "content": [{ "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "listed in a cell" }] }] }] },
+                { "type": "taskList", "content": [{ "type": "taskItem", "attrs": { "checked": false }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "todo in a cell" }] }] }] },
+                { "type": "bulletList", "content": [{ "type": "listItem", "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "bullet in a cell" }] }] }] }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 2 },
+      "content": [{ "type": "text", "text": "Why Graviton" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "A heading with the same text gets a unique id." }]
+    },
+    { "type": "paragraph" }
+  ]
+}

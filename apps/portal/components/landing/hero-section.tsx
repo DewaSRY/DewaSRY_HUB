@@ -1,289 +1,91 @@
-"use client";
-
-import { useTranslation } from "react-i18next";
-import { motion } from "motion/react";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
-import { AUTHOR } from "@/components/landing/author";
-import { GithubIcon, LinkedinIcon } from "@/components/landing/social-icons";
-import { SparkleIconLink } from "@/components/landing/sparkle-icon-link";
+import { buttonVariants } from "@/components/ui/button";
+import { GithubIcon, LinkedinIcon } from "./social-icons";
+import { AUTHOR } from "./author";
 
-export function HeroSection() {
-  const { t } = useTranslation("landing");
+export interface HeroLabels {
+  badge: string;
+  title: string;
+  highlight: string;
+  description: string;
+  primaryCta: string;
+  secondaryCta: string;
+  stackLabel: string;
+}
 
-  const pipeline = t("hero.pipeline", {
-    returnObjects: true,
-  }) as string[];
+const STACK = ["Next.js", "React", "TypeScript", "Spring Boot", "Java", "Go", "PostgreSQL", "AWS", "Cloudflare", "Terraform"];
 
+/** Home hero: who Dewa is, and the two paths (blog, products). Static markup, no JS. */
+export function HeroSection({ labels }: { labels: HeroLabels }) {
   return (
-    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden py-8 ">
+    <section className="relative overflow-hidden border-b">
       <div
-        className="
-          mx-auto flex w-full max-w-5xl flex-col items-center
-          gap-5 text-center
-          sm:gap-6
-          lg:gap-7
-        "
-      >
-        {/* Eyebrow */}
-        <motion.span
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.5,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="
-            rounded-full bg-muted px-3 py-1
-            text-[11px] font-medium
-            text-muted-foreground
-            ring-1 ring-foreground/10
-            sm:px-3.5 sm:py-1.5 sm:text-xs
-          "
-        >
-          {t("hero.eyebrow")}
-        </motion.span>
-
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.05,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="
-            max-w-4xl
-            text-xl
-            md:text-3xl md:leading-[1.1]
-            font-semibold tracking-tight
-            text-balance
-            sm:text-5xl sm:leading-[1.08]
-            lg:text-5xl
-          "
-        >
-          <span>{t("hero.titleBefore")} </span>
-          <span className="text-primary">{t("hero.titleBrand")}</span>
-        </motion.h1>
-
-        {/* Description */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.1,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="
-            max-w-2xl
-            md:text-base md:leading-7
-            text-muted-foreground
-            text-balance
-            sm:text-lg sm:leading-8
-          "
-        >
-          {t("hero.description")}
-        </motion.p>
-
-        {/* Pipeline */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: {},
-            visible: {
-              transition: {
-                staggerChildren: 0.15,
-                delayChildren: 0.2,
-              },
-            },
-          }}
-          className=" hidden sm:flex
-            mt-2  w-full max-w-3xl
-            flex-wrap items-center justify-center
-            gap-x-1.5 gap-y-2
-            sm:gap-x-2 sm:gap-y-2.5
-          "
-        >
-          {pipeline.map((step, index) => (
-            <motion.span
-              key={step}
-              variants={{
-                hidden: {
-                  opacity: 0,
-                  y: 12,
-                  scale: 0.9,
-                },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  transition: {
-                    duration: 0.4,
-                    ease: "easeOut",
-                  },
-                },
-              }}
-              className="flex items-center gap-1.5 sm:gap-2"
-            >
-              <span
-                className="
-                  rounded-full bg-card
-                  px-2.5 py-1.5
-                  text-[11px] font-medium
-                  whitespace-nowrap
-                  ring-1 ring-foreground/10
-                  sm:px-3 sm:text-sm
-                "
-              >
-                {step}
-              </span>
-
-              {index < pipeline.length - 1 && (
-                <motion.span
-                  initial={{ opacity: 0, x: -4 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: 0.2 + (index + 1) * 0.15,
-                  }}
-                >
-                  <ArrowRight
-                    className="
-                      size-3 shrink-0
-                      text-muted-foreground/40
-                      sm:size-3.5
-                    "
-                    aria-hidden
-                  />
-                </motion.span>
-              )}
-            </motion.span>
-          ))}
-        </motion.div>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            delay: 0.3,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="
-            mt-3 flex w-full
-            flex-col gap-2.5
-            sm:mt-4 sm:w-auto sm:flex-row sm:gap-3
-          "
-        >
-          <Button
-            size="lg"
-            className="
-              h-11 w-full px-6
-              text-sm
-              sm:h-12 sm:w-auto sm:text-base
-            "
-            nativeButton={false}
-            render={<a href="#journey" />}
-          >
-            {t("hero.ctaPrimary")}
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            className="
-              h-11 w-full px-6
-              text-sm
-              sm:h-12 sm:w-auto sm:text-base
-            "
-            nativeButton={false}
-            render={<Link href="/onboarding" />}
-          >
-            {t("hero.ctaSecondary")}
-          </Button>
-        </motion.div>
-
-        {/* Note */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            duration: 0.5,
-            delay: 0.45,
-          }}
-          className="
-            max-w-md
-            text-xs text-muted-foreground
-            sm:text-sm
-          "
-        >
-          {t("hero.note")}
-        </motion.p>
-
-        {/* Socials */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            duration: 0.5,
-            delay: 0.5,
-          }}
-          className="flex items-center gap-3 sm:gap-4"
-        >
-          <SparkleIconLink
-            href={AUTHOR.githubUrl}
-            ariaLabel={t("hero.social.github")}
-            icon={<GithubIcon className="size-4.5 sm:size-5" />}
-            hoverRotate="left"
-          />
-
-          <SparkleIconLink
-            href={AUTHOR.linkedinUrl}
-            ariaLabel={t("hero.social.linkedin")}
-            icon={<LinkedinIcon className="size-4.5 sm:size-5" />}
-            hoverRotate="right"
-          />
-        </motion.div>
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_30rem_at_20%_-10%,color-mix(in_oklch,var(--primary)_16%,transparent),transparent),radial-gradient(40rem_24rem_at_90%_10%,color-mix(in_oklch,var(--info)_12%,transparent),transparent)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 [background-image:linear-gradient(to_right,color-mix(in_oklch,var(--foreground)_6%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklch,var(--foreground)_6%,transparent)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]"
+      />
+      <div className="relative mx-auto grid w-full max-w-6xl gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1.3fr_1fr] lg:items-center">
+        <div className="space-y-7">
+          <span className="inline-flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-xs backdrop-blur">
+            <span className="size-1.5 rounded-full bg-success" aria-hidden />
+            {labels.badge}
+          </span>
+          <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+            {labels.title} <span className="text-primary">{labels.highlight}</span>
+          </h1>
+          <p className="max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty">{labels.description}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/blog" className={buttonVariants({ size: "lg" })}>
+              <BookOpen aria-hidden />
+              {labels.primaryCta}
+            </Link>
+            <Link href="/products" className={buttonVariants({ size: "lg", variant: "outline" })}>
+              {labels.secondaryCta}
+              <ArrowRight aria-hidden />
+            </Link>
+          </div>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <a href={AUTHOR.githubUrl} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="hover:text-foreground">
+              <GithubIcon className="size-5" />
+            </a>
+            <a href={AUTHOR.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-foreground">
+              <LinkedinIcon className="size-5" />
+            </a>
+            <span className="text-sm">{AUTHOR.githubLabel}</span>
+          </div>
+        </div>
+        <div className="relative">
+          <div className="rounded-2xl border bg-card/90 p-6 shadow-xl ring-1 ring-foreground/5 backdrop-blur">
+            <div className="mb-4 flex items-center gap-1.5" aria-hidden>
+              <span className="size-2.5 rounded-full bg-destructive/60" />
+              <span className="size-2.5 rounded-full bg-warning/70" />
+              <span className="size-2.5 rounded-full bg-success/70" />
+            </div>
+            <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed text-muted-foreground">
+              <code>
+                <span className="text-primary">const</span> dewa = {"{"}
+                {"\n  "}role: <span className="text-success">&quot;Full-stack developer&quot;</span>,
+                {"\n  "}based: <span className="text-success">&quot;Indonesia&quot;</span>,
+                {"\n  "}ships: [<span className="text-success">&quot;web&quot;</span>, <span className="text-success">&quot;APIs&quot;</span>, <span className="text-success">&quot;infra&quot;</span>],
+                {"\n  "}writes: <span className="text-success">&quot;/blog&quot;</span>,
+                {"\n"}{"}"};
+              </code>
+            </pre>
+            <p className="mt-5 mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">{labels.stackLabel}</p>
+            <ul className="flex flex-wrap gap-1.5">
+              {STACK.map((item) => (
+                <li key={item} className="rounded-md border bg-muted/50 px-2 py-0.5 text-xs font-medium">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.a
-        href="#journey"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{
-          duration: 0.5,
-          delay: 0.6,
-        }}
-        className="
-          absolute bottom-4 left-1/2
-          flex -translate-x-1/2
-          flex-col items-center gap-1
-          text-[11px] font-medium
-          text-muted-foreground
-          transition-colors hover:text-foreground
-          sm:gap-1.5 sm:text-xs sm:bottom-18
-        "
-        aria-label={t("hero.scrollHint")}
-      >
-        <span>{t("hero.scrollHint")}</span>
-
-        <motion.span
-          animate={{ y: [0, 6, 0] }}
-          transition={{
-            duration: 1.6,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        >
-          <ChevronDown className="size-3.5 sm:size-4" aria-hidden />
-        </motion.span>
-      </motion.a>
     </section>
   );
 }

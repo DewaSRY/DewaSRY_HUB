@@ -1,0 +1,115 @@
+{
+  "description": "Invalid article bodies (ADR-009 \u00a78). Each must be rejected with 400 VALIDATION_FAILED; 'expectedPath' is the error field the portal validator reports (field 'body' or a path like 'body.content[1]').",
+  "fixtures": [
+    {
+      "file": "unknown-node.json",
+      "expectedPath": "body.content[1]",
+      "reason": "unknown node type"
+    },
+    {
+      "file": "raw-html-node.json",
+      "expectedPath": "body.content[0]",
+      "reason": "unknown node type"
+    },
+    {
+      "file": "unknown-mark.json",
+      "expectedPath": "body.content[0].content[0].marks[0]",
+      "reason": "unknown mark type"
+    },
+    {
+      "file": "javascript-link.json",
+      "expectedPath": "body.content[0].content[0].marks[0].attrs.href",
+      "reason": "invalid value"
+    },
+    {
+      "file": "data-uri-link.json",
+      "expectedPath": "body.content[0].content[0].marks[0].attrs.href",
+      "reason": "invalid value"
+    },
+    {
+      "file": "protocol-relative-link.json",
+      "expectedPath": "body.content[0].content[0].marks[0].attrs.href",
+      "reason": "invalid value"
+    },
+    {
+      "file": "script-like-image-id.json",
+      "expectedPath": "body.content[0].attrs.imageId",
+      "reason": "invalid value"
+    },
+    {
+      "file": "script-like-embed-id.json",
+      "expectedPath": "body.content[0].attrs.id",
+      "reason": "invalid youtube id"
+    },
+    {
+      "file": "unknown-embed-provider.json",
+      "expectedPath": "body.content[0].attrs.provider",
+      "reason": "invalid value"
+    },
+    {
+      "file": "bookmark-javascript-url.json",
+      "expectedPath": "body.content[0].attrs.url",
+      "reason": "invalid value"
+    },
+    {
+      "file": "bookmark-http-url.json",
+      "expectedPath": "body.content[0].attrs.url",
+      "reason": "invalid value"
+    },
+    {
+      "file": "hex-text-color.json",
+      "expectedPath": "body.content[0].content[0].marks[0].attrs.color",
+      "reason": "invalid value"
+    },
+    {
+      "file": "heading-level-1.json",
+      "expectedPath": "body.content[0].attrs.level",
+      "reason": "invalid value"
+    },
+    {
+      "file": "unsupported-code-language.json",
+      "expectedPath": "body.content[0].attrs.language",
+      "reason": "invalid value"
+    },
+    {
+      "file": "oversized-table-columns.json",
+      "expectedPath": "body.content[0]",
+      "reason": "more than 20 columns"
+    },
+    {
+      "file": "oversized-table-rows.json",
+      "expectedPath": "body.content[0]",
+      "reason": "more than 200 rows"
+    },
+    {
+      "file": "image-in-table-cell.json",
+      "expectedPath": "body.content[0].content[0].content[0].content[0]",
+      "reason": "not allowed here"
+    },
+    {
+      "file": "colspan-too-large.json",
+      "expectedPath": "body.content[0].content[0].content[0].attrs.colspan",
+      "reason": "invalid value"
+    },
+    {
+      "file": "too-deep.json",
+      "expectedPath": "body.content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0].content[0]",
+      "reason": "nesting deeper than 20"
+    },
+    {
+      "file": "too-many-images.json",
+      "expectedPath": "body",
+      "reason": "more than 100 images"
+    },
+    {
+      "file": "not-a-doc.json",
+      "expectedPath": "body",
+      "reason": "body must be a doc node"
+    },
+    {
+      "file": "image-missing-id.json",
+      "expectedPath": "body.content[0].attrs.imageId",
+      "reason": "is required"
+    }
+  ]
+}

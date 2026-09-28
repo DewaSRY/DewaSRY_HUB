@@ -1,0 +1,172 @@
+{
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "blog": "Blog",
+    "products": "Products",
+    "about": "About",
+    "account": "Account",
+    "menu": "Open menu"
+  },
+  "footer": {
+    "tagline": "The home of Dewa Surya Ariesta's writing and SaaS products — one account for every app.",
+    "explore": "Explore",
+    "account": "Account",
+    "signIn": "Sign in",
+    "subscriptions": "Subscriptions",
+    "transactions": "Payment history",
+    "rights": "All rights reserved."
+  },
+  "home": {
+    "metaTitle": "Dewa Surya Hub — full-stack development, articles, and SaaS products",
+    "metaDescription": "Articles and tutorials by Dewa Surya Ariesta, a full-stack developer, plus the SaaS products of the Dewa Surya Hub such as Document Doctor.",
+    "hero": {
+      "badge": "Full-stack developer · open to work",
+      "title": "I build web products end to end —",
+      "highlight": "from the database to the last pixel.",
+      "description": "I'm Dewa Surya Ariesta. I write about building and running real software, and I build SaaS products like Document Doctor on top of this hub.",
+      "primaryCta": "Read the blog",
+      "secondaryCta": "See the products",
+      "stackLabel": "Everyday stack"
+    },
+    "latest": {
+      "eyebrow": "Blog",
+      "title": "Latest articles",
+      "description": "Practical notes on web development, backend design, and cloud infrastructure.",
+      "viewAll": "All articles",
+      "empty": "No articles yet — the first one is on its way.",
+      "unavailable": "Articles can't be loaded right now. Please check back soon."
+    },
+    "skills": {
+      "eyebrow": "What I do",
+      "title": "Full stack, for real",
+      "description": "One developer, the whole product: interface, API, data, payments, and the infrastructure it runs on."
+    },
+    "products": {
+      "eyebrow": "Products",
+      "title": "Tools built on the hub",
+      "description": "Sign in once with Google and use every product with the same account.",
+      "viewAll": "All products",
+      "empty": "Products are coming soon.",
+      "unavailable": "Products can't be loaded right now. Please check back soon."
+    },
+    "cta": {
+      "title": "Let's build something useful",
+      "description": "Want to know more about how I work, or need a developer for your next product?",
+      "about": "About me",
+      "signIn": "Create your account"
+    }
+  },
+  "skills": {
+    "frontend": {
+      "title": "Frontend engineering",
+      "description": "Next.js and React apps that are fast, accessible, and easy to change — server components, ISR, and a design system that works in light and dark."
+    },
+    "backend": {
+      "title": "Backend & APIs",
+      "description": "Spring Boot and Go services with clear module boundaries, strict contracts, and idempotent payment and webhook flows."
+    },
+    "data": {
+      "title": "Data modelling",
+      "description": "PostgreSQL schemas with constraints that protect money and access, versioned with Flyway migrations."
+    },
+    "cloud": {
+      "title": "Cloud & infrastructure",
+      "description": "AWS, Cloudflare Workers, Nginx, and Terraform — production setups that stay cheap for a solo developer."
+    },
+    "security": {
+      "title": "Security",
+      "description": "Firebase sign-in, SSO with PKCE, signed webhooks, least-privilege roles, and no raw HTML reaching the page."
+    },
+    "craft": {
+      "title": "Product craft",
+      "description": "From the PRD and ADRs to the last empty state: documented decisions, tests where they matter, and polished UI."
+    }
+  },
+  "about": {
+    "metaTitle": "About Dewa Surya Ariesta",
+    "metaDescription": "Dewa Surya Ariesta is a full-stack developer building web products end to end: Next.js frontends, Spring Boot and Go APIs, PostgreSQL, and cloud infrastructure.",
+    "eyebrow": "About",
+    "title": "Hi, I'm Dewa — a full-stack developer.",
+    "intro": "I design, build, and run web products end to end. I care about software that is fast for visitors, safe with money and data, and cheap enough to operate as one person.",
+    "body": "This hub is where that comes together: the blog where I share what I learn, the account that signs you in to all my products, and the billing that keeps them running.",
+    "contact": "Email me",
+    "skillsEyebrow": "Skills",
+    "facts": {
+      "focus": {
+        "label": "Focus",
+        "value": "Full-stack web"
+      },
+      "stack": {
+        "label": "Stack",
+        "value": "Next.js · Spring Boot · Go"
+      },
+      "location": {
+        "label": "Based in",
+        "value": "Indonesia"
+      },
+      "writing": {
+        "label": "Writes about",
+        "value": "Web, APIs & cloud"
+      }
+    },
+    "portfolioEyebrow": "Portfolio",
+    "portfolioTitle": "Selected projects",
+    "portfolioDescription": "Things I have designed and built from the first document to production.",
+    "projects": {
+      "hub": {
+        "title": "Dewa Surya Hub",
+        "description": "This platform: a content site, one Google account across products, subscriptions, and Midtrans payments — Next.js on Cloudflare Workers with a Spring Boot API."
+      },
+      "documentDoctor": {
+        "title": "Document Doctor",
+        "description": "Fix, convert, and check documents in the browser. The first product connected to the hub through SSO and entitlements."
+      },
+      "simpleBank": {
+        "title": "Simple Bank",
+        "description": "A ledger-based core banking demo in Go with accounts, deposits, and transfers — a study in consistent money movement."
+      }
+    },
+    "approachEyebrow": "How I work",
+    "approachTitle": "From idea to production",
+    "approach": {
+      "one": {
+        "title": "Write it down",
+        "description": "A short PRD and architecture decisions first, so every trade-off is explicit and reviewable."
+      },
+      "two": {
+        "title": "Model the data",
+        "description": "Schemas and API contracts that make invalid states impossible — especially for payments and access."
+      },
+      "three": {
+        "title": "Build the slice",
+        "description": "Ship thin end-to-end slices: UI, API, data, and tests together, one use case at a time."
+      },
+      "four": {
+        "title": "Run it cheaply",
+        "description": "Static and cached where possible, measured, and deployed with infrastructure as code."
+      }
+    }
+  },
+  "portal": {
+    "navLabel": "Account",
+    "profile": "Profile",
+    "subscriptions": "Subscriptions",
+    "transactions": "Payment history"
+  },
+  "adminNav": {
+    "tagline": "Admin",
+    "overview": "Overview",
+    "dashboard": "Dashboard",
+    "content": "Content",
+    "articles": "Articles",
+    "media": "Media",
+    "categories": "Categories",
+    "tags": "Tags",
+    "business": "Business",
+    "users": "Users",
+    "transactions": "Transactions",
+    "products": "Products & plans",
+    "viewSite": "View site"
+  }
+}
