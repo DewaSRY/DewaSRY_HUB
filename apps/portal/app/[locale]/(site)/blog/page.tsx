@@ -31,7 +31,7 @@ export default async function BlogPage({ params, searchParams }: PageProps<"/[lo
   const t = labels.tContent;
 
   const [articles, categories] = await Promise.all([
-    readOrFallback(() => listArticles({ page, limit: PAGE_SIZE }), emptyPage(page, PAGE_SIZE)),
+    readOrFallback(() => listArticles({ locale, page, limit: PAGE_SIZE }), emptyPage(page, PAGE_SIZE)),
     readOrFallback(() => listCategories(), []),
   ]);
   if (!articles.unavailable && page > 1 && page > articles.data.meta.total_page) notFound();

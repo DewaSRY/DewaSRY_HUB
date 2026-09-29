@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { formatDate } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 import type { ArticleSummary } from "../type";
+import { languageName } from "../utils/locales";
 import { ResponsiveImage } from "./article-body/nodes/figure";
 
 interface Props {
@@ -16,10 +17,13 @@ interface Props {
 
 /** Title, excerpt, 480 px cover, category, and publish date (UC-01, UC-03). */
 export function ArticleCard({ article, locale, variant = "default", priority, className }: Props) {
+  // Not translated into the page language yet: say which language the card is in.
+  const otherLanguage = article.locale && article.locale !== locale ? article.locale : null;
   const featured = variant === "featured";
   const compact = variant === "compact";
   return (
     <article
+      lang={otherLanguage ?? undefined}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-xl border bg-card shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md",
         featured && "md:grid md:grid-cols-2",
@@ -55,6 +59,15 @@ export function ArticleCard({ article, locale, variant = "default", priority, cl
               <CalendarDays className="size-3.5" aria-hidden />
               {formatDate(article.publishedAt, { locale })}
             </time>
+          ) : null}
+          {otherLanguage ? (
+            <span
+              lang={locale}
+              title={languageName(otherLanguage, locale)}
+              className="rounded border px-1.5 py-px font-mono text-[10px] tracking-wide uppercase"
+            >
+              {otherLanguage}
+            </span>
           ) : null}
         </div>
         <h3

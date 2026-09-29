@@ -81,8 +81,8 @@ class MediaFlowTest extends IntegrationTest {
         // Used as a cover and in the body → cannot delete.
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"With image","coverImageId":"%s","body":{"type":"doc","content":[
-                                  {"type":"image","attrs":{"imageId":"%s","width":"wide"}}]}}""".formatted(id, id)))
+                                {"coverImageId":"%s","translations":{"id":{"title":"With image","body":{"type":"doc","content":[
+                                  {"type":"image","attrs":{"imageId":"%s","width":"wide"}}]}}}}""".formatted(id, id)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.images['" + id + "'].variants.length()").value(3))
                 .andExpect(jsonPath("$.data.coverImage.id").value(id));

@@ -24,13 +24,17 @@
       "category": "Kategori",
       "allCategories": "Semua kategori",
       "tag": "Tag",
-      "allTags": "Semua tag"
+      "allTags": "Semua tag",
+      "language": "Bahasa",
+      "allLanguages": "Semua bahasa",
+      "missingLanguage": "Belum ada {{language}}"
     },
     "columns": {
       "title": "Judul",
       "status": "Status",
       "category": "Kategori",
-      "updated": "Diperbarui"
+      "updated": "Diperbarui",
+      "languages": "Bahasa"
     },
     "toast": {
       "created": "Draf dibuat",
@@ -55,7 +59,7 @@
     },
     "settings": {
       "title": "Pengaturan artikel",
-      "description": "URL, ringkasan, sampul, kategori, tag, dan tampilan di mesin pencari. Disimpan bersama artikel.",
+      "description": "URL, sampul, kategori, dan tag dipakai bersama oleh semua bahasa. Ringkasan dan tampilan penelusuran diatur per bahasa. Disimpan bersama artikel.",
       "slug": "Slug",
       "slugHint": "Bagian akhir URL. Kosongkan untuk membuatnya dari judul.",
       "slugFromTitle": "Buat slug dari judul",
@@ -76,7 +80,9 @@
       "googlePreview": "Pratinjau Google",
       "noDescription": "Tambahkan ringkasan atau deskripsi meta.",
       "titleTooLong": "Judul lebih dari {{max}} karakter akan terpotong.",
-      "descriptionTooLong": "Deskripsi lebih dari {{max}} karakter akan terpotong."
+      "descriptionTooLong": "Deskripsi lebih dari {{max}} karakter akan terpotong.",
+      "languageSection": "Versi {{language}}",
+      "languageSectionHint": "Ringkasan dan tampilan penelusuran khusus bahasa ini."
     },
     "checklist": {
       "title": "Siap diterbitkan?",
@@ -93,7 +99,8 @@
         "cover": "Gambar sampul",
         "metaDescription": "Deskripsi meta",
         "imageAlt_zero": "Semua gambar di isi artikel memiliki teks alt",
-        "imageAlt_other": "{{count}} gambar di isi artikel belum memiliki teks alt"
+        "imageAlt_other": "{{count}} gambar di isi artikel belum memiliki teks alt",
+        "language": "Belum ada versi {{language}} — pembacanya melihat bahasa lain"
       }
     },
     "conflict": {
@@ -139,6 +146,20 @@
       "backToEditor": "Kembali ke editor",
       "emptyTitle": "Tidak ada yang bisa dipratinjau",
       "emptyDescription": "Buka pratinjau dari editor untuk melihat artikel seperti yang dilihat pengunjung."
+    },
+    "languages": {
+      "label": "Bahasa",
+      "written": "Sudah ditulis",
+      "missing": "Belum ditulis",
+      "needsAttention": "Ada perubahan belum disimpan atau kesalahan",
+      "startTitle": "Belum ada versi {{language}}",
+      "startDescription": "Pembaca yang memilih {{language}} akan melihat bahasa lain sampai versi ini ditulis. Slug, sampul, kategori, dan tag dipakai bersama oleh semua bahasa.",
+      "copyFrom": "Salin dari {{language}}",
+      "startBlank": "Mulai dari kosong",
+      "remove": "Hapus versi {{language}}",
+      "removeTitle": "Hapus versi {{language}}?",
+      "removeDescription": "Judul, isi, ringkasan, dan kolom SEO-nya dihapus saat Anda menyimpan. Pembaca {{language}} akan melihat bahasa lain.",
+      "removeConfirm": "Hapus"
     }
   },
   "editor": {

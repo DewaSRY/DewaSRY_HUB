@@ -2,6 +2,7 @@ package com.sdewa.coreservices.content;
 
 import com.sdewa.coreservices.common.error.ApiException;
 import com.sdewa.coreservices.common.paging.PageQuery;
+import com.sdewa.coreservices.content.ContentDtos.ArticleSitemapEntry;
 import com.sdewa.coreservices.content.ContentDtos.ArticleSummary;
 import com.sdewa.coreservices.content.ContentDtos.PublicArticle;
 import com.sdewa.coreservices.content.ContentDtos.PublicTerm;
@@ -17,7 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /** Group 1 content reads (UC-01, UC-03). Only published data. */
 @Service
@@ -29,20 +33,24 @@ public class PublicContentService {
     private final CategoryRepository categories;
     private final TagRepository tags;
     private final ContentViews views;
+    private final ContentLocales locales;
 
     public PublicContentService(ArticleRepository articles, ArticleSlugHistoryRepository slugHistory,
-                                CategoryRepository categories, TagRepository tags, ContentViews views) {
+                                CategoryRepository categories, TagRepository tags, ContentViews views,
+                                ContentLocales locales) {
         this.articles = articles;
         this.slugHistory = slugHistory;
         this.categories = categories;
         this.tags = tags;
         this.views = views;
+        this.locales = locales;
     }
 
     public record ListResult(List<ArticleSummary> items, long total) {
     }
 
-    public ListResult list(String categorySlug, String tagSlug, PageQuery page) {
+    public ListResult list(String categorySlug, String tagSlug, String requestedLocale, PageQuery page) {
+        String locale = locales.resolve(requestedLocale, "locale");
         Specification<Article> spec = (root, query, cb) -> {
             List<Predicate> ps = new ArrayList<>();
             ps.add(cb.equal(root.get("status"), ArticleStatus.PUBLISHED));
@@ -56,17 +64,18 @@ public class PublicContentService {
             return cb.and(ps.toArray(Predicate[]::new));
         };
         Page<Article> result = articles.findAll(spec, page.pageableWithTieBreak());
-        return new ListResult(result.getContent().stream().map(views::summary).toList(), result.getTotalElements());
+        return new ListResult(result.getContent().stream().map(a -> views.summary(a, locale)).toList(), result.getTotalElements());
     }
 
     /** Either the article, or the new slug when {@code slug} is an old slug of a published article (301). */
     public record ArticleLookup(PublicArticle article, String redirectSlug) {
     }
 
-    public ArticleLookup bySlug(String slug) {
+    public ArticleLookup bySlug(String slug, String requestedLocale) {
+        String locale = locales.resolve(requestedLocale, "locale");
         var published = articles.findBySlugAndStatus(slug, ArticleStatus.PUBLISHED);
         if (published.isPresent()) {
-            return new ArticleLookup(views.publicArticle(published.get()), null);
+            return new ArticleLookup(views.publicArticle(published.get(), locale), null);
         }
         return slugHistory.findById(slug)
                 .flatMap(h -> articles.findById(h.getArticleId()))
@@ -94,8 +103,15 @@ public class PublicContentService {
     }
 
     public Sitemap sitemap() {
-        return new Sitemap(entries(articles.sitemapArticles()), entries(articles.sitemapCategories()),
-                entries(articles.sitemapTags()));
+        Map<UUID, List<String>> localesById = new HashMap<>();
+        for (Object[] r : articles.sitemapArticleLocales()) {
+            localesById.computeIfAbsent((UUID) r[0], k -> new ArrayList<>()).add((String) r[1]);
+        }
+        List<ArticleSitemapEntry> articleEntries = articles.sitemapArticles().stream()
+                .map(r -> new ArticleSitemapEntry((String) r[1], (Instant) r[2],
+                        locales.sorted(localesById.getOrDefault((UUID) r[0], List.of()))))
+                .toList();
+        return new Sitemap(articleEntries, entries(articles.sitemapCategories()), entries(articles.sitemapTags()));
     }
 
     private static List<SitemapEntry> entries(List<Object[]> rows) {

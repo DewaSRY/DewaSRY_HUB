@@ -25,6 +25,7 @@ public class HubProperties {
     private Storage storage = new Storage();
     private Media media = new Media();
     private Revalidate revalidate = new Revalidate();
+    private Content content = new Content();
     private Sso sso = new Sso();
     private Jobs jobs = new Jobs();
     private LocalSeed localSeed = new LocalSeed();
@@ -103,6 +104,13 @@ public class HubProperties {
         private String secret = "";
         private Duration timeout = Duration.ofSeconds(3);
         private List<Duration> retryDelays = new ArrayList<>(List.of(Duration.ofSeconds(1), Duration.ofSeconds(5), Duration.ofSeconds(30)));
+    }
+
+    /** Article languages (one translation per locale). The first entry is the fallback language. */
+    @Getter
+    @Setter
+    public static class Content {
+        private List<String> locales = new ArrayList<>(List.of("id", "en"));
     }
 
     @Getter

@@ -41,7 +41,8 @@
     "updated": "Diperbarui",
     "onThisPage": "Di halaman ini",
     "tags": "Tag",
-    "related": "Artikel terkait"
+    "related": "Artikel terkait",
+    "fallbackNotice": "Artikel ini belum tersedia dalam {{language}}, jadi Anda membaca versi {{original}}."
   },
   "body": {
     "copy": "Salin",

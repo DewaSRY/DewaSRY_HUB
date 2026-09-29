@@ -112,6 +112,9 @@ hub:
     secret: ${HUB_REVALIDATE_SECRET:}
     timeout: 3s
     retry-delays: 1s,5s,30s
+  content:
+    # Article languages; the first one is the fallback when a translation is missing.
+    locales: ${HUB_CONTENT_LOCALES:id,en}
   sso:
     code-ttl: 60s
     # Allow http://localhost redirect URIs (development only).

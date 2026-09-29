@@ -37,23 +37,30 @@ public class PublicContentController {
         this.content = content;
     }
 
+    /** {@code locale}: the language to show each article in (falls back per article); default: the first configured. */
     @GetMapping("/articles")
     public ResponseEntity<PagedResponse<ArticleSummary>> articles(@RequestParam(required = false) String category,
                                                                   @RequestParam(required = false) String tag,
+                                                                  @RequestParam(required = false) String locale,
                                                                   @RequestParam(required = false) Integer page,
                                                                   @RequestParam(required = false) Integer limit,
                                                                   @RequestParam(required = false) String sort) {
         PageQuery q = PageQuery.parse(page, limit, sort, SORT, "publishedAt", Sort.Direction.DESC);
-        PublicContentService.ListResult r = content.list(category, tag, q);
+        PublicContentService.ListResult r = content.list(category, tag, locale, q);
         return Responses.page(r.items(), r.total(), q.page(), q.limit(), null);
     }
 
-    /** 200 with the article, or 301 to the new slug for an old slug (ADR-003 §5.3). */
+    /**
+     * 200 with the article, or 301 to the new slug for an old slug (ADR-003 §5.3). {@code locale}
+     * picks the translation; a missing one falls back and {@code data.locale} says which was used.
+     */
     @GetMapping("/articles/{slug}")
-    public ResponseEntity<? extends ApiResponse<?>> article(@PathVariable String slug) {
-        PublicContentService.ArticleLookup lookup = content.bySlug(slug);
+    public ResponseEntity<? extends ApiResponse<?>> article(@PathVariable String slug,
+                                                            @RequestParam(required = false) String locale) {
+        PublicContentService.ArticleLookup lookup = content.bySlug(slug, locale);
         if (lookup.redirectSlug() != null) {
-            String location = WebConfig.API_PREFIX + "/public/articles/" + UriUtils.encodePathSegment(lookup.redirectSlug(), StandardCharsets.UTF_8);
+            String location = WebConfig.API_PREFIX + "/public/articles/" + UriUtils.encodePathSegment(lookup.redirectSlug(), StandardCharsets.UTF_8)
+                    + (locale == null || locale.isBlank() ? "" : "?locale=" + UriUtils.encodeQueryParam(locale, StandardCharsets.UTF_8));
             return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
                     .header(HttpHeaders.LOCATION, location)
                     .body(new ApiResponse<>(new SlugRedirect(lookup.redirectSlug()), 301, "Moved permanently"));

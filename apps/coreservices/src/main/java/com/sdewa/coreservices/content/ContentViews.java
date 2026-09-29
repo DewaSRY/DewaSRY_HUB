@@ -4,6 +4,7 @@ import com.sdewa.coreservices.common.util.JsonText;
 import com.sdewa.coreservices.config.HubProperties;
 import com.sdewa.coreservices.content.ContentDtos.AdminArticle;
 import com.sdewa.coreservices.content.ContentDtos.AdminArticleSummary;
+import com.sdewa.coreservices.content.ContentDtos.AdminTranslation;
 import com.sdewa.coreservices.content.ContentDtos.AdminTermRef;
 import com.sdewa.coreservices.content.ContentDtos.ArticleSummary;
 import com.sdewa.coreservices.content.ContentDtos.PublicArticle;
@@ -19,52 +20,78 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Maps articles to their API shapes. Must be called inside a transaction (lazy associations). */
+/**
+ * Maps articles to their API shapes, picking the translation to show. Must be called inside a
+ * transaction (lazy associations).
+ */
 @Component
 public class ContentViews {
 
     private final ImageViews images;
     private final JsonText json;
     private final HubProperties properties;
+    private final ContentLocales locales;
 
-    public ContentViews(ImageViews images, JsonText json, HubProperties properties) {
+    public ContentViews(ImageViews images, JsonText json, HubProperties properties, ContentLocales locales) {
         this.images = images;
         this.json = json;
         this.properties = properties;
+        this.locales = locales;
     }
 
-    public ArticleSummary summary(Article a) {
-        return new ArticleSummary(a.getId(), a.getSlug(), a.getTitle(), a.getExcerpt(), images.toView(a.getCoverImage()),
-                term(a.getCategory()), tags(a), a.getPublishedAt(), a.getUpdatedAt());
+    /** The translation to show for {@code requested} (see {@link ContentLocales#pick}); never null for a saved article. */
+    public ArticleTranslation display(Article a, String requested) {
+        String locale = locales.pick(a.getTranslations().keySet(), requested);
+        return locale == null ? null : a.getTranslations().get(locale);
     }
 
-    public PublicArticle publicArticle(Article a) {
-        String metaTitle = a.getMetaTitle() != null ? a.getMetaTitle() : a.getTitle();
-        String metaDescription = a.getMetaDescription() != null ? a.getMetaDescription()
-                : a.getExcerpt() != null ? a.getExcerpt()
-                : a.getBodyText().length() > 160 ? a.getBodyText().substring(0, 160) : a.getBodyText();
+    public List<String> localesOf(Article a) {
+        return locales.sorted(a.getTranslations().keySet());
+    }
+
+    public ArticleSummary summary(Article a, String requested) {
+        ArticleTranslation t = display(a, requested);
+        return new ArticleSummary(a.getId(), a.getSlug(), t.getLocale(), localesOf(a), t.getTitle(), t.getExcerpt(),
+                images.toView(a.getCoverImage()), term(a.getCategory()), tags(a), a.getPublishedAt(), a.getUpdatedAt());
+    }
+
+    public PublicArticle publicArticle(Article a, String requested) {
+        ArticleTranslation t = display(a, requested);
+        String metaTitle = t.getMetaTitle() != null ? t.getMetaTitle() : t.getTitle();
+        String metaDescription = t.getMetaDescription() != null ? t.getMetaDescription()
+                : t.getExcerpt() != null ? t.getExcerpt()
+                : t.getBodyText().length() > 160 ? t.getBodyText().substring(0, 160) : t.getBodyText();
         String base = properties.getSiteBaseUrl().endsWith("/")
                 ? properties.getSiteBaseUrl().substring(0, properties.getSiteBaseUrl().length() - 1) : properties.getSiteBaseUrl();
-        return new PublicArticle(a.getId(), a.getSlug(), a.getTitle(), a.getExcerpt(), images.toView(a.getCoverImage()),
-                term(a.getCategory()), tags(a), a.getPublishedAt(), a.getUpdatedAt(), json.parse(a.getBody()),
-                a.getBodySchemaVersion(), bodyImages(a), a.readingMinutes(), a.getWordCount(), metaTitle, metaDescription,
-                base + "/blog/" + a.getSlug());
+        // The canonical URL is the language the text is written in, so a fallback page is not a duplicate.
+        return new PublicArticle(a.getId(), a.getSlug(), t.getLocale(), localesOf(a), t.getTitle(), t.getExcerpt(),
+                images.toView(a.getCoverImage()), term(a.getCategory()), tags(a), a.getPublishedAt(), a.getUpdatedAt(),
+                json.parse(t.getBody()), t.getBodySchemaVersion(), bodyImages(a), t.readingMinutes(), t.getWordCount(),
+                metaTitle, metaDescription, base + "/" + t.getLocale() + "/blog/" + a.getSlug());
     }
 
     public AdminArticle admin(Article a, List<String> previousSlugs) {
         List<AdminTermRef> tagRefs = adminTags(a);
-        return new AdminArticle(a.getId(), a.getTitle(), a.getSlug(), a.getExcerpt(), json.parse(a.getBody()),
-                a.getBodySchemaVersion(), a.getCoverImage() == null ? null : a.getCoverImage().getId(),
+        ArticleTranslation display = display(a, null);
+        Map<String, AdminTranslation> translations = new LinkedHashMap<>();
+        for (String locale : localesOf(a)) {
+            ArticleTranslation t = a.getTranslations().get(locale);
+            translations.put(locale, new AdminTranslation(locale, t.getTitle(), t.getExcerpt(), json.parse(t.getBody()),
+                    t.getBodySchemaVersion(), t.getMetaTitle(), t.getMetaDescription(), t.getWordCount(),
+                    t.readingMinutes(), t.getUpdatedAt()));
+        }
+        return new AdminArticle(a.getId(), a.getSlug(), display == null ? "" : display.getTitle(), localesOf(a), translations,
+                a.getCoverImage() == null ? null : a.getCoverImage().getId(),
                 a.getCategory() == null ? null : a.getCategory().getId(), tagRefs.stream().map(AdminTermRef::id).toList(),
-                a.getMetaTitle(), a.getMetaDescription(), a.getVersion(), a.getStatus(), images.toView(a.getCoverImage()),
-                adminTerm(a.getCategory()), tagRefs, bodyImages(a), a.getWordCount(), a.readingMinutes(), a.getPublishedAt(),
-                a.getCreatedAt(), a.getUpdatedAt(), previousSlugs, null);
+                a.getVersion(), a.getStatus(), images.toView(a.getCoverImage()), adminTerm(a.getCategory()), tagRefs,
+                bodyImages(a), a.getPublishedAt(), a.getCreatedAt(), a.getUpdatedAt(), previousSlugs, null);
     }
 
     public AdminArticleSummary adminSummary(Article a) {
-        return new AdminArticleSummary(a.getId(), a.getSlug(), a.getTitle(), a.getExcerpt(), a.getStatus(),
-                images.toView(a.getCoverImage()), adminTerm(a.getCategory()), adminTags(a), a.getWordCount(), a.getVersion(),
-                a.getPublishedAt(), a.getCreatedAt(), a.getUpdatedAt());
+        ArticleTranslation t = display(a, null);
+        return new AdminArticleSummary(a.getId(), a.getSlug(), t == null ? "" : t.getTitle(), t == null ? null : t.getExcerpt(),
+                localesOf(a), a.getStatus(), images.toView(a.getCoverImage()), adminTerm(a.getCategory()), adminTags(a),
+                t == null ? 0 : t.getWordCount(), a.getVersion(), a.getPublishedAt(), a.getCreatedAt(), a.getUpdatedAt());
     }
 
     /** ADR-009 §4.3: the images used by the body, keyed by id. */

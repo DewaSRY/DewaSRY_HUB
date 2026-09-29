@@ -24,13 +24,17 @@
       "category": "Category",
       "allCategories": "All categories",
       "tag": "Tag",
-      "allTags": "All tags"
+      "allTags": "All tags",
+      "language": "Language",
+      "allLanguages": "All languages",
+      "missingLanguage": "Missing {{language}}"
     },
     "columns": {
       "title": "Title",
       "status": "Status",
       "category": "Category",
-      "updated": "Updated"
+      "updated": "Updated",
+      "languages": "Languages"
     },
     "toast": {
       "created": "Draft created",
@@ -55,7 +59,7 @@
     },
     "settings": {
       "title": "Article settings",
-      "description": "URL, summary, cover, category, tags, and search appearance. Saved with the article.",
+      "description": "URL, cover, category, and tags are shared by every language. The excerpt and search appearance are per language. Saved with the article.",
       "slug": "Slug",
       "slugHint": "The last part of the URL. Leave empty to generate it from the title.",
       "slugFromTitle": "Generate slug from title",
@@ -76,7 +80,9 @@
       "googlePreview": "Google preview",
       "noDescription": "Add an excerpt or a meta description.",
       "titleTooLong": "Titles over {{max}} characters get cut off.",
-      "descriptionTooLong": "Descriptions over {{max}} characters get cut off."
+      "descriptionTooLong": "Descriptions over {{max}} characters get cut off.",
+      "languageSection": "{{language}} version",
+      "languageSectionHint": "Excerpt and search appearance for this language only."
     },
     "checklist": {
       "title": "Ready to publish?",
@@ -94,7 +100,8 @@
         "metaDescription": "Meta description",
         "imageAlt_zero": "Every body image has alt text",
         "imageAlt_one": "{{count}} body image has no alt text",
-        "imageAlt_other": "{{count}} body images have no alt text"
+        "imageAlt_other": "{{count}} body images have no alt text",
+        "language": "No {{language}} version — its readers get another language"
       }
     },
     "conflict": {
@@ -142,6 +149,20 @@
       "backToEditor": "Back to editor",
       "emptyTitle": "Nothing to preview",
       "emptyDescription": "Open the preview from the editor to see the article as visitors will."
+    },
+    "languages": {
+      "label": "Languages",
+      "written": "Written",
+      "missing": "Not written yet",
+      "needsAttention": "Unsaved changes or errors",
+      "startTitle": "No {{language}} version yet",
+      "startDescription": "Readers who choose {{language}} see another language until you write this one. Slug, cover, category, and tags are shared by every language.",
+      "copyFrom": "Copy from {{language}}",
+      "startBlank": "Start blank",
+      "remove": "Remove {{language}} version",
+      "removeTitle": "Remove the {{language}} version?",
+      "removeDescription": "Its title, body, excerpt, and SEO fields are removed when you save. Readers of {{language}} will see another language.",
+      "removeConfirm": "Remove"
     }
   },
   "editor": {

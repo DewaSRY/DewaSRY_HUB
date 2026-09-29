@@ -23,14 +23,21 @@ public final class ContentDtos {
     public record AdminTermRef(UUID id, String slug, String name) {
     }
 
-    public record ArticleSummary(UUID id, String slug, String title, String excerpt, ImageView coverImage, TermRef category,
-                                 List<TermRef> tags, Instant publishedAt, Instant updatedAt) {
+    /** {@code locale} is the language of the text; {@code availableLocales} every language the article has. */
+    public record ArticleSummary(UUID id, String slug, String locale, List<String> availableLocales, String title,
+                                 String excerpt, ImageView coverImage, TermRef category, List<TermRef> tags,
+                                 Instant publishedAt, Instant updatedAt) {
     }
 
-    public record PublicArticle(UUID id, String slug, String title, String excerpt, ImageView coverImage, TermRef category,
-                                List<TermRef> tags, Instant publishedAt, Instant updatedAt, JsonNode body,
-                                int bodySchemaVersion, Map<UUID, ImageView> images, int readingMinutes, int wordCount,
-                                String metaTitle, String metaDescription, String canonicalUrl) {
+    /**
+     * {@code locale} is the language actually returned: the requested one, or a fallback when the
+     * article has no translation for it.
+     */
+    public record PublicArticle(UUID id, String slug, String locale, List<String> availableLocales, String title,
+                                String excerpt, ImageView coverImage, TermRef category, List<TermRef> tags,
+                                Instant publishedAt, Instant updatedAt, JsonNode body, int bodySchemaVersion,
+                                Map<UUID, ImageView> images, int readingMinutes, int wordCount, String metaTitle,
+                                String metaDescription, String canonicalUrl) {
     }
 
     public record SlugRedirect(String slug) {
@@ -42,39 +49,57 @@ public final class ContentDtos {
     public record SitemapEntry(String slug, Instant updatedAt) {
     }
 
-    public record Sitemap(List<SitemapEntry> articles, List<SitemapEntry> categories, List<SitemapEntry> tags) {
+    /** {@code locales}: the languages the article is published in. */
+    public record ArticleSitemapEntry(String slug, Instant updatedAt, List<String> locales) {
     }
 
+    public record Sitemap(List<ArticleSitemapEntry> articles, List<SitemapEntry> categories, List<SitemapEntry> tags) {
+    }
+
+    /**
+     * One language of an {@link ArticleInput}. Lengths are checked by the service so that errors
+     * name {@code translations.<locale>.<field>}.
+     */
+    public record TranslationInput(String title, String excerpt, JsonNode body, Integer bodySchemaVersion,
+                                   String metaTitle, String metaDescription) {
+    }
+
+    /**
+     * The whole article. {@code translations} is keyed by locale and replaces the stored set: a
+     * language left out is removed. At least one is required.
+     */
     public record ArticleInput(
-            @NotBlank @Size(max = 200) String title,
             @Size(max = 120) String slug,
-            @Size(max = 500) String excerpt,
-            JsonNode body,
-            Integer bodySchemaVersion,
             UUID coverImageId,
             UUID categoryId,
             List<UUID> tagIds,
-            @Size(max = 200) String metaTitle,
-            @Size(max = 320) String metaDescription,
+            Map<String, TranslationInput> translations,
             Integer version) {
     }
 
-    public record AdminArticle(UUID id, String title, String slug, String excerpt, JsonNode body, int bodySchemaVersion,
-                               UUID coverImageId, UUID categoryId, List<UUID> tagIds, String metaTitle,
-                               String metaDescription, int version, ArticleStatus status, ImageView coverImage,
-                               AdminTermRef category, List<AdminTermRef> tags, Map<UUID, ImageView> images, int wordCount,
-                               int readingMinutes, Instant publishedAt, Instant createdAt, Instant updatedAt,
-                               List<String> previousSlugs, RevalidationResult revalidation) {
+    public record AdminTranslation(String locale, String title, String excerpt, JsonNode body, int bodySchemaVersion,
+                                   String metaTitle, String metaDescription, int wordCount, int readingMinutes,
+                                   Instant updatedAt) {
+    }
+
+    /** {@code title} is the display title (fallback language first); {@code locales} is in configured order. */
+    public record AdminArticle(UUID id, String slug, String title, List<String> locales,
+                               Map<String, AdminTranslation> translations, UUID coverImageId, UUID categoryId,
+                               List<UUID> tagIds, int version, ArticleStatus status, ImageView coverImage,
+                               AdminTermRef category, List<AdminTermRef> tags, Map<UUID, ImageView> images,
+                               Instant publishedAt, Instant createdAt, Instant updatedAt, List<String> previousSlugs,
+                               RevalidationResult revalidation) {
         public AdminArticle withRevalidation(RevalidationResult r) {
-            return new AdminArticle(id, title, slug, excerpt, body, bodySchemaVersion, coverImageId, categoryId, tagIds,
-                    metaTitle, metaDescription, version, status, coverImage, category, tags, images, wordCount,
-                    readingMinutes, publishedAt, createdAt, updatedAt, previousSlugs, r);
+            return new AdminArticle(id, slug, title, locales, translations, coverImageId, categoryId, tagIds, version,
+                    status, coverImage, category, tags, images, publishedAt, createdAt, updatedAt, previousSlugs, r);
         }
     }
 
-    public record AdminArticleSummary(UUID id, String slug, String title, String excerpt, ArticleStatus status,
-                                      ImageView coverImage, AdminTermRef category, List<AdminTermRef> tags, int wordCount,
-                                      int version, Instant publishedAt, Instant createdAt, Instant updatedAt) {
+    /** {@code title}, {@code excerpt} and {@code wordCount} come from the display language. */
+    public record AdminArticleSummary(UUID id, String slug, String title, String excerpt, List<String> locales,
+                                      ArticleStatus status, ImageView coverImage, AdminTermRef category,
+                                      List<AdminTermRef> tags, int wordCount, int version, Instant publishedAt,
+                                      Instant createdAt, Instant updatedAt) {
     }
 
     public record TermInput(@NotBlank @Size(max = 80) String name, @Size(max = 120) String slug) {

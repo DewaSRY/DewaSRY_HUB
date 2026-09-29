@@ -34,11 +34,14 @@ function slugFromMoved(location: string | null, body: unknown): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-/** `GET /public/articles/{slug}` → found, moved (renamed slug, 301), or not-found. */
-export const getArticle = cache(async (slug: string): Promise<ArticleLookup> => {
+/**
+ * `GET /public/articles/{slug}?locale=` → found, moved (renamed slug, 301),
+ * or not-found. A missing translation falls back: check `article.locale`.
+ */
+export const getArticle = cache(async (slug: string, locale: string): Promise<ArticleLookup> => {
   const result = await publicFetch<ApiResponse<ArticleDetail>>(
     `/public/articles/${encodeURIComponent(slug)}`,
-    { tags: [TAG.articles, `public:article:${slug}`] },
+    { query: { locale }, tags: [TAG.articles, `public:article:${slug}`] },
   );
   if (result.kind === "not-found") return { kind: "not-found" };
   if (result.kind === "moved") {
@@ -53,7 +56,7 @@ export const listArticles = cache(
   async (params: ArticleListParams = {}): Promise<ApiPage<ArticleSummary>> => {
     const { page, limit } = normalizePageParams(params, { limit: 12 });
     const options: PublicFetchOptions = {
-      query: { page, limit, category: params.category, tag: params.tag },
+      query: { locale: params.locale, page, limit, category: params.category, tag: params.tag },
       tags: [TAG.articles],
     };
     const result = await publicFetch<unknown>("/public/articles", options);

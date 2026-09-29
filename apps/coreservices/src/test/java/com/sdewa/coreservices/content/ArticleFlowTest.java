@@ -51,11 +51,25 @@ class ArticleFlowTest extends IntegrationTest {
         return body(r).path("data");
     }
 
+    /** A create body with one Indonesian translation. */
+    private static String titleOnly(String title) {
+        return "{\"translations\":{\"id\":{\"title\":\"" + title + "\"}}}";
+    }
+
+    private static String titleOnly(String title, String slug) {
+        return "{\"slug\":\"" + slug + "\",\"translations\":{\"id\":{\"title\":\"" + title + "\"}}}";
+    }
+
+    private static String translation(String title, String excerpt) {
+        return """
+                {"title":"%s","excerpt":%s,"body":%s,"bodySchemaVersion":1,"metaTitle":null,"metaDescription":null}
+                """.formatted(title, excerpt == null ? "null" : "\"" + excerpt + "\"", BODY);
+    }
+
     private String fullInput(String title, String slug, String categoryId, String tagId, int version) {
         return """
-                {"title":"%s","slug":"%s","excerpt":"Short excerpt","body":%s,"bodySchemaVersion":1,
-                 "categoryId":"%s","tagIds":["%s"],"metaTitle":null,"metaDescription":null,"version":%d}
-                """.formatted(title, slug, BODY, categoryId, tagId, version);
+                {"slug":"%s","translations":{"id":%s},"categoryId":"%s","tagIds":["%s"],"version":%d}
+                """.formatted(slug, translation(title, "Short excerpt"), categoryId, tagId, version);
     }
 
     @Test
@@ -66,16 +80,18 @@ class ArticleFlowTest extends IntegrationTest {
         // Create: always DRAFT, slug generated from the title, Location header.
         MvcResult created = mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Deploy Spring Boot on Graviton!\",\"body\":" + BODY + "}"))
+                        .content("{\"translations\":{\"id\":{\"title\":\"Deploy Spring Boot on Graviton!\",\"body\":" + BODY + "}}}"))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", startsWith("/v1/admin/articles/")))
                 .andExpect(jsonPath("$.code").value(201))
                 .andExpect(jsonPath("$.data.status").value("DRAFT"))
                 .andExpect(jsonPath("$.data.slug").value("deploy-spring-boot-on-graviton"))
                 .andExpect(jsonPath("$.data.version").value(0))
-                .andExpect(jsonPath("$.data.wordCount").value(11))
-                .andExpect(jsonPath("$.data.body.type").value("doc"))
-                .andExpect(jsonPath("$.data.bodySchemaVersion").value(1))
+                .andExpect(jsonPath("$.data.locales[0]").value("id"))
+                .andExpect(jsonPath("$.data.title").value("Deploy Spring Boot on Graviton!"))
+                .andExpect(jsonPath("$.data.translations.id.wordCount").value(11))
+                .andExpect(jsonPath("$.data.translations.id.body.type").value("doc"))
+                .andExpect(jsonPath("$.data.translations.id.bodySchemaVersion").value(1))
                 .andReturn();
         String id = body(created).path("data").path("id").stringValue();
 
@@ -86,7 +102,7 @@ class ArticleFlowTest extends IntegrationTest {
         mvc.perform(post("/v1/admin/articles/" + id + "/publish").header("Authorization", adminBearer()))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.code").value(422))
-                .andExpect(jsonPath("$.error[*].field", hasItem("excerpt")))
+                .andExpect(jsonPath("$.error[*].field", hasItem("translations.id.excerpt")))
                 .andExpect(jsonPath("$.error[*].field", hasItem("categoryId")));
 
         // Complete it (PUT with the current version).
@@ -126,7 +142,9 @@ class ArticleFlowTest extends IntegrationTest {
                 .andExpect(jsonPath("$.data.readingMinutes").value(1))
                 .andExpect(jsonPath("$.data.metaTitle").value("Deploy Spring Boot on Graviton"))
                 .andExpect(jsonPath("$.data.metaDescription").value("Short excerpt"))
-                .andExpect(jsonPath("$.data.canonicalUrl").value("https://hub.test/blog/deploy-spring-boot-on-graviton"))
+                .andExpect(jsonPath("$.data.locale").value("id"))
+                .andExpect(jsonPath("$.data.availableLocales[0]").value("id"))
+                .andExpect(jsonPath("$.data.canonicalUrl").value("https://hub.test/id/blog/deploy-spring-boot-on-graviton"))
                 .andExpect(jsonPath("$.data.category.slug").value("devops"))
                 .andExpect(jsonPath("$.data.tags[0].slug").value("aws"))
                 .andExpect(jsonPath("$.data.bodyHtml").doesNotExist());
@@ -140,6 +158,7 @@ class ArticleFlowTest extends IntegrationTest {
         mvc.perform(get("/v1/public/tags/aws")).andExpect(jsonPath("$.data.articleCount").value(1));
         mvc.perform(get("/v1/public/sitemap"))
                 .andExpect(jsonPath("$.data.articles[0].slug").value("deploy-spring-boot-on-graviton"))
+                .andExpect(jsonPath("$.data.articles[0].locales[0]").value("id"))
                 .andExpect(jsonPath("$.data.categories[0].slug").value("devops"))
                 .andExpect(jsonPath("$.data.tags[0].slug").value("aws"));
 
@@ -159,10 +178,10 @@ class ArticleFlowTest extends IntegrationTest {
 
         // A new article cannot take the old slug (409 SLUG_TAKEN), nor the current one.
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"x\",\"slug\":\"deploy-spring-boot-on-graviton\"}"))
+                        .content(titleOnly("x", "deploy-spring-boot-on-graviton")))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.message").value("The slug is already used"));
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"x\",\"slug\":\"spring-boot-graviton\"}"))
+                        .content(titleOnly("x", "spring-boot-graviton")))
                 .andExpect(status().isConflict());
 
         // Taking back its own old slug removes the redirect row.
@@ -200,39 +219,118 @@ class ArticleFlowTest extends IntegrationTest {
 
     @Test
     void generatedSlugsGetSuffixAndExplicitSlugIsValidated() throws Exception {
-        assertThat(createArticle("{\"title\":\"Hello World\"}").path("slug").stringValue()).isEqualTo("hello-world");
-        assertThat(createArticle("{\"title\":\"Hello, World\"}").path("slug").stringValue()).isEqualTo("hello-world-2");
+        assertThat(createArticle(titleOnly("Hello World")).path("slug").stringValue()).isEqualTo("hello-world");
+        assertThat(createArticle(titleOnly("Hello, World")).path("slug").stringValue()).isEqualTo("hello-world-2");
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"x\",\"slug\":\"Bad Slug\"}"))
+                        .content(titleOnly("x", "Bad Slug")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.error[0].field").value("slug"));
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"slug\":\"no-title\"}"))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.error[0].field").value("title"));
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.error[0].field").value("translations"));
+        mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"translations\":{\"id\":{\"title\":\" \"},\"fr\":{\"title\":\"Bonjour\"}}}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error[*].field", hasItem("translations.id.title")))
+                .andExpect(jsonPath("$.error[*].field", hasItem("translations.fr")));
     }
 
     @Test
     void bodyIsValidatedAgainstTheAllowlist() throws Exception {
         String js = """
-                {"title":"x","body":{"type":"doc","content":[{"type":"paragraph","content":[
-                  {"type":"text","text":"click","marks":[{"type":"link","attrs":{"href":"javascript:alert(1)"}}]}]}]}}""";
+                {"translations":{"en":{"title":"x","body":{"type":"doc","content":[{"type":"paragraph","content":[
+                  {"type":"text","text":"click","marks":[{"type":"link","attrs":{"href":"javascript:alert(1)"}}]}]}]}}}}""";
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON).content(js))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.error[0].field").value("body.content[0].content[0].marks[0].attrs.href"));
+                .andExpect(jsonPath("$.error[0].field").value("translations.en.body.content[0].content[0].marks[0].attrs.href"));
 
         String missingImage = """
-                {"title":"x","body":{"type":"doc","content":[{"type":"image","attrs":{"imageId":"%s"}}]}}""".formatted(UUID.randomUUID());
+                {"translations":{"id":{"title":"x","body":{"type":"doc","content":[{"type":"image","attrs":{"imageId":"%s"}}]}}}}""".formatted(UUID.randomUUID());
         mvc.perform(post("/v1/admin/articles").header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON).content(missingImage))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error[0].field").value("body"))
+                .andExpect(jsonPath("$.error[0].field").value("translations.id.body"))
                 .andExpect(jsonPath("$.error[0].message").value(containsString("does not exist")));
 
         String sanitized = """
-                {"title":"sanitized","body":{"type":"doc","content":[{"type":"paragraph","attrs":{"onclick":"x"},
-                  "content":[{"type":"text","text":"hi","marks":[{"type":"link","attrs":{"href":"https://a.io","target":"_blank"}}]}]}]}}""";
-        JsonNode a = createArticle(sanitized);
-        assertThat(a.path("body").path("content").get(0).has("attrs")).isFalse();
-        assertThat(a.path("body").path("content").get(0).path("content").get(0).path("marks").get(0).path("attrs").has("target")).isFalse();
+                {"translations":{"id":{"title":"sanitized","body":{"type":"doc","content":[{"type":"paragraph","attrs":{"onclick":"x"},
+                  "content":[{"type":"text","text":"hi","marks":[{"type":"link","attrs":{"href":"https://a.io","target":"_blank"}}]}]}]}}}}""";
+        JsonNode body = createArticle(sanitized).path("translations").path("id").path("body");
+        assertThat(body.path("content").get(0).has("attrs")).isFalse();
+        assertThat(body.path("content").get(0).path("content").get(0).path("marks").get(0).path("attrs").has("target")).isFalse();
+    }
+
+    @Test
+    void translationsArePerLanguageWithFallback() throws Exception {
+        String cat = category("Cloud");
+        String tag = tag("Kubernetes");
+
+        // Indonesian only, published.
+        JsonNode created = createArticle("""
+                {"slug":"kubernetes-dasar","translations":{"id":%s},"categoryId":"%s","tagIds":["%s"]}
+                """.formatted(translation("Dasar Kubernetes", "Ringkasan"), cat, tag));
+        String id = created.path("id").stringValue();
+        mvc.perform(post("/v1/admin/articles/" + id + "/publish").header("Authorization", adminBearer()))
+                .andExpect(status().isOk());
+
+        // English is requested but missing → the Indonesian text, canonical to /id.
+        mvc.perform(get("/v1/public/articles/kubernetes-dasar?locale=en"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.locale").value("id"))
+                .andExpect(jsonPath("$.data.title").value("Dasar Kubernetes"))
+                .andExpect(jsonPath("$.data.canonicalUrl").value("https://hub.test/id/blog/kubernetes-dasar"));
+        mvc.perform(get("/v1/public/articles/kubernetes-dasar?locale=xx")).andExpect(status().isBadRequest());
+        mvc.perform(get("/v1/admin/articles?missingLocale=en").header("Authorization", adminBearer()))
+                .andExpect(jsonPath("$.meta.total").value(1));
+
+        // Adding English to a published article needs its excerpt.
+        mvc.perform(put("/v1/admin/articles/" + id).header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"kubernetes-dasar","translations":{"id":%s,"en":%s},"categoryId":"%s","tagIds":["%s"],"version":1}
+                                """.formatted(translation("Dasar Kubernetes", "Ringkasan"), translation("Kubernetes Basics", null), cat, tag)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error[0].field").value("translations.en.excerpt"));
+        mvc.perform(put("/v1/admin/articles/" + id).header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"kubernetes-dasar","translations":{"en":%s,"id":%s},"categoryId":"%s","tagIds":["%s"],"version":1}
+                                """.formatted(translation("Kubernetes Basics", "Summary"), translation("Dasar Kubernetes", "Ringkasan"), cat, tag)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.version").value(2))
+                .andExpect(jsonPath("$.data.locales[0]").value("id"))
+                .andExpect(jsonPath("$.data.locales[1]").value("en"))
+                .andExpect(jsonPath("$.data.title").value("Dasar Kubernetes"))
+                .andExpect(jsonPath("$.data.translations.en.title").value("Kubernetes Basics"))
+                .andExpect(jsonPath("$.data.revalidation.paths", hasItem("/blog/kubernetes-dasar")));
+
+        mvc.perform(get("/v1/public/articles/kubernetes-dasar?locale=en"))
+                .andExpect(jsonPath("$.data.locale").value("en"))
+                .andExpect(jsonPath("$.data.title").value("Kubernetes Basics"))
+                .andExpect(jsonPath("$.data.excerpt").value("Summary"))
+                .andExpect(jsonPath("$.data.availableLocales.length()").value(2))
+                .andExpect(jsonPath("$.data.canonicalUrl").value("https://hub.test/en/blog/kubernetes-dasar"));
+        // No locale → the first configured one.
+        mvc.perform(get("/v1/public/articles/kubernetes-dasar")).andExpect(jsonPath("$.data.locale").value("id"));
+        mvc.perform(get("/v1/public/articles?locale=en&category=cloud"))
+                .andExpect(jsonPath("$.data[0].title").value("Kubernetes Basics"))
+                .andExpect(jsonPath("$.data[0].locale").value("en"));
+        mvc.perform(get("/v1/public/sitemap")).andExpect(jsonPath("$.data.articles[?(@.slug == 'kubernetes-dasar')].locales[1]").value(hasItem("en")));
+        mvc.perform(get("/v1/admin/articles?q=basics").header("Authorization", adminBearer()))
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.data[0].locales.length()").value(2));
+        mvc.perform(get("/v1/admin/articles?missingLocale=en").header("Authorization", adminBearer()))
+                .andExpect(jsonPath("$.meta.total").value(0));
+
+        // Leaving a language out of the PUT removes it.
+        mvc.perform(put("/v1/admin/articles/" + id).header("Authorization", adminBearer()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"kubernetes-dasar","translations":{"en":%s},"categoryId":"%s","tagIds":["%s"],"version":2}
+                                """.formatted(translation("Kubernetes Basics", "Summary"), cat, tag)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.locales.length()").value(1))
+                .andExpect(jsonPath("$.data.title").value("Kubernetes Basics"));
+        mvc.perform(get("/v1/public/articles/kubernetes-dasar?locale=id"))
+                .andExpect(jsonPath("$.data.locale").value("en"));
+
+        mvc.perform(delete("/v1/admin/articles/" + id).header("Authorization", adminBearer())).andExpect(status().isNoContent());
     }
 
     @Test
@@ -253,7 +351,7 @@ class ArticleFlowTest extends IntegrationTest {
                 .andExpect(status().isBadRequest());
 
         String tag = tag("Java");
-        JsonNode article = createArticle("{\"title\":\"Tagged\",\"tagIds\":[\"" + tag + "\"]}");
+        JsonNode article = createArticle("{\"tagIds\":[\"" + tag + "\"],\"translations\":{\"id\":{\"title\":\"Tagged\"}}}");
         mvc.perform(get("/v1/admin/tags").header("Authorization", adminBearer()))
                 .andExpect(jsonPath("$.data[0].articleCount").value(1))
                 .andExpect(jsonPath("$.data[0].publishedCount").value(0))

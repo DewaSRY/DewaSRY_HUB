@@ -213,6 +213,10 @@ public class MediaService {
         return views.toView(image);
     }
 
+    /** The title of an article's first translation (titles live per language). */
+    private static final String ARTICLE_TITLE =
+            "(SELECT t.title FROM article_translations t WHERE t.article_id = a.id ORDER BY t.created_at, t.locale LIMIT 1)";
+
     /** {@code usedBy}: cover images plus body images (ADR-004 §5.5). */
     Map<UUID, List<UsedBy>> usage(Collection<UUID> imageIds) {
         if (imageIds.isEmpty()) {
@@ -220,8 +224,8 @@ public class MediaService {
         }
         MapSqlParameterSource p = new MapSqlParameterSource("ids", imageIds);
         List<Object[]> rows = jdbc.query(
-                "SELECT a.cover_image_id AS image_id, a.id, a.title, 'COVER' AS usage FROM articles a WHERE a.cover_image_id IN (:ids) "
-                        + "UNION ALL SELECT abi.image_id, a.id, a.title, 'BODY' FROM article_body_images abi "
+                "SELECT a.cover_image_id AS image_id, a.id, " + ARTICLE_TITLE + ", 'COVER' AS usage FROM articles a WHERE a.cover_image_id IN (:ids) "
+                        + "UNION ALL SELECT abi.image_id, a.id, " + ARTICLE_TITLE + ", 'BODY' FROM article_body_images abi "
                         + "JOIN articles a ON a.id = abi.article_id WHERE abi.image_id IN (:ids) ORDER BY 3",
                 p, (rs, i) -> new Object[]{rs.getObject(1, UUID.class), rs.getObject(2, UUID.class), rs.getString(3), rs.getString(4)});
         return rows.stream().collect(Collectors.groupingBy(r -> (UUID) r[0], LinkedHashMap::new,

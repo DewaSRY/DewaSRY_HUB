@@ -19,12 +19,18 @@ function normalizePath(path: string): string {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
-/** Builds `alternates.languages` for a locale-agnostic path, e.g. "/blog". */
-export function buildLanguageAlternates(path: string): Record<string, string> {
+/**
+ * Builds `alternates.languages` for a locale-agnostic path, e.g. "/blog".
+ * `only` limits it to the languages the page really exists in (an article
+ * with no English translation must not advertise `/en/…`).
+ */
+export function buildLanguageAlternates(path: string, only?: readonly string[]): Record<string, string> {
   const normalized = normalizePath(path);
+  const available = only?.length ? locales.filter((locale) => only.includes(locale)) : locales;
+  const list = available.length ? available : locales;
   return {
-    ...Object.fromEntries(locales.map((locale) => [locale, `${SITE_URL}/${locale}${normalized}`])),
-    "x-default": `${SITE_URL}/${locales[0]}${normalized}`,
+    ...Object.fromEntries(list.map((locale) => [locale, `${SITE_URL}/${locale}${normalized}`])),
+    "x-default": `${SITE_URL}/${list[0]}${normalized}`,
   };
 }
 
@@ -65,6 +71,10 @@ export function buildPageMetadata(options: {
   tags?: string[];
   section?: string;
   canonical?: string | null;
+  /** Languages the page exists in (hreflang); default: every locale. */
+  languages?: readonly string[];
+  /** Language of the text when it differs from `locale` (a fallback translation). */
+  contentLocale?: string;
 }): Metadata {
   const {
     locale,
@@ -80,14 +90,14 @@ export function buildPageMetadata(options: {
   return {
     title: absoluteTitle ? { absolute: title } : title,
     description,
-    alternates: { canonical, languages: buildLanguageAlternates(path) },
+    alternates: { canonical, languages: buildLanguageAlternates(path, options.languages) },
     openGraph: {
       title,
       description,
       type,
       url: canonical,
       siteName: SITE_NAME,
-      locale: locale === "id" ? "id_ID" : "en_US",
+      locale: (options.contentLocale ?? locale) === "id" ? "id_ID" : "en_US",
       images: [og],
       ...(type === "article"
         ? {

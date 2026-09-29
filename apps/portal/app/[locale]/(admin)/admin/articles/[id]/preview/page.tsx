@@ -17,7 +17,10 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/admin/ar
 }
 
 /** `/admin/articles/[id]/preview` — `new` previews an article that has not been saved yet. */
-export default async function ArticlePreviewPage({ params }: PageProps<"/[locale]/admin/articles/[id]/preview">) {
-  const id = decodeURIComponent((await params).id);
-  return <ArticlePreviewScreen id={id === "new" ? null : id} />;
+/** `?lang=en` picks the language to preview (default: the first one the article has). */
+export default async function ArticlePreviewPage({ params, searchParams }: PageProps<"/[locale]/admin/articles/[id]/preview">) {
+  const { id: rawId, locale } = await params;
+  const id = decodeURIComponent(rawId);
+  const lang = (await searchParams).lang;
+  return <ArticlePreviewScreen id={id === "new" ? null : id} lang={typeof lang === "string" ? lang : null} uiLocale={locale} />;
 }

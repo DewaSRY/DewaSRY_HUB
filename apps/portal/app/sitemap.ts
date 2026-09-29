@@ -14,12 +14,14 @@ export const dynamic = "force-dynamic";
 
 const STATIC_PATHS = ["/", "/about", "/blog", "/products", "/login"];
 
-function entries(path: string, lastModified?: string | null, priority?: number): MetadataRoute.Sitemap {
-  return locales.map((locale) => ({
+/** One URL per locale; `only` limits it to the languages the page exists in (articles). */
+function entries(path: string, lastModified?: string | null, priority?: number, only?: readonly string[]): MetadataRoute.Sitemap {
+  const available = only?.length ? locales.filter((locale) => only.includes(locale)) : locales;
+  return available.map((locale) => ({
     url: canonicalFor(locale, path),
     lastModified: lastModified ?? undefined,
     priority,
-    alternates: { languages: buildLanguageAlternates(path) },
+    alternates: { languages: buildLanguageAlternates(path, only) },
   }));
 }
 
@@ -31,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...STATIC_PATHS.flatMap((path) => entries(path, undefined, path === "/" ? 1 : 0.7)),
     ...products.data.flatMap((product) => entries(`/products/${product.code}`, undefined, 0.6)),
-    ...data.data.articles.flatMap((article) => entries(`/blog/${article.slug}`, article.updatedAt, 0.8)),
+    ...data.data.articles.flatMap((article) => entries(`/blog/${article.slug}`, article.updatedAt, 0.8, article.locales)),
     ...data.data.categories.flatMap((category) => entries(`/blog/category/${category.slug}`, category.updatedAt, 0.5)),
     ...data.data.tags.flatMap((tag) => entries(`/blog/tag/${tag.slug}`, tag.updatedAt, 0.4)),
   ];

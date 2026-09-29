@@ -11,7 +11,7 @@
 
 Dewa Surya Hub (see [PRD](../PRD.md)) needs a public, SEO-friendly content site, a central user account shared across Dewa's SaaS products, subscription management, and a payment portal with one-time payments and QR code (QRIS) payments. The first connected product is Document Doctor.
 
-The platform is built and run by one person, has no revenue at launch, and targets users in Indonesia. The stack must therefore be:
+The platform is built and run by one person, has no revenue at launch, and targets users in Indonesia, SEA And Europ. The stack must therefore be:
 
 - **As cheap as possible** to run, especially before the first paying customer.
 - Simple enough for one developer to operate.
@@ -19,33 +19,33 @@ The platform is built and run by one person, has no revenue at launch, and targe
 
 ## 2. Decision Drivers
 
-| #   | Driver                                                                                  | PRD reference                  |
-| --- | --------------------------------------------------------------------------------------- | ------------------------------ |
-| D1  | Lowest monthly cost; prefer free tiers and pay-per-use over fixed fees.                 | —                              |
-| D2  | Public pages must be server-rendered/static for SEO and fast LCP (< 2.5 s).             | FR-C1, NFR SEO / Performance   |
+| #   | Driver                                                                                                    | PRD reference                  |
+| --- | --------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| D1  | Lowest monthly cost; prefer free tiers and pay-per-use over fixed fees.                                   | —                              |
+| D2  | Public pages must be server-rendered/static for SEO and fast LCP (< 2.5 s).                               | FR-C1, NFR SEO / Performance   |
 | D3  | One identity across all SaaS products: sign in once on the hub with Google, then use it in every product. | G2, FR-U1, FR-U2, NFR Security |
-| D4  | One-time payments with local methods for Indonesian users (QRIS, VA, e-wallets, cards). | G5, FR-P1, OQ1                 |
-| D5  | Reliable, idempotent handling of payment webhooks.                                      | FR-P2, NFR Reliability         |
-| D6  | Relational data (users, products, plans, subscriptions, transactions, articles).        | FR-U3, FR-P3, FR-C3            |
-| D7  | Images asset must be small and fast to serve.                                           | FR-C4, NFR Performance         |
-| D8  | Infrastructure must be reproducible, not hand-clicked in a console.                     | —                              |
-| D9  | Public pages will show ads, so the frontend host must allow commercial use on its cheapest plan. | —                    |
+| D4  | One-time payments with local methods for Indonesian users (QRIS, VA, e-wallets, cards).                   | G5, FR-P1, OQ1                 |
+| D5  | Reliable, idempotent handling of payment webhooks.                                                        | FR-P2, NFR Reliability         |
+| D6  | Relational data (users, products, plans, subscriptions, transactions, articles).                          | FR-U3, FR-P3, FR-C3            |
+| D7  | Images asset must be small and fast to serve.                                                             | FR-C4, NFR Performance         |
+| D8  | Infrastructure must be reproducible, not hand-clicked in a console.                                       | —                              |
+| D9  | Public pages will show ads, so the frontend host must allow commercial use on its cheapest plan.          | —                              |
 
 ## 3. Decision Summary
 
-| Area                   | Choice                                         | Why (short)                                                           |
-| ---------------------- | ---------------------------------------------- | --------------------------------------------------------------------- |
-| Frontend framework     | **Next.js** (App Router)                       | SSR/SSG for SEO; one codebase for public site, user portal, admin.    |
-| Frontend hosting       | **Cloudflare Workers** (OpenNext adapter)      | Commercial use (ads) allowed on free plan; global CDN; US$5 paid plan. |
-| Backend framework      | **Spring Boot** (Java, REST API)               | Mature, strongly typed; first-class security, JPA, and migrations.    |
-| Backend hosting        | **AWS EC2** (single small instance)            | Cheapest always-on compute; full control; runs API + Nginx.           |
-| Reverse proxy / LB     | **Nginx** on the EC2 instance                  | Free; replaces AWS ALB (saves ~US$16+/month).                         |
-| Database               | **Supabase** (managed PostgreSQL)              | Free tier to start; managed backups and upgrades; no RDS fee.         |
+| Area                   | Choice                                                     | Why (short)                                                                                                   |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Frontend framework     | **Next.js** (App Router)                                   | SSR/SSG for SEO; one codebase for public site, user portal, admin.                                            |
+| Frontend hosting       | **Cloudflare Workers** (OpenNext adapter)                  | Commercial use (ads) allowed on free plan; global CDN; US$5 paid plan.                                        |
+| Backend framework      | **Spring Boot** (Java, REST API)                           | Mature, strongly typed; first-class security, JPA, and migrations.                                            |
+| Backend hosting        | **AWS EC2** (single small instance)                        | Cheapest always-on compute; full control; runs API + Nginx.                                                   |
+| Reverse proxy / LB     | **Nginx** on the EC2 instance                              | Free; replaces AWS ALB (saves ~US$16+/month).                                                                 |
+| Database               | **Supabase** (managed PostgreSQL)                          | Free tier to start; managed backups and upgrades; no RDS fee.                                                 |
 | Authentication         | **Firebase Authentication** (Google sign-in) + **hub SSO** | Users sign in on the hub; products get the sign-in through a one-time code and a Firebase custom token. Free. |
-| Payment gateway        | **Midtrans** (Snap)                            | No monthly fee; one-time payments with QRIS, VA, GoPay, cards in IDR. |
-| Image storage          | **AWS S3** (+ CloudFront for delivery)         | Cheap storage; CloudFront free tier cheaper than direct S3 egress.    |
-| Image processing       | **Resize on upload** in Spring Boot (Scrimage) | Store only optimized WebP sizes; no paid resize service.              |
-| Infrastructure as code | **Terraform** (state in S3)                    | Free CLI; reproducible AWS setup; no Terraform Cloud needed.          |
+| Payment gateway        | **Midtrans** (Snap)                                        | No monthly fee; one-time payments with QRIS, VA, GoPay, cards in IDR.                                         |
+| Image storage          | **AWS S3** (+ CloudFront for delivery)                     | Cheap storage; CloudFront free tier cheaper than direct S3 egress.                                            |
+| Image processing       | **Resize on upload** in Spring Boot (Scrimage)             | Store only optimized WebP sizes; no paid resize service.                                                      |
+| Infrastructure as code | **Terraform** (state in S3)                                | Free CLI; reproducible AWS setup; no Terraform Cloud needed.                                                  |
 
 ## 4. Architecture Overview
 
@@ -155,18 +155,18 @@ Request flow in short:
 
 **Main libraries.**
 
-| Concern           | Library / approach                                                                                   |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| HTTP API          | Spring Web (MVC), Bean Validation for request DTOs.                                                  |
+| Concern           | Library / approach                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP API          | Spring Web (MVC), Bean Validation for request DTOs.                                                                                                                 |
 | Auth              | Spring Security **OAuth2 Resource Server** validating Firebase ID tokens as JWTs; **Firebase Admin SDK** (Java) only to create custom tokens for hub SSO (see 5.7). |
-| Data access       | Spring Data JPA (Hibernate) with HikariCP; PostgreSQL JDBC driver, connecting to Supabase (see 5.6). |
-| Schema migrations | **Flyway** (`src/main/resources/db/migration`), run on startup.                                      |
-| Payments          | Midtrans Java library, or Spring `RestClient` calling the Midtrans Snap and Status APIs directly.    |
-| Images            | **Scrimage** (`scrimage-core` + `scrimage-webp`) for resizing and WebP encoding (see 5.9).           |
-| AWS               | AWS SDK for Java v2 (S3), credentials from the EC2 instance role; no access keys in config.          |
-| Operations        | Spring Boot Actuator (`/actuator/health` for Nginx and deploy checks; not exposed publicly).         |
-| Scheduling        | `@Scheduled` + **ShedLock** (PostgreSQL lock), so only one instance runs jobs during a deploy.       |
-| Testing           | JUnit 5, Spring Boot Test, **Testcontainers** (real PostgreSQL in tests).                            |
+| Data access       | Spring Data JPA (Hibernate) with HikariCP; PostgreSQL JDBC driver, connecting to Supabase (see 5.6).                                                                |
+| Schema migrations | **Flyway** (`src/main/resources/db/migration`), run on startup.                                                                                                     |
+| Payments          | Midtrans Java library, or Spring `RestClient` calling the Midtrans Snap and Status APIs directly.                                                                   |
+| Images            | **Scrimage** (`scrimage-core` + `scrimage-webp`) for resizing and WebP encoding (see 5.9).                                                                          |
+| AWS               | AWS SDK for Java v2 (S3), credentials from the EC2 instance role; no access keys in config.                                                                         |
+| Operations        | Spring Boot Actuator (`/actuator/health` for Nginx and deploy checks; not exposed publicly).                                                                        |
+| Scheduling        | `@Scheduled` + **ShedLock** (PostgreSQL lock), so only one instance runs jobs during a deploy.                                                                      |
+| Testing           | JUnit 5, Spring Boot Test, **Testcontainers** (real PostgreSQL in tests).                                                                                           |
 
 **Structure.** One deployable application (modular monolith), with a package per domain: `content`, `identity`, `product`, `subscription`, `payment`, `media`, `admin`. This keeps one process to run and pay for, while leaving clean seams if a module ever needs to become its own service.
 
@@ -451,19 +451,19 @@ sequenceDiagram
 
 Approximate figures in USD before tax, for low launch traffic. **Check current prices on each provider's pricing page before relying on them**; prices differ by region and change over time.
 
-| Item                            | Launch (Phase 1–2)    | With payments (Phase 3+)                                               |
-| ------------------------------- | --------------------- | ---------------------------------------------------------------------- |
-| Cloudflare Workers (Next.js)    | $0 (Free) or $5 (Paid) | $5 (Paid), or $0 if self-hosted on EC2                                |
-| EC2 `t4g.small`, on-demand      | ~$12–16               | ~$12–16, or ~$25–32 if `t4g.medium` is needed (less with Savings Plan) |
-| Public IPv4 / Elastic IP        | ~$3.6                 | ~$3.6                                                                  |
-| EBS gp3 20–30 GB + snapshots    | ~$2–4                 | ~$2–4                                                                  |
-| Supabase (PostgreSQL)           | $0 (Free)             | ~$25 (Pro)                                                             |
-| S3 (images + backups + state)   | < $1                  | ~$1                                                                    |
-| CloudFront                      | $0 (within free tier) | $0 (within free tier)                                                  |
-| Firebase Auth (social / email)  | $0                    | $0                                                                     |
-| Midtrans                        | $0                    | Per-transaction fees only                                              |
-| Terraform, Nginx, Let's Encrypt | $0                    | $0                                                                     |
-| **Total (approx.)**             | **~$18–30 / month**   | **~$50–65 / month**                                                    |
+| Item                            | Launch (Phase 1–2)     | With payments (Phase 3+)                                               |
+| ------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| Cloudflare Workers (Next.js)    | $0 (Free) or $5 (Paid) | $5 (Paid), or $0 if self-hosted on EC2                                 |
+| EC2 `t4g.small`, on-demand      | ~$12–16                | ~$12–16, or ~$25–32 if `t4g.medium` is needed (less with Savings Plan) |
+| Public IPv4 / Elastic IP        | ~$3.6                  | ~$3.6                                                                  |
+| EBS gp3 20–30 GB + snapshots    | ~$2–4                  | ~$2–4                                                                  |
+| Supabase (PostgreSQL)           | $0 (Free)              | ~$25 (Pro)                                                             |
+| S3 (images + backups + state)   | < $1                   | ~$1                                                                    |
+| CloudFront                      | $0 (within free tier)  | $0 (within free tier)                                                  |
+| Firebase Auth (social / email)  | $0                     | $0                                                                     |
+| Midtrans                        | $0                     | Per-transaction fees only                                              |
+| Terraform, Nginx, Let's Encrypt | $0                     | $0                                                                     |
+| **Total (approx.)**             | **~$18–30 / month**    | **~$50–65 / month**                                                    |
 
 Self-hosting Next.js on the same `t4g.small` next to Spring Boot may fit now that PostgreSQL is on Supabase, but measure memory first. If it does not fit, the fallback in 5.2 means moving to `t4g.medium` (about US$12–16 more per month), which costs more than Cloudflare Workers Paid.
 
@@ -481,23 +481,23 @@ New AWS accounts may be eligible for free-tier credits that cover part of the fi
 
 ### 7.2 Negative and risks
 
-| Risk                                                                                       | Mitigation                                                                                                                                     |
-| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Single EC2 instance is a single point of failure for the API and webhooks.                 | Terraform to rebuild quickly (the instance holds no data); Midtrans retries notifications, so short outages do not lose payments.              |
-| Supabase Free plan pauses after inactivity, has no backups, and has a small storage limit. | Scheduled jobs keep it active; daily `pg_dump` to S3; upgrade to Pro before Phase 3 (5.6).                                                     |
-| Dependency on Supabase for the database (outage, pricing change).                          | Plain PostgreSQL only (no Supabase-specific features); daily `pg_dump` in S3 allows restore to RDS or another host.                            |
-| Supabase Data API exposes `public` tables if left on.                                      | Data API disabled or non-exposed schema, RLS enabled on all tables, no Supabase keys in the apps (5.6).                                        |
-| Database is outside AWS; each query crosses the network.                                   | EC2 and Supabase in the same region (`ap-southeast-1`); session pooler with a small Hikari pool; avoid N+1 queries.                            |
-| Spring Boot (JVM) memory on a 2 GiB instance; out-of-memory kills the API.                 | Cap JVM heap and container memory, add swap, set a CloudWatch memory alarm (CloudWatch agent); GraalVM native image or `t4g.medium` if needed. |
-| Slow JVM startup lengthens deploys and restarts.                                           | Blue/green deploy through Nginx with health check, so users never hit a starting instance.                                                     |
+| Risk                                                                                                                                          | Mitigation                                                                                                                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single EC2 instance is a single point of failure for the API and webhooks.                                                                    | Terraform to rebuild quickly (the instance holds no data); Midtrans retries notifications, so short outages do not lose payments.                     |
+| Supabase Free plan pauses after inactivity, has no backups, and has a small storage limit.                                                    | Scheduled jobs keep it active; daily `pg_dump` to S3; upgrade to Pro before Phase 3 (5.6).                                                            |
+| Dependency on Supabase for the database (outage, pricing change).                                                                             | Plain PostgreSQL only (no Supabase-specific features); daily `pg_dump` in S3 allows restore to RDS or another host.                                   |
+| Supabase Data API exposes `public` tables if left on.                                                                                         | Data API disabled or non-exposed schema, RLS enabled on all tables, no Supabase keys in the apps (5.6).                                               |
+| Database is outside AWS; each query crosses the network.                                                                                      | EC2 and Supabase in the same region (`ap-southeast-1`); session pooler with a small Hikari pool; avoid N+1 queries.                                   |
+| Spring Boot (JVM) memory on a 2 GiB instance; out-of-memory kills the API.                                                                    | Cap JVM heap and container memory, add swap, set a CloudWatch memory alarm (CloudWatch agent); GraalVM native image or `t4g.medium` if needed.        |
+| Slow JVM startup lengthens deploys and restarts.                                                                                              | Blue/green deploy through Nginx with health check, so users never hit a starting instance.                                                            |
 | Next.js on Cloudflare Workers (OpenNext) is less mature than on Vercel; some features may behave differently or hit Worker CPU / size limits. | Prefer static/ISR pages; test with `opennextjs-cloudflare preview` before each release; move to Workers Paid; fall back to self-hosting on EC2 (5.2). |
-| Ads slow down public pages (LCP, CLS) and hurt SEO.                                        | Load ad scripts after the page is interactive, reserve ad slot space, and keep ads off the portal, admin, and checkout (5.2).                  |
-| Dependency on Firebase for identity.                                                       | Store profile and roles in PostgreSQL keyed by Firebase `uid`; Firebase users can be exported if needed.                                       |
-| The hub is the only sign-in point; if the hub API is down, users cannot sign in to products. | Users already signed in on a product stay signed in (Firebase refreshes their token without the hub); products cache entitlements (ADR-003 §8.5). |
-| SSO handoff bugs (open redirect, stolen or reused code) could sign a user in on the wrong site. | Exact `redirect_uri` match, `state`, PKCE, 60-second single-use hashed codes, server-to-server code exchange with the client secret (5.7). |
-| Leaked Firebase Admin service account key allows custom tokens for any user.               | Key only in SSM `SecureString`, read by the instance role; rotate it in Google Cloud if leaked; the hub API is the only holder.                  |
-| Frontend (Cloudflare) and API (EC2) on different hosts.                                        | Serve API on a subdomain (for example `api.<domain>`), strict CORS allow-list, tokens in headers rather than cross-site cookies.               |
-| One-time payments may lower renewal rates (PRD §8, G4).                                    | Show the end date clearly; send reminder emails before expiry (ADR-006).                                                                       |
+| Ads slow down public pages (LCP, CLS) and hurt SEO.                                                                                           | Load ad scripts after the page is interactive, reserve ad slot space, and keep ads off the portal, admin, and checkout (5.2).                         |
+| Dependency on Firebase for identity.                                                                                                          | Store profile and roles in PostgreSQL keyed by Firebase `uid`; Firebase users can be exported if needed.                                              |
+| The hub is the only sign-in point; if the hub API is down, users cannot sign in to products.                                                  | Users already signed in on a product stay signed in (Firebase refreshes their token without the hub); products cache entitlements (ADR-003 §8.5).     |
+| SSO handoff bugs (open redirect, stolen or reused code) could sign a user in on the wrong site.                                               | Exact `redirect_uri` match, `state`, PKCE, 60-second single-use hashed codes, server-to-server code exchange with the client secret (5.7).            |
+| Leaked Firebase Admin service account key allows custom tokens for any user.                                                                  | Key only in SSM `SecureString`, read by the instance role; rotate it in Google Cloud if leaked; the hub API is the only holder.                       |
+| Frontend (Cloudflare) and API (EC2) on different hosts.                                                                                       | Serve API on a subdomain (for example `api.<domain>`), strict CORS allow-list, tokens in headers rather than cross-site cookies.                      |
+| One-time payments may lower renewal rates (PRD §8, G4).                                                                                       | Show the end date clearly; send reminder emails before expiry (ADR-006).                                                                              |
 
 ## 8. When to Revisit This Decision
 
@@ -515,11 +515,11 @@ Create a new ADR that supersedes the relevant part of this one when any of these
 
 ## 9. Follow-up Decisions
 
-| ADR     | Topic                                                              | Status   |
-| ------- | ------------------------------------------------------------------ | -------- |
-| ADR-002 | Use cases (update: products sign in through the hub, OQ4)          | Proposed |
+| ADR     | Topic                                                                                                             | Status   |
+| ------- | ----------------------------------------------------------------------------------------------------------------- | -------- |
+| ADR-002 | Use cases (update: products sign in through the hub, OQ4)                                                         | Proposed |
 | ADR-003 | API contract, including SSO (`/sso/authorize`, `/sso/codes`, `/sso/token`) and entitlement for connected products | Proposed |
-| ADR-004 | Initial schema model (add registered redirect URIs and SSO codes)  | Proposed |
-| ADR-005 | Ads provider and placement (for example Google AdSense), consent banner | To do    |
-| ADR-006 | Domain, DNS, and email sending provider                            | To do    |
-| ADR-007 | CI/CD pipeline (build Spring Boot ARM image, deploy to EC2)        | To do    |
+| ADR-004 | Initial schema model (add registered redirect URIs and SSO codes)                                                 | Proposed |
+| ADR-005 | Ads provider and placement (for example Google AdSense), consent banner                                           | To do    |
+| ADR-006 | Domain, DNS, and email sending provider                                                                           | To do    |
+| ADR-007 | CI/CD pipeline (build Spring Boot ARM image, deploy to EC2)                                                       | To do    |

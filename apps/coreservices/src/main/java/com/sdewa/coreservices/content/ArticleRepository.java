@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface ArticleRepository extends JpaRepository<Article, UUID>, JpaSpecificationExecutor<Article> {
 
-    @EntityGraph(attributePaths = {"category", "coverImage"})
+    @EntityGraph(attributePaths = {"category", "coverImage", "translations"})
     Optional<Article> findBySlugAndStatus(String slug, ArticleStatus status);
 
     @Query("select count(a) > 0 from Article a where a.slug = :slug and (:excludeId is null or a.id <> :excludeId)")
@@ -51,8 +51,13 @@ public interface ArticleRepository extends JpaRepository<Article, UUID>, JpaSpec
     @Query("select count(a) from Article a join a.tags t where t.slug = :slug and a.status = com.sdewa.coreservices.content.ArticleStatus.PUBLISHED")
     long countPublishedWithTag(@Param("slug") String slug);
 
-    @Query("select a.slug, a.updatedAt from Article a where a.status = com.sdewa.coreservices.content.ArticleStatus.PUBLISHED order by a.publishedAt desc")
+    /** [id, slug, updatedAt] */
+    @Query("select a.id, a.slug, a.updatedAt from Article a where a.status = com.sdewa.coreservices.content.ArticleStatus.PUBLISHED order by a.publishedAt desc")
     List<Object[]> sitemapArticles();
+
+    /** [articleId, locale] of every published article. */
+    @Query("select t.article.id, t.locale from ArticleTranslation t where t.article.status = com.sdewa.coreservices.content.ArticleStatus.PUBLISHED")
+    List<Object[]> sitemapArticleLocales();
 
     @Query("select distinct c.slug, c.updatedAt from Article a join a.category c where a.status = com.sdewa.coreservices.content.ArticleStatus.PUBLISHED")
     List<Object[]> sitemapCategories();

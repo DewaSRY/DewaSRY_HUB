@@ -47,7 +47,7 @@ export async function TaxonomyPage({ kind, locale, slug, page }: { kind: Taxonom
 
   const [articles, categories] = await Promise.all([
     readOrFallback(
-      () => listArticles(kind === "category" ? { category: taxonomy.slug, page, limit: PAGE_SIZE } : { tag: taxonomy.slug, page, limit: PAGE_SIZE }),
+      () => listArticles(kind === "category" ? { locale, category: taxonomy.slug, page, limit: PAGE_SIZE } : { locale, tag: taxonomy.slug, page, limit: PAGE_SIZE }),
       emptyPage(page, PAGE_SIZE),
     ),
     kind === "category" ? readOrFallback(() => listCategories(), []) : Promise.resolve({ data: [] as Taxonomy[], unavailable: false }),

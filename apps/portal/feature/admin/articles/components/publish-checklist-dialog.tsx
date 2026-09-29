@@ -5,12 +5,13 @@ import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ApiErrorAlert } from "@/components/common/api-error-alert";
+import { languageName } from "@/feature/content";
 import { canPublish, type ChecklistItem } from "../utils";
 
 /**
- * Publish checklist (ADR-009 §6): title, slug, excerpt, and category are
- * required by the API (`422 ARTICLE_INCOMPLETE`); cover, meta description,
- * and image alt text are warnings.
+ * Publish checklist (ADR-009 §6): slug, category, and a title and excerpt in
+ * every written language are required by the API (`422 ARTICLE_INCOMPLETE`);
+ * cover, meta description, image alt text, and missing languages are warnings.
  */
 export function PublishChecklistDialog({
   open,
@@ -21,6 +22,7 @@ export function PublishChecklistDialog({
   publishing,
   error,
   hasUnsavedChanges,
+  uiLocale,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,6 +32,7 @@ export function PublishChecklistDialog({
   publishing: boolean;
   error: unknown;
   hasUnsavedChanges: boolean;
+  uiLocale: string;
 }) {
   const { t } = useTranslation("admin");
   const ready = canPublish(items);
@@ -45,10 +48,16 @@ export function PublishChecklistDialog({
             const Icon = item.ok ? CheckCircle2 : item.required ? XCircle : AlertTriangle;
             const tone = item.ok ? "text-success" : item.required ? "text-destructive" : "text-warning";
             return (
-              <li key={item.key} className="flex items-start gap-2.5 text-sm">
+              <li key={`${item.key}:${item.locale ?? ""}`} className="flex items-start gap-2.5 text-sm">
                 <Icon className={`mt-0.5 size-4 shrink-0 ${tone}`} aria-hidden />
                 <span>
-                  {t(`articles.checklist.items.${item.key}`, { count: item.count ?? 0 })}
+                  {t(`articles.checklist.items.${item.key}`, {
+                    count: item.count ?? 0,
+                    language: item.locale ? languageName(item.locale, uiLocale) : "",
+                  })}
+                  {item.locale && item.key !== "language" ? (
+                    <span className="ml-1.5 rounded border px-1 font-mono text-[10px] text-muted-foreground uppercase">{item.locale}</span>
+                  ) : null}
                   {!item.ok ? (
                     <span className="ml-1.5 text-xs text-muted-foreground">
                       {item.required ? t("articles.checklist.required") : t("articles.checklist.recommended")}

@@ -13,6 +13,7 @@ class AdminArticlesClient extends BaseClient {
         status: params.status,
         category: params.category,
         tag: params.tag,
+        missingLocale: params.missingLocale,
         page: params.page,
         limit: params.limit,
         sort: params.sort ?? "updatedAt,desc",

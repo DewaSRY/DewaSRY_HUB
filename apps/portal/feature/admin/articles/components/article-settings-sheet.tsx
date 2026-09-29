@@ -13,7 +13,7 @@ import { InputField } from "@/components/form/input-field";
 import { TextareaField } from "@/components/form/textarea-field";
 import { cn, slugify } from "@/lib/utils";
 import { SITE_URL } from "@/lib/seo/metadata";
-import { ResponsiveImage, type ImageAsset } from "@/feature/content";
+import { languageName, ResponsiveImage, type ContentLocale, type ImageAsset } from "@/feature/content";
 import { MediaPickerDialog } from "@/feature/admin/media";
 import { useTaxonomyList } from "@/feature/admin/taxonomy";
 import type { ArticleFormValues } from "../schema";
@@ -24,9 +24,10 @@ function Counter({ value, max }: { value: number; max: number }) {
 }
 
 /**
- * Settings side sheet (ADR-009 §5.1): slug, excerpt, cover image, category,
- * tags, meta title/description, and a live Google-result preview. It edits
- * the page's React Hook Form, so values are saved with the body.
+ * Settings side sheet (ADR-009 §5.1). Shared by every language: slug, cover
+ * image, category, tags. For the language being edited: excerpt, meta
+ * title/description, and a live Google-result preview. It edits the page's
+ * React Hook Form, so values are saved with the body.
  */
 export function ArticleSettingsSheet({
   form,
@@ -35,6 +36,7 @@ export function ArticleSettingsSheet({
   coverImage,
   onCoverChange,
   locale,
+  activeLocale,
 }: {
   form: UseFormReturn<ArticleFormValues>;
   open: boolean;
@@ -42,16 +44,23 @@ export function ArticleSettingsSheet({
   coverImage: ImageAsset | null;
   onCoverChange: (image: ImageAsset | null) => void;
   locale: string;
+  /** The language whose excerpt / SEO fields are shown; `null` when it is not written yet. */
+  activeLocale: ContentLocale | null;
 }) {
   const { t } = useTranslation("admin");
   const [pickerOpen, setPickerOpen] = useState(false);
   const categories = useTaxonomyList("categories");
   const tags = useTaxonomyList("tags");
-  const [title, slug, excerpt, metaTitle, metaDescription] = useWatch({
-    control: form.control,
-    name: ["title", "slug", "excerpt", "metaTitle", "metaDescription"],
-  });
+  const [slug, translations] = useWatch({ control: form.control, name: ["slug", "translations"] });
+  const current = activeLocale ? translations?.[activeLocale] : undefined;
+  const title = current?.title ?? "";
+  const excerpt = current?.excerpt ?? "";
+  const metaTitle = current?.metaTitle ?? "";
+  const metaDescription = current?.metaDescription ?? "";
   const preview = seoPreview({ title, metaTitle, excerpt, metaDescription });
+  const language = activeLocale ? languageName(activeLocale, locale) : "";
+  // The slug is shared; it is generated from the first language's title.
+  const slugSource = Object.values(translations ?? {}).find((item) => item?.title.trim())?.title ?? "";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -76,21 +85,11 @@ export function ArticleSettingsSheet({
               size="icon"
               className="mb-6"
               aria-label={t("articles.settings.slugFromTitle")}
-              onClick={() => form.setValue("slug", slugify(title), { shouldDirty: true, shouldValidate: true })}
+              onClick={() => form.setValue("slug", slugify(title || slugSource), { shouldDirty: true, shouldValidate: true })}
             >
               <RefreshCw aria-hidden />
             </Button>
           </div>
-
-          <TextareaField
-            control={form.control}
-            name="excerpt"
-            label={t("articles.settings.excerpt")}
-            description={t("articles.settings.excerptHint")}
-            counter
-            maxLength={300}
-            rows={3}
-          />
 
           <div className="space-y-2">
             <Label>{t("articles.settings.cover")}</Label>
@@ -191,42 +190,63 @@ export function ArticleSettingsSheet({
             />
           </fieldset>
 
-          <div className="space-y-4 rounded-xl border p-4">
-            <p className="text-sm font-semibold">{t("articles.settings.seo")}</p>
-            <div className="space-y-1">
-              <InputField control={form.control} name="metaTitle" label={t("articles.settings.metaTitle")} placeholder={title} maxLength={120} />
-              <div className="flex justify-end">
-                <Counter value={(metaTitle || title).length} max={SEO_TITLE_MAX} />
+          {activeLocale ? (
+            <div key={activeLocale} lang={activeLocale} className="space-y-5 rounded-xl border p-4">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold">{t("articles.settings.languageSection", { language })}</p>
+                <p className="text-xs text-muted-foreground">{t("articles.settings.languageSectionHint")}</p>
               </div>
-            </div>
-            <div className="space-y-1">
               <TextareaField
                 control={form.control}
-                name="metaDescription"
-                label={t("articles.settings.metaDescription")}
-                placeholder={excerpt}
+                name={`translations.${activeLocale}.excerpt`}
+                label={t("articles.settings.excerpt")}
+                description={t("articles.settings.excerptHint")}
+                counter
+                maxLength={300}
                 rows={3}
-                maxLength={320}
               />
-              <div className="flex justify-end">
-                <Counter value={(metaDescription || excerpt).length} max={SEO_DESCRIPTION_MAX} />
+              <p className="text-sm font-medium">{t("articles.settings.seo")}</p>
+              <div className="space-y-1">
+                <InputField
+                  control={form.control}
+                  name={`translations.${activeLocale}.metaTitle`}
+                  label={t("articles.settings.metaTitle")}
+                  placeholder={title}
+                  maxLength={120}
+                />
+                <div className="flex justify-end">
+                  <Counter value={(metaTitle || title).length} max={SEO_TITLE_MAX} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <TextareaField
+                  control={form.control}
+                  name={`translations.${activeLocale}.metaDescription`}
+                  label={t("articles.settings.metaDescription")}
+                  placeholder={excerpt}
+                  rows={3}
+                  maxLength={320}
+                />
+                <div className="flex justify-end">
+                  <Counter value={(metaDescription || excerpt).length} max={SEO_DESCRIPTION_MAX} />
+                </div>
+              </div>
+              <div className="space-y-1 rounded-lg bg-muted/40 p-3" aria-label={t("articles.settings.googlePreview")}>
+                <p className="text-xs text-muted-foreground">{t("articles.settings.googlePreview")}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {SITE_URL.replace(/^https?:\/\//, "")} › {activeLocale} › blog › {slug || "…"}
+                </p>
+                <p className="truncate text-base font-medium text-[#1a0dab] dark:text-[#8ab4f8]">{preview.title || t("articles.untitled")}</p>
+                <p className="line-clamp-2 text-sm text-muted-foreground">{preview.description || t("articles.settings.noDescription")}</p>
+                {preview.titleTooLong || preview.descriptionTooLong ? (
+                  <p className="pt-1 text-xs text-warning">
+                    {preview.titleTooLong ? t("articles.settings.titleTooLong", { max: SEO_TITLE_MAX }) : null}{" "}
+                    {preview.descriptionTooLong ? t("articles.settings.descriptionTooLong", { max: SEO_DESCRIPTION_MAX }) : null}
+                  </p>
+                ) : null}
               </div>
             </div>
-            <div className="space-y-1 rounded-lg bg-muted/40 p-3" aria-label={t("articles.settings.googlePreview")}>
-              <p className="text-xs text-muted-foreground">{t("articles.settings.googlePreview")}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {SITE_URL.replace(/^https?:\/\//, "")} › {locale} › blog › {slug || "…"}
-              </p>
-              <p className="truncate text-base font-medium text-[#1a0dab] dark:text-[#8ab4f8]">{preview.title || t("articles.untitled")}</p>
-              <p className="line-clamp-2 text-sm text-muted-foreground">{preview.description || t("articles.settings.noDescription")}</p>
-              {preview.titleTooLong || preview.descriptionTooLong ? (
-                <p className="pt-1 text-xs text-warning">
-                  {preview.titleTooLong ? t("articles.settings.titleTooLong", { max: SEO_TITLE_MAX }) : null}{" "}
-                  {preview.descriptionTooLong ? t("articles.settings.descriptionTooLong", { max: SEO_DESCRIPTION_MAX }) : null}
-                </p>
-              ) : null}
-            </div>
-          </div>
+          ) : null}
         </div>
       </SheetContent>
       <MediaPickerDialog

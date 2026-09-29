@@ -24,10 +24,16 @@ export interface Taxonomy extends TaxonomyRef {
   articleCount: number;
 }
 
-/** `ArticleSummary` (ADR-003 §5.1). */
+/**
+ * `ArticleSummary` (ADR-003 §5.1). `locale` is the language of `title` /
+ * `excerpt` — the one asked for, or a fallback when the article has no
+ * translation for it; `availableLocales` lists every language it has.
+ */
 export interface ArticleSummary {
   id: string;
   slug: string;
+  locale: string;
+  availableLocales: string[];
   title: string;
   excerpt: string | null;
   coverImage: ImageAsset | null;
@@ -53,6 +59,8 @@ export interface ArticleDetail extends ArticleSummary {
 }
 
 export interface ArticleListParams {
+  /** The language to show each article in (the API falls back per article). */
+  locale?: string;
   page?: number;
   limit?: number;
   category?: string;
@@ -61,7 +69,8 @@ export interface ArticleListParams {
 
 /** `GET /public/sitemap`. */
 export interface SitemapData {
-  articles: { slug: string; updatedAt: string | null }[];
+  /** `locales`: the languages the article is published in. */
+  articles: { slug: string; updatedAt: string | null; locales?: string[] }[];
   categories: { slug: string; updatedAt: string | null }[];
   tags: { slug: string; updatedAt: string | null }[];
 }

@@ -1,6 +1,7 @@
 package com.sdewa.coreservices.content;
 
 import com.sdewa.coreservices.media.Image;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,25 +13,30 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * An article. The body is Tiptap/ProseMirror JSON (ADR-009 §4); {@code bodyText} and
- * {@code wordCount} are derived on save. {@code version} is the optimistic lock (409 VERSION_CONFLICT).
+ * An article: what every language shares (slug, cover, category, tags, status). The text lives in
+ * {@link ArticleTranslation}s, one per locale. {@code version} is the optimistic lock
+ * (409 VERSION_CONFLICT) and is bumped on every save, translations included.
  */
 @Entity
 @Table(name = "articles")
@@ -47,25 +53,6 @@ public class Article {
     @Column(nullable = false, length = 120)
     private String slug;
 
-    @Column(nullable = false, length = 200)
-    private String title;
-
-    @Column(length = 500)
-    private String excerpt;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false)
-    private String body = "{\"type\":\"doc\",\"content\":[]}";
-
-    @Column(name = "body_schema_version", nullable = false)
-    private short bodySchemaVersion = 1;
-
-    @Column(name = "body_text", nullable = false, columnDefinition = "text")
-    private String bodyText = "";
-
-    @Column(name = "word_count", nullable = false)
-    private int wordCount;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cover_image_id")
     private Image coverImage;
@@ -73,12 +60,6 @@ public class Article {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
-
-    @Column(name = "meta_title", length = 200)
-    private String metaTitle;
-
-    @Column(name = "meta_description", length = 320)
-    private String metaDescription;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
@@ -103,7 +84,17 @@ public class Article {
     @JoinTable(name = "article_tags", joinColumns = @JoinColumn(name = "article_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new LinkedHashSet<>();
 
-    /** Rebuilt from the {@code image} nodes of the body on every save (ADR-009 §4.3). */
+    /** One per language, keyed by locale (see {@link ContentLocales}). */
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    @MapKey(name = "locale")
+    @BatchSize(size = 50)
+    private Map<String, ArticleTranslation> translations = new LinkedHashMap<>();
+
+    /** Sort key of the admin list: the title of the first translation written. */
+    @Formula("(select t.title from article_translations t where t.article_id = id order by t.created_at, t.locale limit 1)")
+    private String sortTitle;
+
+    /** Rebuilt from the {@code image} nodes of every translation's body on save (ADR-009 §4.3). */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "article_body_images", joinColumns = @JoinColumn(name = "article_id"), inverseJoinColumns = @JoinColumn(name = "image_id"))
     private Set<Image> bodyImages = new LinkedHashSet<>();
@@ -112,8 +103,8 @@ public class Article {
         return status == ArticleStatus.PUBLISHED;
     }
 
-    /** {@code ceil(word_count / 200)} minutes (ADR-009 §4.4). */
-    public int readingMinutes() {
-        return (wordCount + 199) / 200;
+    /** Adds or returns the translation for {@code locale}. */
+    public ArticleTranslation translation(String locale) {
+        return translations.computeIfAbsent(locale, l -> new ArticleTranslation(this, l));
     }
 }

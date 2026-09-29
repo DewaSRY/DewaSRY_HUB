@@ -15,11 +15,15 @@ import {
   ArticleBody,
   ResponsiveImage,
   TableOfContents,
+  CONTENT_LOCALES,
   buildToc,
   countWords,
   docToPlainText,
+  isContentLocale,
+  languageName,
   readingMinutes,
   type ArticleBodyLabels,
+  type ContentLocale,
 } from "@/feature/content";
 import { useAdminArticle } from "../hooks";
 import type { AdminArticle } from "../type";
@@ -45,11 +49,16 @@ function AdPlaceholder({ slot, label }: { slot: string; label: string }) {
   );
 }
 
-function fromArticle(article: AdminArticle): PreviewPayload {
+/** The saved version in `locale`, or its first language when it has none. */
+function fromArticle(article: AdminArticle, locale: ContentLocale | null): PreviewPayload | null {
+  const chosen = (locale && article.translations[locale] ? locale : CONTENT_LOCALES.find((item) => article.translations[item])) ?? null;
+  const translation = chosen ? article.translations[chosen] : undefined;
+  if (!chosen || !translation) return null;
   return {
-    title: article.title,
-    excerpt: article.excerpt ?? "",
-    body: article.body,
+    locale: chosen,
+    title: translation.title,
+    excerpt: translation.excerpt ?? "",
+    body: translation.body,
     images: article.images,
     coverImage: article.coverImage,
     category: article.category,
@@ -94,13 +103,16 @@ function useLocalPreview(key: string): PreviewPayload | null {
  * `ArticleBody` renderer in the public article layout. Ads are grey
  * placeholders in their real positions.
  */
-export function ArticlePreviewScreen({ id }: { id: string | null }) {
+export function ArticlePreviewScreen({ id, lang, uiLocale }: { id: string | null; lang: string | null; uiLocale: string }) {
   const { t } = useTranslation("admin");
   const { t: tContent } = useTranslation("content");
-  const local = useLocalPreview(previewKey(id));
+  const requested = lang && isContentLocale(lang) ? lang : null;
+  const stored = useLocalPreview(previewKey(id));
+  // The editor writes the language it is showing; use it only for that language.
+  const local = stored && (!requested || stored.locale === requested) ? stored : null;
   const server = useAdminArticle(id);
 
-  const serverPayload = server.data ? fromArticle(server.data) : null;
+  const serverPayload = server.data ? fromArticle(server.data, requested) : null;
   const payload = local && (!serverPayload || local.at >= serverPayload.at) ? local : serverPayload;
   const fromEditor = Boolean(payload && payload === local);
 
@@ -157,6 +169,11 @@ export function ArticlePreviewScreen({ id }: { id: string | null }) {
       <div className="flex flex-wrap items-center gap-3 border-b bg-warning/10 px-4 py-2 text-sm lg:px-6">
         <Eye className="size-4 text-warning" aria-hidden />
         <span className="font-medium">{t("articles.previewScreen.banner")}</span>
+        {payload.locale ? (
+          <span className="rounded border px-1.5 font-mono text-xs uppercase" title={languageName(payload.locale, uiLocale)}>
+            {payload.locale}
+          </span>
+        ) : null}
         <span className="text-muted-foreground">
           {fromEditor ? t("articles.previewScreen.fromEditor") : t("articles.previewScreen.fromServer")}
         </span>
@@ -166,7 +183,7 @@ export function ArticlePreviewScreen({ id }: { id: string | null }) {
         </Link>
       </div>
 
-      <article className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+      <article lang={payload.locale} className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
         <header className="mx-auto max-w-3xl space-y-5">
           {payload.category ? (
             <nav aria-label={tContent("article.breadcrumb")}>

@@ -55,7 +55,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const labels = await siteLabels(locale);
 
   const [articles, products] = await Promise.all([
-    readOrFallback(() => listArticles({ page: 1, limit: 4 }), emptyPage(1, 4)),
+    readOrFallback(() => listArticles({ locale, page: 1, limit: 4 }), emptyPage(1, 4)),
     readOrFallback(() => listProducts(), []),
   ]);
   const [featured, ...rest] = articles.data.data;

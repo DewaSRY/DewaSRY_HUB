@@ -24,6 +24,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { formatDateTime } from "@/lib/datetime";
 import { pushToast } from "@/lib/toast/store";
 import { useTaxonomyList } from "@/feature/admin/taxonomy";
+import { CONTENT_LOCALES, languageName } from "@/feature/content";
 import { useAdminArticles, useDeleteArticle, usePublishArticle } from "../hooks";
 import type { AdminArticleSummary } from "../type";
 
@@ -44,6 +45,7 @@ export function ArticlesScreen() {
     status: parseAsStringLiteral(STATUSES),
     category: parseAsString,
     tag: parseAsString,
+    missing: parseAsStringLiteral(CONTENT_LOCALES),
     page: parseAsInteger.withDefault(1),
     limit: parseAsInteger.withDefault(20),
   });
@@ -54,6 +56,7 @@ export function ArticlesScreen() {
     status: query.status ?? undefined,
     category: query.category ?? undefined,
     tag: query.tag ?? undefined,
+    missingLocale: query.missing ?? undefined,
     page: query.page,
     limit: query.limit,
   });
@@ -92,7 +95,7 @@ export function ArticlesScreen() {
     );
   }
 
-  const filtered = Boolean(q || query.status || query.category || query.tag);
+  const filtered = Boolean(q || query.status || query.category || query.tag || query.missing);
 
   return (
     <PageContainer>
@@ -116,7 +119,7 @@ export function ArticlesScreen() {
           }}
           placeholder={t("articles.search")}
         />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:flex">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 lg:flex">
           <NativeSelect
             aria-label={t("articles.filters.status")}
             value={query.status ?? ""}
@@ -153,6 +156,18 @@ export function ArticlesScreen() {
               </option>
             ))}
           </NativeSelect>
+          <NativeSelect
+            aria-label={t("articles.filters.language")}
+            value={query.missing ?? ""}
+            onChange={(event) => void setQuery({ missing: (event.target.value || null) as (typeof CONTENT_LOCALES)[number] | null, page: 1 })}
+          >
+            <option value="">{t("articles.filters.allLanguages")}</option>
+            {CONTENT_LOCALES.map((item) => (
+              <option key={item} value={item}>
+                {t("articles.filters.missingLanguage", { language: languageName(item, locale) })}
+              </option>
+            ))}
+          </NativeSelect>
         </div>
       </div>
 
@@ -181,6 +196,7 @@ export function ArticlesScreen() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("articles.columns.title")}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t("articles.columns.languages")}</TableHead>
                 <TableHead>{t("articles.columns.status")}</TableHead>
                 <TableHead className="hidden md:table-cell">{t("articles.columns.category")}</TableHead>
                 <TableHead className="hidden lg:table-cell">{t("articles.columns.updated")}</TableHead>
@@ -197,6 +213,26 @@ export function ArticlesScreen() {
                       {article.title || t("articles.untitled")}
                     </Link>
                     <span className="block truncate font-mono text-xs text-muted-foreground">/{article.slug}</span>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <ul className="flex gap-1" aria-label={t("articles.columns.languages")}>
+                      {CONTENT_LOCALES.map((item) => {
+                        const has = article.locales?.includes(item);
+                        return (
+                          <li
+                            key={item}
+                            title={`${languageName(item, locale)}: ${has ? t("articles.languages.written") : t("articles.languages.missing")}`}
+                            className={
+                              has
+                                ? "rounded border border-success/40 bg-success/10 px-1.5 font-mono text-[11px] uppercase text-success"
+                                : "rounded border border-dashed px-1.5 font-mono text-[11px] uppercase text-muted-foreground line-through"
+                            }
+                          >
+                            {item}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </TableCell>
                   <TableCell>
                     <ArticleStatusBadge status={article.status} />

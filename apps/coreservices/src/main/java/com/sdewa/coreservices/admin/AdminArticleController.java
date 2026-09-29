@@ -46,11 +46,13 @@ public class AdminArticleController {
                                                                    @RequestParam(required = false) ArticleStatus status,
                                                                    @RequestParam(required = false) UUID category,
                                                                    @RequestParam(required = false) UUID tag,
+                                                                   @RequestParam(required = false) String locale,
+                                                                   @RequestParam(required = false) String missingLocale,
                                                                    @RequestParam(required = false) Integer page,
                                                                    @RequestParam(required = false) Integer limit,
                                                                    @RequestParam(required = false) String sort) {
         PageQuery pq = PageQuery.parse(page, limit, sort, ArticleAdminService.SORT, "updatedAt", Sort.Direction.DESC);
-        ArticleAdminService.ListResult r = articles.list(q, status, category, tag, pq);
+        ArticleAdminService.ListResult r = articles.list(q, status, category, tag, locale, missingLocale, pq);
         return Responses.page(r.items(), r.total(), pq.page(), pq.limit(), null);
     }
 

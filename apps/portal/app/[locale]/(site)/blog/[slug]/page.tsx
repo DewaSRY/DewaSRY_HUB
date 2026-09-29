@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { ChevronRight, Clock } from "lucide-react";
+import { ChevronRight, Clock, Languages } from "lucide-react";
 import { isAppLocale } from "@/i18n/settings";
 import { Link } from "@/i18n/navigation";
 import { AdSlot } from "@/components/ads/ad-slot";
@@ -14,6 +14,7 @@ import {
   articleMetaTitle,
   articleReadingMinutes,
   buildToc,
+  languageName,
   largestVariant,
   pickRelated,
   wasUpdated,
@@ -36,7 +37,7 @@ export function generateStaticParams() {
 }
 
 async function load(locale: string, slug: string) {
-  const result = await getArticle(slug);
+  const result = await getArticle(slug, locale);
   if (result.kind === "moved") permanentRedirect(`/${locale}/blog/${encodeURIComponent(result.slug)}`);
   if (result.kind === "not-found") notFound();
   return result.article;
@@ -58,7 +59,10 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog/[sl
     modifiedTime: article.updatedAt,
     tags: article.tags.map((tag) => tag.name),
     section: article.category?.name,
+    // A fallback translation canonicalises to the language it is written in.
     canonical: article.canonicalUrl,
+    languages: article.availableLocales,
+    contentLocale: article.locale,
   });
 }
 
@@ -70,7 +74,7 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/blog/
   const t = labels.tContent;
 
   const related = article.category
-    ? await readOrFallback(() => listArticles({ category: article.category!.slug, limit: 4 }), emptyPage<ArticleSummary>(1, 4))
+    ? await readOrFallback(() => listArticles({ locale, category: article.category!.slug, limit: 4 }), emptyPage<ArticleSummary>(1, 4))
     : { data: emptyPage<ArticleSummary>(1, 4), unavailable: false };
   const relatedArticles = pickRelated(related.data.data, article.slug, 3);
 
@@ -78,9 +82,10 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/blog/
   const minutes = articleReadingMinutes(article);
   const url = canonicalFor(locale, `/blog/${article.slug}`);
   const cover = largestVariant(article.coverImage);
+  const isFallback = article.locale !== locale;
 
   return (
-    <article className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+    <article lang={isFallback ? article.locale : undefined} className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
       <JsonLd
         data={[
           articleJsonLd({
@@ -105,6 +110,15 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/blog/
       />
 
       <header className="mx-auto max-w-3xl space-y-5">
+        {isFallback ? (
+          <p lang={locale} className="flex items-start gap-2 rounded-lg border border-info/30 bg-info/10 px-3 py-2 text-sm text-foreground">
+            <Languages className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
+            {t("article.fallbackNotice", {
+              language: languageName(locale, locale),
+              original: languageName(article.locale, locale),
+            })}
+          </p>
+        ) : null}
         <nav aria-label={t("article.breadcrumb")}>
           <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
             <li>

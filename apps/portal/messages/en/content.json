@@ -41,7 +41,8 @@
     "updated": "Updated",
     "onThisPage": "On this page",
     "tags": "Tags",
-    "related": "Related articles"
+    "related": "Related articles",
+    "fallbackNotice": "This article isn't available in {{language}} yet, so you're reading the {{original}} version."
   },
   "body": {
     "copy": "Copy",
