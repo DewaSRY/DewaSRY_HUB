@@ -1,1 +1,292 @@
-{}
+{
+  "users": {
+    "title": "Pengguna",
+    "description": "Semua orang yang pernah masuk ke hub: profil, produk yang diikuti, dan pembayaran.",
+    "search": "Cari nama atau email",
+    "empty": "Belum ada pengguna",
+    "emptyDescription": "Pengguna muncul di sini setelah pertama kali masuk dengan Google.",
+    "noMatch": "Tidak ada pengguna yang cocok dengan filter ini.",
+    "paidCount_other": "{{count}} transaksi lunas",
+    "filters": {
+      "product": "Produk",
+      "allProducts": "Semua produk",
+      "sort": "Urutkan"
+    },
+    "sort": {
+      "createdAt_desc": "Terbaru",
+      "createdAt_asc": "Terlama",
+      "lastSignInAt_desc": "Terakhir masuk",
+      "paidAmount_desc": "Pembayaran tertinggi",
+      "name_asc": "Nama (A–Z)",
+      "email_asc": "Email (A–Z)"
+    },
+    "columns": {
+      "user": "Pengguna",
+      "products": "Produk",
+      "paid": "Dibayar",
+      "lastPaid": "Pembayaran terakhir",
+      "joined": "Bergabung",
+      "lastSignIn": "Terakhir masuk"
+    },
+    "role": {
+      "USER": "Pengguna",
+      "ADMIN": "Admin"
+    },
+    "detail": {
+      "title": "Pengguna",
+      "profile": "Profil Google",
+      "email": "Email",
+      "userId": "ID pengguna",
+      "firebaseUid": "UID Firebase",
+      "copyEmail": "Salin email",
+      "copyId": "Salin ID pengguna",
+      "paidAmount": "Total dibayar",
+      "paidCount": "Transaksi lunas",
+      "lastPaid": "Pembayaran terakhir",
+      "products": "Produk yang diikuti",
+      "productsDescription": "Produk yang pernah dibuka pengguna ini lewat hub.",
+      "noProducts": "Pengguna ini belum mengikuti produk apa pun.",
+      "joinedAt": "Bergabung {{date}}",
+      "subscriptions": "Langganan",
+      "noSubscriptions": "Tidak ada langganan.",
+      "notEntitled": "Tidak berhak akses",
+      "transactions": "Transaksi",
+      "noTransactions": "Belum ada transaksi.",
+      "allTransactions": "Lihat transaksi",
+      "openInTransactions": "Buka di Transaksi"
+    },
+    "picker": {
+      "title": "Filter menurut pengguna",
+      "description": "Cari nama atau email, lalu pilih pengguna."
+    }
+  },
+  "transactions": {
+    "title": "Transaksi",
+    "description": "Semua pembayaran. Filter menurut pengguna, produk, status, dan tanggal untuk memantau pendapatan atau menyelidiki masalah.",
+    "search": "Cari ID pesanan atau email",
+    "empty": "Belum ada transaksi",
+    "emptyDescription": "Transaksi muncul di sini saat pengguna melakukan checkout.",
+    "noMatch": "Tidak ada transaksi yang cocok dengan filter ini.",
+    "needsReview": "Perlu ditinjau",
+    "filters": {
+      "user": "Pengguna",
+      "allUsers": "Semua pengguna",
+      "selectedUser": "Pengguna terpilih",
+      "userChip": "Pengguna: {{email}}",
+      "clearUser": "Hapus filter pengguna",
+      "product": "Produk",
+      "allProducts": "Semua produk",
+      "status": "Status",
+      "sort": "Urutkan",
+      "from": "Dari",
+      "to": "Sampai",
+      "reset": "Atur ulang filter ({{count}})",
+      "resetAll": "Atur ulang filter",
+      "invertedRange": "Tanggal mulai setelah tanggal akhir, jadi filter tanggal diabaikan."
+    },
+    "sort": {
+      "createdAtDesc": "Terbaru",
+      "createdAtAsc": "Terlama",
+      "amountDesc": "Nominal tertinggi",
+      "amountAsc": "Nominal terendah"
+    },
+    "summary": {
+      "count": "Transaksi",
+      "paidCount": "Lunas",
+      "paidAmount": "Pendapatan (lunas)",
+      "line": "{{count}} transaksi · {{paidCount}} lunas · {{paidAmount}}"
+    },
+    "columns": {
+      "date": "Tanggal",
+      "user": "Pengguna",
+      "product": "Produk",
+      "amount": "Nominal",
+      "method": "Metode",
+      "status": "Status"
+    },
+    "source": {
+      "CHECKOUT": "Checkout",
+      "WEBHOOK": "Webhook Midtrans",
+      "SYNC": "Sinkron admin"
+    },
+    "detail": {
+      "metaTitle": "Transaksi {{orderId}}",
+      "description": "Detail pembayaran dan setiap perubahan status.",
+      "summary": "Ringkasan",
+      "orderId": "ID pesanan",
+      "copyOrderId": "Salin ID pesanan",
+      "gatewayId": "ID transaksi Midtrans",
+      "copyGatewayId": "Salin ID transaksi Midtrans",
+      "gatewayUnknown": "Belum tercatat di Midtrans",
+      "createdAt": "Dibuat",
+      "paidAt": "Dibayar",
+      "failureReason": "Pembayaran gagal",
+      "reviewTitle": "Transaksi ini perlu ditinjau",
+      "reviewDescription": "Hub menandainya saat menerapkan status dari Midtrans (misalnya nominal yang dibayar tidak sama dengan harga). Periksa di dasbor Midtrans.",
+      "subscription": "Langganan",
+      "noSubscription": "Tidak ada langganan yang terhubung dengan transaksi ini.",
+      "history": "Riwayat status",
+      "historyDescription": "Dari yang terlama. Sumber menunjukkan siapa yang mengubah status.",
+      "noHistory": "Belum ada perubahan status.",
+      "to": "menjadi",
+      "syncNote": "Gunakan “Sinkronkan dengan Midtrans” jika status tampak macet, misalnya webhook terlewat."
+    },
+    "sync": {
+      "button": "Sinkronkan dengan Midtrans",
+      "updated": "Status diperbarui dari Midtrans",
+      "noChange": "Midtrans tidak melaporkan perubahan",
+      "upstreamTitle": "Midtrans tidak dapat dihubungi",
+      "failedTitle": "Sinkronisasi gagal"
+    }
+  },
+  "products": {
+    "title": "Produk",
+    "description": "Produk SaaS yang terhubung ke hub. Menambah produk cukup dengan konfigurasi: produk, paket, kredensial klien, dan URI pengalihan.",
+    "new": "Produk baru",
+    "search": "Cari nama atau kode",
+    "empty": "Belum ada produk",
+    "emptyDescription": "Buat produk untuk menghubungkan aplikasi SaaS baru ke hub.",
+    "noMatch": "Tidak ada produk yang cocok dengan pencarian.",
+    "planCount_other": "{{count}} paket",
+    "status": {
+      "active": "Aktif",
+      "inactive": "Nonaktif"
+    },
+    "columns": {
+      "product": "Produk",
+      "status": "Status",
+      "plans": "Paket",
+      "members": "Anggota",
+      "created": "Dibuat"
+    },
+    "fields": {
+      "code": "Kode",
+      "planCode": "Kode paket",
+      "name": "Nama",
+      "description": "Deskripsi",
+      "websiteUrl": "URL situs",
+      "active": "Aktif",
+      "public": "Publik",
+      "price": "Harga (IDR)",
+      "billingPeriod": "Periode tagihan",
+      "features": "Fitur (JSON)"
+    },
+    "period": {
+      "MONTHLY": "Bulanan",
+      "YEARLY": "Tahunan",
+      "none": "Tidak ada (paket gratis)",
+      "free": "Gratis"
+    },
+    "form": {
+      "createTitle": "Produk baru",
+      "createDescription": "Kredensial klien pertama dibuat bersama produk. Rahasianya hanya ditampilkan sekali.",
+      "editTitle": "Ubah produk",
+      "editDescription": "Kode tidak bisa diubah karena dipakai produk di URL.",
+      "codeHint": "Huruf kecil, angka, dan “-”. Tidak bisa diubah nanti.",
+      "codeLocked": "Kode tidak bisa diubah.",
+      "websiteHint": "Alamat tempat pengguna membuka produk. Opsional.",
+      "activeHint": "Produk nonaktif disembunyikan dari situs publik dan tidak bisa dibeli."
+    },
+    "detail": {
+      "title": "Produk",
+      "overview": "Ringkasan",
+      "copyCode": "Salin kode produk",
+      "viewTransactions": "Lihat transaksi"
+    },
+    "plans": {
+      "title": "Paket",
+      "description": "Yang bisa dibeli pengguna. Paket tidak pernah dihapus; nonaktifkan paket untuk berhenti menjualnya.",
+      "new": "Tambah paket",
+      "empty": "Belum ada paket",
+      "emptyDescription": "Tambahkan minimal satu paket agar pengguna bisa berlangganan.",
+      "createTitle": "Tambah paket",
+      "editTitle": "Ubah paket {{name}}",
+      "formDescription": "Satu pembayaran memberi akses selama satu periode tagihan; tidak diperpanjang otomatis.",
+      "codeHint": "Dipakai di URL checkout. Tidak bisa diubah nanti.",
+      "codeLocked": "Kode paket tidak bisa diubah.",
+      "priceHint": "Rupiah bulat. Isi 0 untuk paket gratis.",
+      "periodHint": "Paket berbayar butuh periode; paket gratis tidak.",
+      "featuresHint": "Objek JSON (maks. 8 KB). Arti setiap kunci ditentukan oleh produk.",
+      "publicHint": "Ditampilkan di halaman produk publik.",
+      "activeHint": "Bisa dibeli.",
+      "hidden": "Tersembunyi",
+      "sold": "Terjual",
+      "soldTitle": "Harga dan periode tagihan dikunci",
+      "soldDescription": "Paket ini sudah pernah terjual. Buat paket baru untuk mengubah harga.",
+      "freeExists": "Produk ini sudah punya paket gratis yang aktif. Hub hanya mengizinkan satu.",
+      "columns": {
+        "plan": "Paket",
+        "price": "Harga",
+        "period": "Periode",
+        "status": "Status",
+        "subscribers": "Pelanggan aktif"
+      }
+    },
+    "credentials": {
+      "title": "Kredensial klien",
+      "description": "Dipakai produk untuk memanggil API hub. Maksimal {{max}} yang aktif, sehingga rahasia bisa dirotasi tanpa gangguan.",
+      "new": "Kredensial baru",
+      "empty": "Tidak ada kredensial aktif.",
+      "limit": "Batas {{max}} kredensial aktif sudah tercapai. Cabut salah satu untuk membuat yang baru.",
+      "lastOne": "Kredensial terakhir tidak bisa dicabut. Buat yang baru terlebih dahulu.",
+      "clientId": "ID klien",
+      "clientSecret": "Rahasia klien",
+      "copyClientId": "Salin ID klien",
+      "copySecret": "Salin rahasia klien",
+      "created": "Dibuat {{date}}",
+      "lastUsed": "terakhir dipakai {{date}}",
+      "neverUsed": "belum pernah dipakai",
+      "revoke": "Cabut",
+      "revokeTitle": "Cabut kredensial?",
+      "revokeDescription": "Panggilan yang memakai {{clientId}} langsung berhenti berfungsi. Tindakan ini tidak bisa dibatalkan.",
+      "secretTitle": "Simpan rahasia klien",
+      "secretDescription": "Simpan sekarang di pengelola rahasia produk.",
+      "secretOnce": "Rahasia ini hanya ditampilkan sekali. Jika hilang, buat kredensial baru.",
+      "secretDone": "Sudah saya simpan"
+    },
+    "redirects": {
+      "title": "URI pengalihan SSO",
+      "description": "Alamat tujuan hub mengembalikan pengguna setelah masuk lewat SSO. Harus sama persis.",
+      "uri": "URI pengalihan",
+      "hint": "URI HTTPS absolut, tanpa “#” atau wildcard. http://localhost hanya berlaku jika API mengizinkannya.",
+      "add": "Tambah",
+      "empty": "Belum ada URI pengalihan. Masuk lewat SSO akan gagal sampai ada satu.",
+      "remove": "Hapus",
+      "removeTitle": "Hapus URI pengalihan?",
+      "removeDescription": "Proses masuk SSO yang kembali ke {{uri}} akan ditolak.",
+      "duplicate": "URI pengalihan ini sudah terdaftar."
+    },
+    "errors": {
+      "codeRequired": "Masukkan kode.",
+      "codeTooLong": "Maksimal 64 karakter.",
+      "codeFormat": "Gunakan huruf kecil a–z, angka, dan “-” saja.",
+      "codeTaken": "Kode ini sudah dipakai.",
+      "nameRequired": "Masukkan nama.",
+      "nameTooLong": "Maksimal 120 karakter.",
+      "descriptionTooLong": "Maksimal 5000 karakter.",
+      "urlTooLong": "Maksimal 2000 karakter.",
+      "websiteUrl": "Masukkan URL http(s).",
+      "priceRequired": "Masukkan harga (0 untuk gratis).",
+      "priceFormat": "Masukkan rupiah bulat, hanya angka.",
+      "periodRequired": "Paket berbayar harus punya periode tagihan.",
+      "periodFree": "Paket gratis tidak punya periode tagihan.",
+      "featuresJson": "Masukkan objek JSON, misalnya {\"removeAds\": true}.",
+      "featuresTooLarge": "Fitur maksimal 8 KB.",
+      "uriRequired": "Masukkan URI pengalihan.",
+      "uri": {
+        "absolute": "Masukkan URI absolut, misalnya https://app.example.com/callback.",
+        "fragment": "Hapus fragmen “#” atau wildcard “*”.",
+        "https": "Gunakan https:// (http hanya untuk localhost)."
+      }
+    },
+    "toast": {
+      "created": "Produk dibuat",
+      "updated": "Produk disimpan",
+      "planCreated": "Paket ditambahkan",
+      "planUpdated": "Paket disimpan",
+      "credentialRevoked": "Kredensial dicabut",
+      "redirectAdded": "URI pengalihan ditambahkan",
+      "redirectRemoved": "URI pengalihan dihapus"
+    }
+  }
+}

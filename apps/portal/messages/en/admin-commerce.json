@@ -1,1 +1,294 @@
-{}
+{
+  "users": {
+    "title": "Users",
+    "description": "Everyone who signed in to the hub: profile, joined products, and payments.",
+    "search": "Search by name or email",
+    "empty": "No users yet",
+    "emptyDescription": "Users appear here after their first Google sign-in.",
+    "noMatch": "No users match these filters.",
+    "paidCount_one": "{{count}} paid transaction",
+    "paidCount_other": "{{count}} paid transactions",
+    "filters": {
+      "product": "Product",
+      "allProducts": "All products",
+      "sort": "Sort"
+    },
+    "sort": {
+      "createdAt_desc": "Newest first",
+      "createdAt_asc": "Oldest first",
+      "lastSignInAt_desc": "Last signed in",
+      "paidAmount_desc": "Highest paid",
+      "name_asc": "Name (A–Z)",
+      "email_asc": "Email (A–Z)"
+    },
+    "columns": {
+      "user": "User",
+      "products": "Products",
+      "paid": "Paid",
+      "lastPaid": "Last payment",
+      "joined": "Joined",
+      "lastSignIn": "Last sign-in"
+    },
+    "role": {
+      "USER": "User",
+      "ADMIN": "Admin"
+    },
+    "detail": {
+      "title": "User",
+      "profile": "Google profile",
+      "email": "Email",
+      "userId": "User ID",
+      "firebaseUid": "Firebase UID",
+      "copyEmail": "Copy email",
+      "copyId": "Copy user ID",
+      "paidAmount": "Total paid",
+      "paidCount": "Paid transactions",
+      "lastPaid": "Last payment",
+      "products": "Joined products",
+      "productsDescription": "Products this user has opened through the hub.",
+      "noProducts": "This user has not joined a product yet.",
+      "joinedAt": "Joined {{date}}",
+      "subscriptions": "Subscriptions",
+      "noSubscriptions": "No subscriptions.",
+      "notEntitled": "Not entitled",
+      "transactions": "Transactions",
+      "noTransactions": "No transactions yet.",
+      "allTransactions": "View transactions",
+      "openInTransactions": "Open in Transactions"
+    },
+    "picker": {
+      "title": "Filter by user",
+      "description": "Search by name or email, then pick a user."
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "description": "All payments. Filter by user, product, status, and date to monitor revenue or investigate a problem.",
+    "search": "Search by order ID or email",
+    "empty": "No transactions yet",
+    "emptyDescription": "Transactions appear here when users check out.",
+    "noMatch": "No transactions match these filters.",
+    "needsReview": "Needs review",
+    "filters": {
+      "user": "User",
+      "allUsers": "All users",
+      "selectedUser": "Selected user",
+      "userChip": "User: {{email}}",
+      "clearUser": "Clear user filter",
+      "product": "Product",
+      "allProducts": "All products",
+      "status": "Status",
+      "sort": "Sort",
+      "from": "From",
+      "to": "To",
+      "reset": "Reset filters ({{count}})",
+      "resetAll": "Reset filters",
+      "invertedRange": "The start date is after the end date, so the date filter is ignored."
+    },
+    "sort": {
+      "createdAtDesc": "Newest first",
+      "createdAtAsc": "Oldest first",
+      "amountDesc": "Highest amount",
+      "amountAsc": "Lowest amount"
+    },
+    "summary": {
+      "count": "Transactions",
+      "paidCount": "Paid",
+      "paidAmount": "Revenue (paid)",
+      "line": "{{count}} transactions · {{paidCount}} paid · {{paidAmount}}"
+    },
+    "columns": {
+      "date": "Date",
+      "user": "User",
+      "product": "Product",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status"
+    },
+    "source": {
+      "CHECKOUT": "Checkout",
+      "WEBHOOK": "Midtrans webhook",
+      "SYNC": "Admin sync"
+    },
+    "detail": {
+      "metaTitle": "Transaction {{orderId}}",
+      "description": "Payment details and every status change.",
+      "summary": "Summary",
+      "orderId": "Order ID",
+      "copyOrderId": "Copy order ID",
+      "gatewayId": "Midtrans transaction ID",
+      "copyGatewayId": "Copy Midtrans transaction ID",
+      "gatewayUnknown": "Not seen by Midtrans yet",
+      "createdAt": "Created",
+      "paidAt": "Paid",
+      "failureReason": "Payment failed",
+      "reviewTitle": "This transaction needs review",
+      "reviewDescription": "The hub flagged it while applying a Midtrans status (for example, the paid amount did not match the price). Check it in the Midtrans dashboard.",
+      "subscription": "Subscription",
+      "noSubscription": "No subscription is linked to this transaction.",
+      "history": "Status history",
+      "historyDescription": "Oldest first. Source shows who changed the status.",
+      "noHistory": "No status changes recorded.",
+      "to": "to",
+      "syncNote": "Use “Sync with Midtrans” when a status looks stuck, e.g. a webhook was missed."
+    },
+    "sync": {
+      "button": "Sync with Midtrans",
+      "updated": "Status updated from Midtrans",
+      "noChange": "Midtrans reports no change",
+      "upstreamTitle": "Midtrans could not be reached",
+      "failedTitle": "Sync failed"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "description": "SaaS products connected to the hub. Adding one is configuration only: product, plans, client credentials, and redirect URIs.",
+    "new": "New product",
+    "search": "Search by name or code",
+    "empty": "No products yet",
+    "emptyDescription": "Create a product to connect a new SaaS app to the hub.",
+    "noMatch": "No products match your search.",
+    "planCount_one": "{{count}} plan",
+    "planCount_other": "{{count}} plans",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "columns": {
+      "product": "Product",
+      "status": "Status",
+      "plans": "Plans",
+      "members": "Members",
+      "created": "Created"
+    },
+    "fields": {
+      "code": "Code",
+      "planCode": "Plan code",
+      "name": "Name",
+      "description": "Description",
+      "websiteUrl": "Website URL",
+      "active": "Active",
+      "public": "Public",
+      "price": "Price (IDR)",
+      "billingPeriod": "Billing period",
+      "features": "Features (JSON)"
+    },
+    "period": {
+      "MONTHLY": "Monthly",
+      "YEARLY": "Yearly",
+      "none": "None (free plan)",
+      "free": "Free"
+    },
+    "form": {
+      "createTitle": "New product",
+      "createDescription": "The first client credential is created with the product. Its secret is shown once.",
+      "editTitle": "Edit product",
+      "editDescription": "The code cannot change, because products use it in URLs.",
+      "codeHint": "Lowercase letters, numbers, and “-”. It cannot be changed later.",
+      "codeLocked": "The code cannot be changed.",
+      "websiteHint": "Where users open the product. Optional.",
+      "activeHint": "Inactive products are hidden from the public site and cannot be bought."
+    },
+    "detail": {
+      "title": "Product",
+      "overview": "Overview",
+      "copyCode": "Copy product code",
+      "viewTransactions": "View transactions"
+    },
+    "plans": {
+      "title": "Plans",
+      "description": "What users can buy. Plans are never deleted; deactivate a plan to stop selling it.",
+      "new": "Add plan",
+      "empty": "No plans yet",
+      "emptyDescription": "Add at least one plan so users can subscribe.",
+      "createTitle": "Add plan",
+      "editTitle": "Edit plan {{name}}",
+      "formDescription": "One payment buys one billing period of access; it does not renew automatically.",
+      "codeHint": "Used in the checkout URL. It cannot be changed later.",
+      "codeLocked": "The plan code cannot be changed.",
+      "priceHint": "Whole rupiah. Use 0 for a free plan.",
+      "periodHint": "Paid plans need a period; a free plan has none.",
+      "featuresHint": "A JSON object (max 8 KB). The product decides what the keys mean.",
+      "publicHint": "Shown on the public product page.",
+      "activeHint": "Can be bought.",
+      "hidden": "Hidden",
+      "sold": "Sold",
+      "soldTitle": "Price and billing period are locked",
+      "soldDescription": "This plan has already been sold. Create a new plan to change the price.",
+      "freeExists": "This product already has an active free plan. The hub allows only one.",
+      "columns": {
+        "plan": "Plan",
+        "price": "Price",
+        "period": "Period",
+        "status": "Status",
+        "subscribers": "Active subscribers"
+      }
+    },
+    "credentials": {
+      "title": "Client credentials",
+      "description": "The product uses these to call the hub API. Up to {{max}} can be active, so you can rotate a secret without downtime.",
+      "new": "New credential",
+      "empty": "No active credentials.",
+      "limit": "The limit of {{max}} active credentials is reached. Revoke one to create another.",
+      "lastOne": "The last credential cannot be revoked. Create a new one first.",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "copyClientId": "Copy client ID",
+      "copySecret": "Copy client secret",
+      "created": "Created {{date}}",
+      "lastUsed": "last used {{date}}",
+      "neverUsed": "never used",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke credential?",
+      "revokeDescription": "Calls signed with {{clientId}} stop working immediately. This cannot be undone.",
+      "secretTitle": "Save the client secret",
+      "secretDescription": "Store it in the product's secret manager now.",
+      "secretOnce": "This secret is shown only once. If you lose it, create a new credential.",
+      "secretDone": "I have saved it"
+    },
+    "redirects": {
+      "title": "SSO redirect URIs",
+      "description": "Where the hub may send users back after SSO sign-in. Must match exactly.",
+      "uri": "Redirect URI",
+      "hint": "Absolute HTTPS URI, no “#” or wildcard. http://localhost works only when the API allows it.",
+      "add": "Add",
+      "empty": "No redirect URIs yet. SSO sign-in will fail until one is added.",
+      "remove": "Remove",
+      "removeTitle": "Remove redirect URI?",
+      "removeDescription": "SSO sign-ins that return to {{uri}} will be refused.",
+      "duplicate": "This redirect URI is already registered."
+    },
+    "errors": {
+      "codeRequired": "Enter a code.",
+      "codeTooLong": "Use at most 64 characters.",
+      "codeFormat": "Use lowercase letters a–z, numbers, and “-” only.",
+      "codeTaken": "This code is already used.",
+      "nameRequired": "Enter a name.",
+      "nameTooLong": "Use at most 120 characters.",
+      "descriptionTooLong": "Use at most 5000 characters.",
+      "urlTooLong": "Use at most 2000 characters.",
+      "websiteUrl": "Enter an http(s) URL.",
+      "priceRequired": "Enter a price (0 for free).",
+      "priceFormat": "Enter whole rupiah, digits only.",
+      "periodRequired": "A paid plan needs a billing period.",
+      "periodFree": "A free plan has no billing period.",
+      "featuresJson": "Enter a JSON object, e.g. {\"removeAds\": true}.",
+      "featuresTooLarge": "Features must be at most 8 KB.",
+      "uriRequired": "Enter a redirect URI.",
+      "uri": {
+        "absolute": "Enter an absolute URI, e.g. https://app.example.com/callback.",
+        "fragment": "Remove the “#” fragment or “*” wildcard.",
+        "https": "Use https:// (http is allowed for localhost only)."
+      }
+    },
+    "toast": {
+      "created": "Product created",
+      "updated": "Product saved",
+      "planCreated": "Plan added",
+      "planUpdated": "Plan saved",
+      "credentialRevoked": "Credential revoked",
+      "redirectAdded": "Redirect URI added",
+      "redirectRemoved": "Redirect URI removed"
+    }
+  }
+}

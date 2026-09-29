@@ -1,4 +1,14 @@
-import { collectImageIds, type ArticleDoc, type BodyImageMap, type ImageAsset, type TaxonomyRef } from "@/feature/content";
+import {
+  BODY_SCHEMA_VERSION,
+  collectImageIds,
+  type ArticleDoc,
+  type BodyImageMap,
+  type ImageAsset,
+  type TaxonomyRef,
+} from "@/feature/content";
+import { toApiError } from "@/lib/api/error";
+import { EMPTY_ARTICLE_FORM, type ArticleFormValues } from "./schema";
+import type { AdminArticle, ArticleInput } from "./type";
 
 /**
  * Crash recovery (ADR-009 §6): the editor keeps `{ body, title, savedVersion, at }`
@@ -171,4 +181,67 @@ export interface PreviewPayload {
 /** Image ids used by the body that the images map does not know yet. */
 export function unknownImageIds(body: ArticleDoc, images: BodyImageMap): string[] {
   return collectImageIds(body).filter((id) => !images[id]);
+}
+
+/** Settings-sheet fields of the form (everything but the title). */
+export const SETTINGS_FIELDS = ["slug", "excerpt", "coverImageId", "categoryId", "tagIds", "metaTitle", "metaDescription"] as const;
+
+/** `AdminArticle` → form values (`null` → empty strings for text inputs). */
+export function toFormValues(article: AdminArticle | null | undefined): ArticleFormValues {
+  if (!article) return { ...EMPTY_ARTICLE_FORM, tagIds: [] };
+  return {
+    title: article.title ?? "",
+    slug: article.slug ?? "",
+    excerpt: article.excerpt ?? "",
+    coverImageId: article.coverImageId ?? article.coverImage?.id ?? null,
+    categoryId: article.categoryId ?? article.category?.id ?? null,
+    tagIds: article.tagIds ?? article.tags.map((tag) => tag.id),
+    metaTitle: article.metaTitle ?? "",
+    metaDescription: article.metaDescription ?? "",
+  };
+}
+
+/**
+ * Form values + body → `ArticleInput` (ADR-003 §10.3). Empty text becomes
+ * `null`; `version` is sent only for an update (optimistic lock).
+ */
+export function toArticleInput(values: ArticleFormValues, body: ArticleDoc, version?: number): ArticleInput {
+  const text = (value: string) => value.trim() || null;
+  return {
+    title: values.title.trim(),
+    slug: text(values.slug),
+    excerpt: text(values.excerpt),
+    body,
+    bodySchemaVersion: BODY_SCHEMA_VERSION,
+    coverImageId: values.coverImageId,
+    categoryId: values.categoryId,
+    tagIds: values.tagIds,
+    metaTitle: text(values.metaTitle),
+    metaDescription: text(values.metaDescription),
+    ...(version === undefined ? {} : { version }),
+  };
+}
+
+/**
+ * `PUT /admin/articles/{id}` answers `409` for both `SLUG_TAKEN` and
+ * `VERSION_CONFLICT`. A slug problem names the `slug` field (or says so);
+ * anything else is treated as a version conflict.
+ */
+export function isSlugConflict(error: unknown): boolean {
+  const apiError = toApiError(error);
+  if (apiError?.status !== 409) return false;
+  return apiError.fieldErrors.some((item) => item.field === "slug") || /slug/i.test(apiError.message);
+}
+
+export function isVersionConflict(error: unknown): boolean {
+  return toApiError(error)?.status === 409 && !isSlugConflict(error);
+}
+
+/** `400` items that point at the body (`body`, `body.content[12]…`). */
+export function bodyFieldErrors(error: unknown): { path: string; message: string }[] {
+  const apiError = toApiError(error);
+  if (apiError?.status !== 400) return [];
+  return apiError.fieldErrors
+    .filter((item) => item.field === "body" || item.field.startsWith("body."))
+    .map((item) => ({ path: item.field, message: item.message }));
 }

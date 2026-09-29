@@ -1,1 +1,135 @@
-{}
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Welcome back, {{name}}",
+    "description": "Manage content, users, payments, and products from one place.",
+    "sections": {
+      "articles": {
+        "title": "Articles",
+        "description": "Write, edit, publish, and unpublish blog posts."
+      },
+      "media": {
+        "title": "Media library",
+        "description": "Upload and reuse images across articles."
+      },
+      "categories": {
+        "title": "Categories",
+        "description": "Group articles by topic. Each article has one category."
+      },
+      "tags": {
+        "title": "Tags",
+        "description": "Label articles so readers can find related posts."
+      },
+      "users": {
+        "title": "Users",
+        "description": "See who uses your products and what they have paid."
+      },
+      "transactions": {
+        "title": "Transactions",
+        "description": "Monitor revenue and investigate payment problems."
+      },
+      "products": {
+        "title": "Products",
+        "description": "Connect SaaS products, plans, and client credentials."
+      }
+    }
+  },
+  "media": {
+    "title": "Media library",
+    "description": "Images uploaded here can be used as covers or inside articles.",
+    "library": "Library",
+    "upload": "Upload image",
+    "uploadTitle": "Upload an image",
+    "uploadDescription": "JPEG, PNG, or WebP up to 10 MB. The image is resized and its metadata removed.",
+    "dropHere": "Drop an image here or click to choose",
+    "fileHint": "JPEG, PNG, or WebP · max 10 MB",
+    "alt": "Alt text",
+    "altHint": "Describe the image for screen readers and search engines (required).",
+    "altPlaceholder": "e.g. Architecture diagram of the payment flow",
+    "searchPlaceholder": "Search by alt text or file name…",
+    "unusedOnly": "Unused only",
+    "unused": "Unused",
+    "empty": "No images yet",
+    "emptyDescription": "Upload your first image to start building the library.",
+    "emptyPickerDescription": "No image matches. Upload a new one from the Upload tab.",
+    "pickerTitle": "Choose an image",
+    "pickerDescription": "Pick an image from the library or upload a new one.",
+    "insert": "Insert",
+    "detailTitle": "Image details",
+    "dimensions": "Dimensions",
+    "size": "File size",
+    "uploadedAt": "Uploaded",
+    "urls": "Sizes",
+    "copyUrl": "Copy {{width}}px URL",
+    "usedBy": "Used by",
+    "notUsed": "Not used by any article.",
+    "usage": {
+      "COVER": "Cover",
+      "BODY": "Body"
+    },
+    "inUseTitle": "Image in use",
+    "cannotDelete": "In use — cannot delete",
+    "confirmDelete": "Delete this image? This cannot be undone.",
+    "errors": {
+      "type": "Only JPEG, PNG, or WebP images are allowed.",
+      "size": "The image is larger than 10 MB.",
+      "noFile": "Choose an image to upload.",
+      "altRequired": "Alt text is required.",
+      "invalid": "The image could not be read. Try another file."
+    },
+    "uploaded": "Image uploaded",
+    "altSaved": "Alt text saved",
+    "deleted": "Image deleted"
+  },
+  "taxonomy": {
+    "category": "category",
+    "tag": "tag",
+    "name": "Name",
+    "slug": "Slug",
+    "slugHint": "Lowercase letters, numbers, and hyphens. Changing it changes the public URL.",
+    "slugAuto": "Leave empty to use “{{slug}}”.",
+    "search": "Search…",
+    "noMatch": "Nothing matches your search.",
+    "articles": "Articles",
+    "published_one": "{{count}} published",
+    "published_other": "{{count}} published",
+    "rename": "Rename",
+    "createTitle": "New {{noun}}",
+    "editTitle": "Edit {{noun}}",
+    "createDescription": "Give it a name. The slug is generated from the name if you leave it empty.",
+    "editDescription": "Update the name or slug.",
+    "categories": {
+      "title": "Categories",
+      "description": "Every article belongs to exactly one category.",
+      "new": "New category",
+      "empty": "No categories yet",
+      "emptyDescription": "Create a category before publishing your first article.",
+      "deleteTitle": "Delete category?",
+      "deleteDescription": "The category will be removed. This cannot be undone.",
+      "deleteInUse_one": "{{count}} article still uses this category. Move it to another category first.",
+      "deleteInUse_other": "{{count}} articles still use this category. Move them to another category first.",
+      "inUseTitle": "Category in use"
+    },
+    "tags": {
+      "title": "Tags",
+      "description": "An article can have many tags.",
+      "new": "New tag",
+      "empty": "No tags yet",
+      "emptyDescription": "Create tags to label your articles.",
+      "deleteTitle": "Delete tag?",
+      "deleteDescription_one": "The tag will be removed from {{count}} article. This cannot be undone.",
+      "deleteDescription_other": "The tag will be removed from {{count}} articles. This cannot be undone."
+    },
+    "errors": {
+      "nameRequired": "Name is required.",
+      "nameTooLong": "Name must be at most 80 characters.",
+      "slugTooLong": "Slug must be at most 120 characters.",
+      "slugFormat": "Use lowercase letters, numbers, and single hyphens."
+    },
+    "toast": {
+      "created": "Saved",
+      "updated": "Changes saved",
+      "deleted": "Deleted"
+    }
+  }
+}

@@ -52,7 +52,10 @@ export interface AdminTransactionListParams extends PageParams {
   userId?: string;
   productCode?: string;
   status?: TransactionStatus[];
-  /** `YYYY-MM-DD`, inclusive, on `createdAt`. */
+  /**
+   * On `createdAt`: `YYYY-MM-DD` (a UTC day) or an ISO instant. `from` is
+   * inclusive, `to` exclusive for an instant. See `dateRangeToInstants()`.
+   */
   from?: string;
   to?: string;
   /** `orderId` or email. */

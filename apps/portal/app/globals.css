@@ -520,3 +520,150 @@
   width: 100%;
   overflow: hidden;
 }
+
+/* ---------------------------------------------------------------------------
+   Admin article editor (ADR-009 §5). The canvas reuses `.article-body`, so
+   blocks look like the public page; these rules add editing affordances.
+   ------------------------------------------------------------------------- */
+
+.article-editor-content {
+  min-height: 50vh;
+  outline: none;
+}
+.article-editor-content > * + * { margin-top: 0; }
+
+/* Placeholder ("Type '/' for commands…") on the current empty block. */
+.article-editor-content :where(p, h2, h3, h4, [data-type="detailsSummary"]).is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: color-mix(in oklch, var(--muted-foreground) 70%, transparent);
+}
+
+/* Atom blocks (image, embed, link card): selection ring. */
+.article-editor-content .editor-atom { position: relative; }
+.article-editor-content .editor-atom[data-selected] > :first-child {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 0.75rem;
+}
+.article-editor-content .ProseMirror-selectednode:not(.editor-atom) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* In the editor column, wide and full images break out a little, never past the card. */
+.article-editor-content .article-figure[data-width] {
+  width: 100%;
+  margin-left: 0;
+  transform: none;
+}
+@media (min-width: 768px) {
+  .article-editor-content .article-figure[data-width="wide"] { width: calc(100% + 4rem); margin-left: -2rem; }
+  .article-editor-content .article-figure[data-width="full"] { width: calc(100% + 7rem); margin-left: -3.5rem; }
+}
+
+/* Tables: same look as `.article-table`, plus cell selection and column resize. */
+.article-editor-content .tableWrapper {
+  margin: 1.75rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+.article-editor-content table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.article-editor-content :where(th, td) {
+  position: relative;
+  min-width: 6rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+.article-editor-content :where(th, td) > :first-child { margin-top: 0; }
+.article-editor-content :where(th, td) > :last-child { margin-bottom: 0; }
+.article-editor-content th { background: var(--muted); font-weight: 600; }
+.article-editor-content .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+}
+.article-editor-content .column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: -2px;
+  width: 4px;
+  pointer-events: none;
+  background: var(--primary);
+}
+.article-editor-content.resize-cursor { cursor: col-resize; }
+
+/* Toggle (details): Tiptap renders a button + summary + content. */
+.article-editor-content [data-type="details"] {
+  display: flex;
+  gap: 0.25rem;
+  margin: 1.25rem 0;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+}
+.article-editor-content [data-type="details"] > button {
+  display: flex;
+  width: 1.5rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  background: transparent;
+  cursor: pointer;
+}
+.article-editor-content [data-type="details"] > button:hover { background: var(--muted); }
+.article-editor-content [data-type="details"] > button::before {
+  content: "▸";
+  font-size: 0.8rem;
+  transition: transform 150ms;
+}
+.article-editor-content [data-type="details"].is-open > button::before { transform: rotate(90deg); }
+.article-editor-content [data-type="details"] > div { flex: 1; min-width: 0; }
+.article-editor-content [data-type="detailsSummary"] { font-weight: 600; }
+.article-editor-content [data-type="detailsContent"] > :first-child { margin-top: 0.25rem; }
+
+/* To-do list: Tiptap renders `li > label > input` + `div`. */
+.article-editor-content ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
+.article-editor-content ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.625rem; padding-left: 0; }
+.article-editor-content ul[data-type="taskList"] li > label { margin-top: 0.3rem; user-select: none; }
+.article-editor-content ul[data-type="taskList"] li > label input { width: 1rem; height: 1rem; accent-color: var(--primary); }
+.article-editor-content ul[data-type="taskList"] li > div { flex: 1; min-width: 0; }
+.article-editor-content ul[data-type="taskList"] li > div > :first-child { margin-top: 0; }
+.article-editor-content ul[data-type="taskList"] li[data-checked="true"] > div { color: var(--muted-foreground); text-decoration: line-through; }
+
+/* Drag handle (⋮⋮), positioned by the drag-handle plugin. */
+.editor-drag-handle {
+  display: flex;
+  align-items: center;
+  transition: opacity 150ms;
+}
+.editor-drag-handle[data-dragging="true"] { opacity: 0.4; }
+
+/* Scroll-to-error flash (ADR-009 §6 "Validation errors"). */
+@keyframes editor-flash {
+  from { box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 60%, transparent); }
+  to { box-shadow: 0 0 0 3px transparent; }
+}
+.editor-flash {
+  border-radius: 0.375rem;
+  animation: editor-flash 2s ease-out;
+}

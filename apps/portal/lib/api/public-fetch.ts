@@ -20,7 +20,7 @@ export const PUBLIC_REVALIDATE_SECONDS = 3600;
 export const PUBLIC_API_BASE_URL = (
   process.env.API_INTERNAL_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8080/v1"
+  "http://localhost:8088/v1"
 ).replace(/\/+$/, "");
 
 export class BuildPhaseSkippedError extends Error {

@@ -12,7 +12,7 @@ export function useTaxonomyList(kind: TaxonomyKind) {
 
 function warnIfPending(item: AdminTaxonomy) {
   if (item.revalidation?.status === "PENDING_RETRY") {
-    pushToast({ variant: "error", title: { key: "admin:revalidationPending" } });
+    pushToast({ variant: "error", title: { key: "admin:articles.toast.revalidationPending" } });
   }
 }
 

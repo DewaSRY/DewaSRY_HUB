@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { ArticleDoc, BodyImageMap } from "@/feature/content";
+import { ApiError } from "@/lib/api/error";
+import type { AdminArticle } from "./type";
 import {
+  bodyFieldErrors,
   canPublish,
+  isSlugConflict,
+  isVersionConflict,
+  toArticleInput,
+  toFormValues,
   draftKey,
   imagesMissingAlt,
   parseBodyPath,
@@ -80,5 +87,63 @@ describe("seoPreview", () => {
     expect(preview.titleTooLong).toBe(true);
     expect(preview.description).toBe("short");
     expect(preview.descriptionTooLong).toBe(false);
+  });
+});
+
+describe("form mapping", () => {
+  it("maps an article to form values and back", () => {
+    const article = {
+      title: "T",
+      slug: "t",
+      excerpt: null,
+      coverImage: null,
+      coverImageId: "img",
+      category: { id: "c", slug: "c", name: "C" },
+      categoryId: "c",
+      tags: [],
+      tagIds: ["x"],
+      metaTitle: null,
+      metaDescription: "d",
+    } as unknown as AdminArticle;
+    const values = toFormValues(article);
+    expect(values).toEqual({
+      title: "T",
+      slug: "t",
+      excerpt: "",
+      coverImageId: "img",
+      categoryId: "c",
+      tagIds: ["x"],
+      metaTitle: "",
+      metaDescription: "d",
+    });
+    const input = toArticleInput({ ...values, title: "  T  " }, body("b"), 4);
+    expect(input).toMatchObject({ title: "T", slug: "t", excerpt: null, metaTitle: null, metaDescription: "d", version: 4, bodySchemaVersion: 1 });
+    expect("version" in toArticleInput(values, body("b"))).toBe(false);
+    expect(toFormValues(null).title).toBe("");
+  });
+});
+
+describe("error classification", () => {
+  const error = (status: number, message: string, fieldErrors: { field: string; message: string }[] = []) =>
+    new ApiError({ status, message, fieldErrors });
+
+  it("tells a slug conflict from a version conflict", () => {
+    expect(isSlugConflict(error(409, "The slug is already used"))).toBe(true);
+    expect(isVersionConflict(error(409, "The slug is already used"))).toBe(false);
+    expect(isVersionConflict(error(409, "The article was changed by someone else; reload before saving"))).toBe(true);
+    expect(isVersionConflict(error(400, "Bad"))).toBe(false);
+  });
+
+  it("picks body errors out of a 400", () => {
+    const failed = error(400, "Validation failed", [
+      { field: "title", message: "Too long" },
+      { field: "body.content[3]", message: "unknown node" },
+      { field: "body", message: "Image missing" },
+    ]);
+    expect(bodyFieldErrors(failed)).toEqual([
+      { path: "body.content[3]", message: "unknown node" },
+      { path: "body", message: "Image missing" },
+    ]);
+    expect(bodyFieldErrors(error(409, "x"))).toEqual([]);
   });
 });

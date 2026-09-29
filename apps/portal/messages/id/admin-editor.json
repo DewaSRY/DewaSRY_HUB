@@ -1,1 +1,316 @@
-{}
+{
+  "articles": {
+    "title": "Artikel",
+    "description": "Tulis, sunting, dan terbitkan artikel blog.",
+    "new": "Artikel baru",
+    "search": "Cari berdasarkan judul…",
+    "untitled": "Tanpa judul",
+    "empty": "Belum ada artikel",
+    "emptyDescription": "Tulis artikel pertama Anda. Artikel tetap berupa draf sampai Anda menerbitkannya.",
+    "noMatch": "Tidak ada artikel yang cocok dengan filter ini",
+    "preview": "Pratinjau",
+    "publish": "Terbitkan",
+    "unpublish": "Batalkan terbit",
+    "deleteTitle": "Hapus “{{title}}”?",
+    "deleteDraft": "Draf ini akan dihapus secara permanen.",
+    "deletePublished": "Artikel ini sedang tayang. Artikel akan diturunkan dari situs dan dihapus secara permanen.",
+    "status": {
+      "DRAFT": "Draf",
+      "PUBLISHED": "Terbit"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "Semua status",
+      "category": "Kategori",
+      "allCategories": "Semua kategori",
+      "tag": "Tag",
+      "allTags": "Semua tag"
+    },
+    "columns": {
+      "title": "Judul",
+      "status": "Status",
+      "category": "Kategori",
+      "updated": "Diperbarui"
+    },
+    "toast": {
+      "created": "Draf dibuat",
+      "deleted": "Artikel dihapus",
+      "published": "Artikel diterbitkan",
+      "unpublished": "Artikel batal diterbitkan",
+      "publishFailed": "Artikel gagal diterbitkan",
+      "unpublishFailed": "Gagal membatalkan terbit artikel",
+      "revalidationPending": "Tersimpan, tetapi situs belum diperbarui. Sistem akan mencoba lagi secara otomatis.",
+      "reloadFailed": "Gagal memuat ulang artikel",
+      "copied": "Konten Anda disalin ke papan klip",
+      "copyFailed": "Gagal menyalin ke papan klip. Tidak ada yang dimuat ulang."
+    },
+    "errors": {
+      "titleRequired": "Masukkan judul",
+      "titleTooLong": "Judul paling banyak 200 karakter",
+      "slugTooLong": "Slug paling banyak 120 karakter",
+      "slugFormat": "Gunakan huruf kecil, angka, dan satu tanda hubung sebagai pemisah",
+      "excerptTooLong": "Ringkasan paling banyak 300 karakter",
+      "metaTitleTooLong": "Judul meta paling banyak 120 karakter",
+      "metaDescriptionTooLong": "Deskripsi meta paling banyak 320 karakter"
+    },
+    "settings": {
+      "title": "Pengaturan artikel",
+      "description": "URL, ringkasan, sampul, kategori, tag, dan tampilan di mesin pencari. Disimpan bersama artikel.",
+      "slug": "Slug",
+      "slugHint": "Bagian akhir URL. Kosongkan untuk membuatnya dari judul.",
+      "slugFromTitle": "Buat slug dari judul",
+      "excerpt": "Ringkasan",
+      "excerptHint": "Satu atau dua kalimat di bawah judul dan di daftar artikel. Wajib untuk terbit.",
+      "cover": "Gambar sampul",
+      "chooseCover": "Pilih gambar sampul",
+      "replace": "Ganti",
+      "removeCover": "Hapus gambar sampul",
+      "category": "Kategori",
+      "noCategory": "Tanpa kategori",
+      "categoryHint": "Wajib untuk terbit.",
+      "tags": "Tag",
+      "noTags": "Belum ada tag. Buat di menu Tag.",
+      "seo": "Tampilan di pencarian",
+      "metaTitle": "Judul meta",
+      "metaDescription": "Deskripsi meta",
+      "googlePreview": "Pratinjau Google",
+      "noDescription": "Tambahkan ringkasan atau deskripsi meta.",
+      "titleTooLong": "Judul lebih dari {{max}} karakter akan terpotong.",
+      "descriptionTooLong": "Deskripsi lebih dari {{max}} karakter akan terpotong."
+    },
+    "checklist": {
+      "title": "Siap diterbitkan?",
+      "description": "Menerbitkan artikel akan menampilkannya di situs.",
+      "required": "Wajib",
+      "recommended": "Disarankan",
+      "savesFirst": "Perubahan yang belum disimpan akan disimpan terlebih dahulu.",
+      "openSettings": "Buka pengaturan",
+      "items": {
+        "title": "Judul",
+        "slug": "Slug",
+        "excerpt": "Ringkasan",
+        "category": "Kategori",
+        "cover": "Gambar sampul",
+        "metaDescription": "Deskripsi meta",
+        "imageAlt_zero": "Semua gambar di isi artikel memiliki teks alt",
+        "imageAlt_other": "{{count}} gambar di isi artikel belum memiliki teks alt"
+      }
+    },
+    "conflict": {
+      "title": "Artikel ini diubah di tempat lain",
+      "description": "Ada versi yang lebih baru (mungkin dari tab lain). Muat ulang untuk mengambilnya — perubahan Anda di sini akan hilang — atau salin konten Anda terlebih dahulu.",
+      "reload": "Muat ulang",
+      "copy": "Salin konten saya, lalu muat ulang"
+    },
+    "editor": {
+      "metaTitle": "Sunting artikel",
+      "notFound": "Artikel tidak ditemukan",
+      "back": "Kembali ke artikel",
+      "new": "Baru",
+      "settings": "Pengaturan",
+      "save": "Simpan",
+      "saving": "Menyimpan…",
+      "unsaved": "Ada perubahan belum disimpan",
+      "savedAt": "Tersimpan {{time}}",
+      "notSaved": "Belum disimpan",
+      "saveFailed": "Artikel gagal disimpan",
+      "titleLabel": "Judul artikel",
+      "titlePlaceholder": "Judul artikel",
+      "words_other": "{{count}} kata",
+      "readingTime_other": "{{count}} menit baca",
+      "restoreTitle": "Pulihkan perubahan yang belum disimpan?",
+      "restoreDescription": "Browser ini menyimpan salinan artikel yang lebih baru dari pukul {{time}} dan belum pernah disimpan.",
+      "restore": "Pulihkan",
+      "discard": "Buang",
+      "bodyInvalid": "Ada masalah pada isi artikel",
+      "goToBlock": "Ke blok tersebut",
+      "leaveTitle": "Keluar tanpa menyimpan?",
+      "leaveDescription": "Perubahan pada artikel ini belum disimpan. Salinan lokal tetap tersimpan di browser ini.",
+      "leaveConfirm": "Keluar",
+      "leaveCancel": "Lanjut menyunting",
+      "unpublishTitle": "Batalkan terbit artikel ini?",
+      "unpublishDescription": "Artikel akan diturunkan dari situs dan kembali menjadi Draf. Anda bisa menerbitkannya lagi nanti."
+    },
+    "previewScreen": {
+      "metaTitle": "Pratinjau artikel",
+      "banner": "Pratinjau",
+      "fromEditor": "Menampilkan konten editor saat ini, termasuk perubahan yang belum disimpan.",
+      "fromServer": "Menampilkan versi terakhir yang disimpan.",
+      "backToEditor": "Kembali ke editor",
+      "emptyTitle": "Tidak ada yang bisa dipratinjau",
+      "emptyDescription": "Buka pratinjau dari editor untuk melihat artikel seperti yang dilihat pengunjung."
+    }
+  },
+  "editor": {
+    "ariaLabel": "Isi artikel",
+    "placeholder": {
+      "paragraph": "Ketik '/' untuk perintah…",
+      "heading": "Judul bagian",
+      "summary": "Judul toggle"
+    },
+    "slash": {
+      "label": "Sisipkan blok",
+      "empty": "Tidak ada blok yang cocok"
+    },
+    "toolbar": {
+      "label": "Format",
+      "selection": "Format teks terpilih",
+      "undo": "Urungkan",
+      "redo": "Ulangi",
+      "blockType": "Jenis blok",
+      "align": "Perataan",
+      "more": "Format lainnya",
+      "clearFormatting": "Hapus format"
+    },
+    "blocks": {
+      "paragraph": "Teks",
+      "heading2": "Judul 2",
+      "heading3": "Judul 3",
+      "heading4": "Judul 4",
+      "bulletList": "Daftar poin",
+      "orderedList": "Daftar bernomor",
+      "taskList": "Daftar tugas",
+      "blockquote": "Kutipan",
+      "codeBlock": "Kode",
+      "horizontalRule": "Pemisah",
+      "callout": "Callout",
+      "details": "Toggle",
+      "image": "Gambar",
+      "embed": "Sematan",
+      "bookmark": "Kartu tautan",
+      "table": "Tabel"
+    },
+    "marks": {
+      "bold": "Tebal",
+      "italic": "Miring",
+      "underline": "Garis bawah",
+      "strike": "Coret",
+      "code": "Kode sebaris",
+      "link": "Tautan",
+      "textColor": "Warna teks",
+      "highlight": "Sorotan",
+      "subscript": "Subskrip",
+      "superscript": "Superskrip"
+    },
+    "align": {
+      "left": "Rata kiri",
+      "center": "Rata tengah",
+      "right": "Rata kanan"
+    },
+    "colors": {
+      "gray": "Abu-abu",
+      "red": "Merah",
+      "orange": "Oranye",
+      "yellow": "Kuning",
+      "green": "Hijau",
+      "blue": "Biru",
+      "purple": "Ungu",
+      "pink": "Merah muda",
+      "none": "Bawaan"
+    },
+    "paste": {
+      "imagesDropped": "Gambar dari konten yang ditempel tidak ditambahkan. Unggah dulu ke pustaka media.",
+      "oneImage": "Hanya gambar pertama yang dipakai. Tambahkan gambar lain satu per satu."
+    },
+    "link": {
+      "title": "Tautan",
+      "description": "Tautkan teks yang dipilih, atau sisipkan tautan jika tidak ada teks yang dipilih.",
+      "url": "URL",
+      "hint": "https://, http://, mailto:, atau path situs seperti /blog/artikel-saya atau #bagian.",
+      "invalid": "Gunakan tautan https://, http://, atau mailto:, atau path yang diawali / atau #.",
+      "apply": "Terapkan",
+      "remove": "Hapus tautan"
+    },
+    "image": {
+      "pickerTitle": "Sisipkan gambar",
+      "menu": "Opsi gambar",
+      "missing": "Gambar tidak ditemukan di pustaka media",
+      "width": {
+        "content": "Lebar konten",
+        "wide": "Lebar",
+        "full": "Lebar penuh"
+      },
+      "caption": "Keterangan",
+      "captionPlaceholder": "Tambahkan keterangan (opsional)",
+      "alt": "Teks alt untuk artikel ini",
+      "altPlaceholder": "Teks alt",
+      "altFromLibrary": "Teks alt (pustaka: {{alt}})",
+      "replace": "Ganti gambar",
+      "delete": "Hapus gambar"
+    },
+    "embed": {
+      "title": "Sematan",
+      "description": "Tempel tautan dari {{providers}}. Konten baru dimuat saat pengunjung mengekliknya.",
+      "url": "URL",
+      "detected": "{{provider}} · {{id}}",
+      "unsupported": "Tautan ini bukan dari penyedia yang didukung.",
+      "asLinkCard": "Sisipkan sebagai kartu tautan",
+      "keepAsLink": "Biarkan sebagai tautan",
+      "insert": "Sematkan",
+      "invalid": "Sematan tidak valid",
+      "menu": "Opsi sematan",
+      "caption": "Keterangan",
+      "captionPlaceholder": "Tambahkan keterangan (opsional)",
+      "replace": "Ganti sematan",
+      "delete": "Hapus sematan"
+    },
+    "bookmark": {
+      "title": "Kartu tautan",
+      "description": "Kartu berisi judul halaman, deskripsi, dan nama situs. Tidak menampilkan gambar dari luar.",
+      "url": "URL",
+      "hint": "Detail diambil dari halaman tersebut; Anda bisa menyuntingnya.",
+      "httpsOnly": "Kartu tautan memerlukan URL https://.",
+      "fetch": "Ambil detail",
+      "fetchFailed": "Gagal mengambil detail halaman. Anda bisa mengisinya sendiri.",
+      "cardTitle": "Judul",
+      "cardDescription": "Deskripsi",
+      "siteName": "Nama situs",
+      "insert": "Sisipkan",
+      "save": "Simpan",
+      "untitled": "Tautan",
+      "menu": "Opsi kartu tautan",
+      "edit": "Sunting kartu tautan",
+      "delete": "Hapus kartu tautan"
+    },
+    "callout": {
+      "tone": "Jenis callout",
+      "tones": {
+        "info": "Catatan",
+        "tip": "Tips",
+        "warning": "Peringatan",
+        "danger": "Bahaya"
+      }
+    },
+    "code": {
+      "language": "Bahasa kode",
+      "plain": "Teks biasa"
+    },
+    "table": {
+      "insertTitle": "Sisipkan tabel",
+      "insertDescription": "Pilih ukuran. Anda bisa menambah atau menghapus baris dan kolom nanti.",
+      "size": "{{rows}} × {{cols}}",
+      "rows": "Baris",
+      "cols": "Kolom",
+      "headerRow": "Baris judul",
+      "insert": "Sisipkan tabel",
+      "menu": "Opsi tabel",
+      "addRowBefore": "Tambah baris di atas",
+      "addRowAfter": "Tambah baris di bawah",
+      "deleteRow": "Hapus baris",
+      "addColumnBefore": "Tambah kolom di kiri",
+      "addColumnAfter": "Tambah kolom di kanan",
+      "deleteColumn": "Hapus kolom",
+      "toggleHeaderRow": "Aktifkan/nonaktifkan baris judul",
+      "toggleHeaderColumn": "Aktifkan/nonaktifkan kolom judul",
+      "merge": "Gabungkan sel",
+      "split": "Pisahkan sel",
+      "delete": "Hapus tabel"
+    },
+    "dragHandle": {
+      "label": "Seret untuk memindahkan, klik untuk opsi blok",
+      "turnInto": "Ubah menjadi",
+      "duplicate": "Duplikat",
+      "delete": "Hapus"
+    }
+  }
+}

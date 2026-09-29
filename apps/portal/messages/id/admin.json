@@ -1,1 +1,132 @@
-{}
+{
+  "dashboard": {
+    "title": "Dasbor",
+    "greeting": "Selamat datang kembali, {{name}}",
+    "description": "Kelola konten, pengguna, pembayaran, dan produk dari satu tempat.",
+    "sections": {
+      "articles": {
+        "title": "Artikel",
+        "description": "Tulis, sunting, terbitkan, dan batalkan terbitan artikel blog."
+      },
+      "media": {
+        "title": "Pustaka media",
+        "description": "Unggah dan gunakan ulang gambar di berbagai artikel."
+      },
+      "categories": {
+        "title": "Kategori",
+        "description": "Kelompokkan artikel berdasarkan topik. Setiap artikel memiliki satu kategori."
+      },
+      "tags": {
+        "title": "Tag",
+        "description": "Beri label artikel agar pembaca menemukan tulisan terkait."
+      },
+      "users": {
+        "title": "Pengguna",
+        "description": "Lihat siapa yang memakai produk Anda dan apa yang telah mereka bayar."
+      },
+      "transactions": {
+        "title": "Transaksi",
+        "description": "Pantau pendapatan dan telusuri masalah pembayaran."
+      },
+      "products": {
+        "title": "Produk",
+        "description": "Hubungkan produk SaaS, paket, dan kredensial klien."
+      }
+    }
+  },
+  "media": {
+    "title": "Pustaka media",
+    "description": "Gambar yang diunggah di sini dapat dipakai sebagai sampul atau di dalam artikel.",
+    "library": "Pustaka",
+    "upload": "Unggah gambar",
+    "uploadTitle": "Unggah gambar",
+    "uploadDescription": "JPEG, PNG, atau WebP hingga 10 MB. Ukuran gambar akan disesuaikan dan metadatanya dihapus.",
+    "dropHere": "Letakkan gambar di sini atau klik untuk memilih",
+    "fileHint": "JPEG, PNG, atau WebP · maks. 10 MB",
+    "alt": "Teks alternatif",
+    "altHint": "Jelaskan gambar untuk pembaca layar dan mesin pencari (wajib).",
+    "altPlaceholder": "mis. Diagram arsitektur alur pembayaran",
+    "searchPlaceholder": "Cari berdasarkan teks alternatif atau nama berkas…",
+    "unusedOnly": "Hanya yang tidak dipakai",
+    "unused": "Tidak dipakai",
+    "empty": "Belum ada gambar",
+    "emptyDescription": "Unggah gambar pertama Anda untuk mulai membangun pustaka.",
+    "emptyPickerDescription": "Tidak ada gambar yang cocok. Unggah gambar baru dari tab Unggah.",
+    "pickerTitle": "Pilih gambar",
+    "pickerDescription": "Pilih gambar dari pustaka atau unggah yang baru.",
+    "insert": "Sisipkan",
+    "detailTitle": "Detail gambar",
+    "dimensions": "Dimensi",
+    "size": "Ukuran berkas",
+    "uploadedAt": "Diunggah",
+    "urls": "Ukuran",
+    "copyUrl": "Salin URL {{width}}px",
+    "usedBy": "Dipakai oleh",
+    "notUsed": "Tidak dipakai oleh artikel mana pun.",
+    "usage": {
+      "COVER": "Sampul",
+      "BODY": "Isi"
+    },
+    "inUseTitle": "Gambar sedang dipakai",
+    "cannotDelete": "Sedang dipakai — tidak dapat dihapus",
+    "confirmDelete": "Hapus gambar ini? Tindakan ini tidak dapat dibatalkan.",
+    "errors": {
+      "type": "Hanya gambar JPEG, PNG, atau WebP yang diizinkan.",
+      "size": "Ukuran gambar melebihi 10 MB.",
+      "noFile": "Pilih gambar untuk diunggah.",
+      "altRequired": "Teks alternatif wajib diisi.",
+      "invalid": "Gambar tidak dapat dibaca. Coba berkas lain."
+    },
+    "uploaded": "Gambar diunggah",
+    "altSaved": "Teks alternatif disimpan",
+    "deleted": "Gambar dihapus"
+  },
+  "taxonomy": {
+    "category": "kategori",
+    "tag": "tag",
+    "name": "Nama",
+    "slug": "Slug",
+    "slugHint": "Huruf kecil, angka, dan tanda hubung. Mengubahnya akan mengubah URL publik.",
+    "slugAuto": "Kosongkan untuk memakai “{{slug}}”.",
+    "search": "Cari…",
+    "noMatch": "Tidak ada yang cocok dengan pencarian Anda.",
+    "articles": "Artikel",
+    "published_other": "{{count}} terbit",
+    "rename": "Ganti nama",
+    "createTitle": "Buat {{noun}} baru",
+    "editTitle": "Sunting {{noun}}",
+    "createDescription": "Beri nama. Slug akan dibuat dari nama jika Anda mengosongkannya.",
+    "editDescription": "Perbarui nama atau slug.",
+    "categories": {
+      "title": "Kategori",
+      "description": "Setiap artikel termasuk dalam tepat satu kategori.",
+      "new": "Kategori baru",
+      "empty": "Belum ada kategori",
+      "emptyDescription": "Buat kategori sebelum menerbitkan artikel pertama Anda.",
+      "deleteTitle": "Hapus kategori?",
+      "deleteDescription": "Kategori akan dihapus. Tindakan ini tidak dapat dibatalkan.",
+      "deleteInUse_other": "{{count}} artikel masih memakai kategori ini. Pindahkan ke kategori lain terlebih dahulu.",
+      "inUseTitle": "Kategori sedang dipakai"
+    },
+    "tags": {
+      "title": "Tag",
+      "description": "Satu artikel dapat memiliki banyak tag.",
+      "new": "Tag baru",
+      "empty": "Belum ada tag",
+      "emptyDescription": "Buat tag untuk memberi label pada artikel Anda.",
+      "deleteTitle": "Hapus tag?",
+      "deleteDescription_other": "Tag akan dilepas dari {{count}} artikel. Tindakan ini tidak dapat dibatalkan."
+    },
+    "errors": {
+      "nameRequired": "Nama wajib diisi.",
+      "nameTooLong": "Nama maksimal 80 karakter.",
+      "slugTooLong": "Slug maksimal 120 karakter.",
+      "slugFormat": "Gunakan huruf kecil, angka, dan satu tanda hubung di antaranya."
+    },
+    "toast": {
+      "created": "Tersimpan",
+      "updated": "Perubahan disimpan",
+      "deleted": "Dihapus"
+    }
+  }
+}

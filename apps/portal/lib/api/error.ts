@@ -154,7 +154,7 @@ export function getApiFieldErrors(
 type SetError<TField extends string> = (
   name: TField,
   error: { type: string; message: string },
-  options?: { shouldFocus?: boolean },
+  options?: { shouldFocus: boolean },
 ) => void;
 
 /**

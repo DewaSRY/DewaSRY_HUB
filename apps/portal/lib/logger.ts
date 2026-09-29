@@ -20,7 +20,12 @@ const SENSITIVE_KEYS = new Set([
 
 // Catches credential-shaped keys not covered verbatim above
 // (e.g. "accessToken", "refresh_token", "x-api-key").
-const SENSITIVE_KEY_PATTERNS = [/token/i, /secret/i, /api[-_]?key/i, /credential/i];
+const SENSITIVE_KEY_PATTERNS = [
+  /token/i,
+  /secret/i,
+  /api[-_]?key/i,
+  /credential/i,
+];
 
 function isSensitiveKey(key: string): boolean {
   const lower = key.toLowerCase();
@@ -38,10 +43,15 @@ export function maskSensitiveData(
   if (seen.has(data)) return "[Circular]";
   seen.add(data);
   try {
-    if (Array.isArray(data)) return data.map((item) => maskSensitiveData(item, seen));
+    if (Array.isArray(data))
+      return data.map((item) => maskSensitiveData(item, seen));
     const masked: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
-      masked[key] = isSensitiveKey(key) ? "[REDACTED]" : maskSensitiveData(value, seen);
+    for (const [key, value] of Object.entries(
+      data as Record<string, unknown>,
+    )) {
+      masked[key] = isSensitiveKey(key)
+        ? "[REDACTED]"
+        : maskSensitiveData(value, seen);
     }
     return masked;
   } finally {
@@ -50,7 +60,12 @@ export function maskSensitiveData(
 }
 
 type Level = "debug" | "info" | "warn" | "error";
-const LEVELS: Record<Level, number> = { debug: 10, info: 20, warn: 30, error: 40 };
+const LEVELS: Record<Level, number> = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
+};
 
 function threshold(): number {
   const configured = (process.env.LOG_LEVEL ?? "info").toLowerCase() as Level;
@@ -71,10 +86,14 @@ function write(level: Level, message: string, meta?: Record<string, unknown>) {
 }
 
 export const logger = {
-  debug: (message: string, meta?: Record<string, unknown>) => write("debug", message, meta),
-  info: (message: string, meta?: Record<string, unknown>) => write("info", message, meta),
-  warn: (message: string, meta?: Record<string, unknown>) => write("warn", message, meta),
-  error: (message: string, meta?: Record<string, unknown>) => write("error", message, meta),
+  debug: (message: string, meta?: Record<string, unknown>) =>
+    write("debug", message, meta),
+  info: (message: string, meta?: Record<string, unknown>) =>
+    write("info", message, meta),
+  warn: (message: string, meta?: Record<string, unknown>) =>
+    write("warn", message, meta),
+  error: (message: string, meta?: Record<string, unknown>) =>
+    write("error", message, meta),
 };
 
 export default logger;

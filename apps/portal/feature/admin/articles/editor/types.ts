@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
 import type { ArticleDoc, BodyImageMap } from "@/feature/content";
 
 /**
@@ -37,10 +37,16 @@ export interface ArticleEditorProps {
   onImagesChange?: (images: BodyImageMap) => void;
   /** Called on every document change with the normalised body. */
   onChange: (doc: ArticleDoc) => void;
+  /**
+   * Called once the editor is created, with the body as the editor sees it
+   * (normalised). The page uses it as the "saved" baseline for dirty checks.
+   */
+  onReady?: (doc: ArticleDoc) => void;
   onStats?: (stats: ArticleEditorStats) => void;
   /** `Ctrl+S` / `Cmd+S` inside the editor. */
   onSaveShortcut?: () => void;
-  placeholder?: string;
   editable?: boolean;
+  /** Rendered between the fixed toolbar and the body (the title input). */
+  beforeContent?: ReactNode;
   editorRef?: Ref<ArticleEditorHandle>;
 }

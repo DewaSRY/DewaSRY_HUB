@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, usePathname } from "@/i18n/navigation";
+import { GuardedLink } from "@/components/common/navigation-guard/guarded-link";
 import {
   Sidebar,
   SidebarContent,
@@ -69,7 +70,7 @@ function AdminSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/admin" />} aria-label={tCommon("appName")}>
+            <SidebarMenuButton size="lg" render={<GuardedLink href="/admin" />} aria-label={tCommon("appName")}>
               <BrandWordmark name={tCommon("appName")} tagline={t("adminNav.tagline")} />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -86,7 +87,7 @@ function AdminSidebar() {
                     "exact" in item && item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
                   return (
                     <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton isActive={active} render={<Link href={item.href} />}>
+                      <SidebarMenuButton isActive={active} render={<GuardedLink href={item.href} />}>
                         <item.icon aria-hidden />
                         <span>{t(item.key)}</span>
                       </SidebarMenuButton>

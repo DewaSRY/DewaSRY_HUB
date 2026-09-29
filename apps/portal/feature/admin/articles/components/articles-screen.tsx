@@ -74,7 +74,7 @@ export function ArticlesScreen() {
             title: {
               key:
                 updated.revalidation?.status === "PENDING_RETRY"
-                  ? "admin:revalidationPending"
+                  ? "admin:articles.toast.revalidationPending"
                   : next
                     ? "admin:articles.toast.published"
                     : "admin:articles.toast.unpublished",

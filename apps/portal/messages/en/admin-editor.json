@@ -1,1 +1,319 @@
-{}
+{
+  "articles": {
+    "title": "Articles",
+    "description": "Write, edit, and publish blog articles.",
+    "new": "New article",
+    "search": "Search by title…",
+    "untitled": "Untitled",
+    "empty": "No articles yet",
+    "emptyDescription": "Write your first article. It stays a draft until you publish it.",
+    "noMatch": "No articles match these filters",
+    "preview": "Preview",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "deleteTitle": "Delete “{{title}}”?",
+    "deleteDraft": "This draft will be deleted permanently.",
+    "deletePublished": "This article is live. It will be removed from the site and deleted permanently.",
+    "status": {
+      "DRAFT": "Draft",
+      "PUBLISHED": "Published"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "category": "Category",
+      "allCategories": "All categories",
+      "tag": "Tag",
+      "allTags": "All tags"
+    },
+    "columns": {
+      "title": "Title",
+      "status": "Status",
+      "category": "Category",
+      "updated": "Updated"
+    },
+    "toast": {
+      "created": "Draft created",
+      "deleted": "Article deleted",
+      "published": "Article published",
+      "unpublished": "Article unpublished",
+      "publishFailed": "Could not publish the article",
+      "unpublishFailed": "Could not unpublish the article",
+      "revalidationPending": "Saved, but the live site has not refreshed yet. It will retry automatically.",
+      "reloadFailed": "Could not reload the article",
+      "copied": "Your content was copied to the clipboard",
+      "copyFailed": "Could not copy to the clipboard. Nothing was reloaded."
+    },
+    "errors": {
+      "titleRequired": "Enter a title",
+      "titleTooLong": "The title can be at most 200 characters",
+      "slugTooLong": "The slug can be at most 120 characters",
+      "slugFormat": "Use lowercase letters, numbers, and single dashes",
+      "excerptTooLong": "The excerpt can be at most 300 characters",
+      "metaTitleTooLong": "The meta title can be at most 120 characters",
+      "metaDescriptionTooLong": "The meta description can be at most 320 characters"
+    },
+    "settings": {
+      "title": "Article settings",
+      "description": "URL, summary, cover, category, tags, and search appearance. Saved with the article.",
+      "slug": "Slug",
+      "slugHint": "The last part of the URL. Leave empty to generate it from the title.",
+      "slugFromTitle": "Generate slug from title",
+      "excerpt": "Excerpt",
+      "excerptHint": "One or two sentences shown under the title and in article lists. Required to publish.",
+      "cover": "Cover image",
+      "chooseCover": "Choose a cover image",
+      "replace": "Replace",
+      "removeCover": "Remove cover image",
+      "category": "Category",
+      "noCategory": "No category",
+      "categoryHint": "Required to publish.",
+      "tags": "Tags",
+      "noTags": "No tags yet. Create them under Tags.",
+      "seo": "Search appearance",
+      "metaTitle": "Meta title",
+      "metaDescription": "Meta description",
+      "googlePreview": "Google preview",
+      "noDescription": "Add an excerpt or a meta description.",
+      "titleTooLong": "Titles over {{max}} characters get cut off.",
+      "descriptionTooLong": "Descriptions over {{max}} characters get cut off."
+    },
+    "checklist": {
+      "title": "Ready to publish?",
+      "description": "Publishing puts the article on the live site.",
+      "required": "Required",
+      "recommended": "Recommended",
+      "savesFirst": "Your unsaved changes are saved first.",
+      "openSettings": "Open settings",
+      "items": {
+        "title": "Title",
+        "slug": "Slug",
+        "excerpt": "Excerpt",
+        "category": "Category",
+        "cover": "Cover image",
+        "metaDescription": "Meta description",
+        "imageAlt_zero": "Every body image has alt text",
+        "imageAlt_one": "{{count}} body image has no alt text",
+        "imageAlt_other": "{{count}} body images have no alt text"
+      }
+    },
+    "conflict": {
+      "title": "This article was changed elsewhere",
+      "description": "Someone saved a newer version (maybe in another tab). Reload to get it — your changes here will be lost — or copy your content first.",
+      "reload": "Reload",
+      "copy": "Copy my content, then reload"
+    },
+    "editor": {
+      "metaTitle": "Edit article",
+      "notFound": "Article not found",
+      "back": "Back to articles",
+      "new": "New",
+      "settings": "Settings",
+      "save": "Save",
+      "saving": "Saving…",
+      "unsaved": "Unsaved changes",
+      "savedAt": "Saved {{time}}",
+      "notSaved": "Not saved yet",
+      "saveFailed": "Could not save the article",
+      "titleLabel": "Article title",
+      "titlePlaceholder": "Article title",
+      "words_one": "{{count}} word",
+      "words_other": "{{count}} words",
+      "readingTime_one": "{{count}} min read",
+      "readingTime_other": "{{count}} min read",
+      "restoreTitle": "Restore unsaved changes?",
+      "restoreDescription": "This browser has a newer copy of this article from {{time}} that was never saved.",
+      "restore": "Restore",
+      "discard": "Discard",
+      "bodyInvalid": "The article body has a problem",
+      "goToBlock": "Go to the block",
+      "leaveTitle": "Leave without saving?",
+      "leaveDescription": "Your changes to this article have not been saved. A local copy is kept in this browser.",
+      "leaveConfirm": "Leave",
+      "leaveCancel": "Keep editing",
+      "unpublishTitle": "Unpublish this article?",
+      "unpublishDescription": "It will be removed from the live site and go back to Draft. You can publish it again later."
+    },
+    "previewScreen": {
+      "metaTitle": "Preview article",
+      "banner": "Preview",
+      "fromEditor": "Showing the current editor content, including unsaved changes.",
+      "fromServer": "Showing the last saved version.",
+      "backToEditor": "Back to editor",
+      "emptyTitle": "Nothing to preview",
+      "emptyDescription": "Open the preview from the editor to see the article as visitors will."
+    }
+  },
+  "editor": {
+    "ariaLabel": "Article body",
+    "placeholder": {
+      "paragraph": "Type '/' for commands…",
+      "heading": "Heading",
+      "summary": "Toggle title"
+    },
+    "slash": {
+      "label": "Insert block",
+      "empty": "No matching blocks"
+    },
+    "toolbar": {
+      "label": "Formatting",
+      "selection": "Selection formatting",
+      "undo": "Undo",
+      "redo": "Redo",
+      "blockType": "Block type",
+      "align": "Align",
+      "more": "More formatting",
+      "clearFormatting": "Clear formatting"
+    },
+    "blocks": {
+      "paragraph": "Text",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "heading4": "Heading 4",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "taskList": "To-do list",
+      "blockquote": "Quote",
+      "codeBlock": "Code",
+      "horizontalRule": "Divider",
+      "callout": "Callout",
+      "details": "Toggle",
+      "image": "Image",
+      "embed": "Embed",
+      "bookmark": "Link card",
+      "table": "Table"
+    },
+    "marks": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Inline code",
+      "link": "Link",
+      "textColor": "Text colour",
+      "highlight": "Highlight",
+      "subscript": "Subscript",
+      "superscript": "Superscript"
+    },
+    "align": {
+      "left": "Align left",
+      "center": "Align center",
+      "right": "Align right"
+    },
+    "colors": {
+      "gray": "Gray",
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "purple": "Purple",
+      "pink": "Pink",
+      "none": "Default"
+    },
+    "paste": {
+      "imagesDropped": "Images from pasted content were not added. Upload them to the media library first.",
+      "oneImage": "Only the first image was used. Add the others one at a time."
+    },
+    "link": {
+      "title": "Link",
+      "description": "Link the selected text, or insert the link if nothing is selected.",
+      "url": "URL",
+      "hint": "https://, http://, mailto:, or a site path such as /blog/my-post or #section.",
+      "invalid": "Use an https://, http://, or mailto: link, or a path starting with / or #.",
+      "apply": "Apply",
+      "remove": "Remove link"
+    },
+    "image": {
+      "pickerTitle": "Insert an image",
+      "menu": "Image options",
+      "missing": "Image not found in the media library",
+      "width": {
+        "content": "Content width",
+        "wide": "Wide",
+        "full": "Full width"
+      },
+      "caption": "Caption",
+      "captionPlaceholder": "Add a caption (optional)",
+      "alt": "Alt text for this article",
+      "altPlaceholder": "Alt text",
+      "altFromLibrary": "Alt text (library: {{alt}})",
+      "replace": "Replace image",
+      "delete": "Delete image"
+    },
+    "embed": {
+      "title": "Embed",
+      "description": "Paste a link from {{providers}}. It loads only when a visitor clicks it.",
+      "url": "URL",
+      "detected": "{{provider}} · {{id}}",
+      "unsupported": "This link is not from a supported provider.",
+      "asLinkCard": "Insert as link card",
+      "keepAsLink": "Keep as link",
+      "insert": "Embed",
+      "invalid": "Invalid embed",
+      "menu": "Embed options",
+      "caption": "Caption",
+      "captionPlaceholder": "Add a caption (optional)",
+      "replace": "Replace embed",
+      "delete": "Delete embed"
+    },
+    "bookmark": {
+      "title": "Link card",
+      "description": "A card with the page title, description, and site. No remote image is shown.",
+      "url": "URL",
+      "hint": "The details are fetched from the page; you can edit them.",
+      "httpsOnly": "Link cards need an https:// URL.",
+      "fetch": "Fetch details",
+      "fetchFailed": "Could not fetch the page details. You can fill them in yourself.",
+      "cardTitle": "Title",
+      "cardDescription": "Description",
+      "siteName": "Site name",
+      "insert": "Insert",
+      "save": "Save",
+      "untitled": "Link",
+      "menu": "Link card options",
+      "edit": "Edit link card",
+      "delete": "Delete link card"
+    },
+    "callout": {
+      "tone": "Callout type",
+      "tones": {
+        "info": "Note",
+        "tip": "Tip",
+        "warning": "Warning",
+        "danger": "Danger"
+      }
+    },
+    "code": {
+      "language": "Code language",
+      "plain": "Plain text"
+    },
+    "table": {
+      "insertTitle": "Insert a table",
+      "insertDescription": "Pick a size. You can add or remove rows and columns later.",
+      "size": "{{rows}} × {{cols}}",
+      "rows": "Rows",
+      "cols": "Columns",
+      "headerRow": "Header row",
+      "insert": "Insert table",
+      "menu": "Table options",
+      "addRowBefore": "Add row above",
+      "addRowAfter": "Add row below",
+      "deleteRow": "Delete row",
+      "addColumnBefore": "Add column left",
+      "addColumnAfter": "Add column right",
+      "deleteColumn": "Delete column",
+      "toggleHeaderRow": "Toggle header row",
+      "toggleHeaderColumn": "Toggle header column",
+      "merge": "Merge cells",
+      "split": "Split cell",
+      "delete": "Delete table"
+    },
+    "dragHandle": {
+      "label": "Drag to move, click for block options",
+      "turnInto": "Turn into",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    }
+  }
+}
