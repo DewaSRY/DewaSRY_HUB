@@ -6,6 +6,7 @@ import {
   FolderTree,
   Image as ImageIcon,
   LayoutDashboard,
+  MessageSquare,
   Package,
   Receipt,
   Tags,
@@ -49,6 +50,7 @@ const GROUPS = [
       { href: "/admin/media", key: "adminNav.media", icon: ImageIcon },
       { href: "/admin/categories", key: "adminNav.categories", icon: FolderTree },
       { href: "/admin/tags", key: "adminNav.tags", icon: Tags },
+      { href: "/admin/comments", key: "adminNav.comments", icon: MessageSquare },
     ],
   },
   {

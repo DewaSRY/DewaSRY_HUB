@@ -19,6 +19,7 @@ export const namespaces = [
   "product",
   "auth",
   "billing",
+  "engagement",
   "admin",
 ] as const;
 

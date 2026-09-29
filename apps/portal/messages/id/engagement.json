@@ -1,0 +1,75 @@
+{
+  "section": {
+    "title": "Diskusi",
+    "loadFailed": "Komentar tidak dapat dimuat.",
+    "retry": "Coba lagi"
+  },
+  "vote": {
+    "label": "Apakah artikel ini membantu?",
+    "up": "Suka",
+    "down": "Tidak suka",
+    "upCount_one": "{{count}} suka",
+    "upCount_other": "{{count}} suka",
+    "downCount_one": "{{count}} tidak suka",
+    "downCount_other": "{{count}} tidak suka"
+  },
+  "comments": {
+    "count_one": "{{count}} komentar",
+    "count_other": "{{count}} komentar",
+    "empty": "Belum ada komentar. Jadilah yang pertama berbagi pendapat.",
+    "loadMore": "Muat komentar lainnya",
+    "edited": "diubah",
+    "yours": "Komentar Anda"
+  },
+  "comment": {
+    "label": "Tulis komentar",
+    "placeholder": "Bagikan pendapat Anda… Ketik @ untuk menyebut seseorang.",
+    "placeholderVisitor": "Masuk untuk ikut berdiskusi",
+    "post": "Kirim komentar",
+    "save": "Simpan perubahan",
+    "cancel": "Batal",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "counter": "{{count}} / {{max}}",
+    "oneComment": "Anda dapat menulis satu komentar per artikel dan mengubahnya kapan saja.",
+    "hidden": "Komentar ini disembunyikan oleh moderator dan tidak terlihat oleh orang lain.",
+    "conflict": "Komentar Anda diubah di tab lain. Versi terbaru sudah dimuat — periksa lalu coba lagi.",
+    "saveFailed": "Komentar Anda tidak dapat disimpan.",
+    "deleteTitle": "Hapus komentar Anda?",
+    "deleteDescription": "Komentar Anda akan dihapus dari artikel ini. Anda dapat menulis komentar baru setelahnya.",
+    "deleteConfirm": "Hapus komentar",
+    "mentionLimit": "Anda dapat menyebut paling banyak {{max}} orang dalam satu komentar.",
+    "errors": {
+      "required": "Tulis sesuatu sebelum mengirim.",
+      "tooLong": "Komentar paling banyak {{max}} karakter."
+    }
+  },
+  "mention": {
+    "listLabel": "Orang yang dapat disebut",
+    "searching": "Mencari…",
+    "noResults": "Tidak ada yang ditemukan"
+  },
+  "guard": {
+    "title": "Buang komentar Anda?",
+    "description": "Komentar Anda belum dikirim. Jika Anda meninggalkan halaman ini, komentar akan hilang.",
+    "discard": "Buang dan keluar",
+    "keepEditing": "Lanjut menulis"
+  },
+  "signIn": {
+    "title": "Ikut berdiskusi",
+    "vote": "Masuk dengan akun Google Anda untuk memberi suara pada artikel ini.",
+    "comment": "Masuk dengan akun Google Anda untuk berkomentar dan menyebut pembaca lain.",
+    "continue": "Lanjutkan dengan Google",
+    "notNow": "Nanti saja",
+    "failed": "Gagal masuk. Coba lagi, atau gunakan halaman masuk.",
+    "loginPage": "Buka halaman masuk",
+    "unavailable": "Fitur masuk sedang tidak tersedia."
+  },
+  "toast": {
+    "voteFailed": "Suara Anda tidak dapat disimpan",
+    "commentPosted": "Komentar terkirim",
+    "commentUpdated": "Komentar diperbarui",
+    "commentDeleted": "Komentar dihapus",
+    "deleteFailed": "Komentar Anda tidak dapat dihapus"
+  }
+}

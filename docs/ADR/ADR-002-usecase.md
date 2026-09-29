@@ -105,6 +105,11 @@ Priority: **P0** = required for launch, **P1** = soon after launch, **P2** = lat
 | UC-19 | Manage media library       | Administrator     | A-3.7, FR-C4                | `media`                   | P0       | 1     |
 | UC-20 | Manage categories & tags   | Administrator     | A-3.8, FR-C3                | `content`                 | P0       | 1     |
 | UC-21 | Manage products & plans    | Administrator     | G3, NFR Extensibility       | `product`                 | P0       | 3     |
+| UC-22 | View article interactions  | Visitor, SaaS User | PRD §11 ([ADR-010](./ADR-010-article_interactions.md)) | `engagement` | P1 | 5 |
+| UC-23 | Vote on an article         | SaaS User         | PRD §11 (ADR-010)           | `engagement`              | P1       | 5     |
+| UC-24 | Write / edit / delete my comment | SaaS User   | PRD §11 (ADR-010)           | `engagement`              | P1       | 5     |
+| UC-25 | Mention a user in a comment | SaaS User        | PRD §11 (ADR-010)           | `engagement`              | P1       | 5     |
+| UC-26 | Moderate comments          | Administrator     | NFR Security (ADR-010)      | `engagement`, `admin`     | P1       | 5     |
 
 UC-21 has no PRD user story, but the hub cannot sell plans or connect a new product without it. Until the admin screen exists (phase 3), Document Doctor and its plans are seeded by a database migration (ADR-004 §8).
 
@@ -660,7 +665,6 @@ From the PRD non-goals and "need to cover later" list, and features left out of 
 
 | Item                                                        | Source           | Note                                                             |
 | ----------------------------------------------------------- | ---------------- | ---------------------------------------------------------------- |
-| Post interactions: up/down vote, comment, tag other users   | PRD §3.2, §11    | Needs visitor accounts on the blog; new use cases and tables.   |
 | Feedback about the application and system                    | PRD §11          | New use case.                                                    |
 | Share a post to social media                                 | PRD §11          | Frontend only (share links + Open Graph, already in UC-01).     |
 | Quotation and freelance flow tools                           | PRD §11          | Separate product; would connect through UC-06 / UC-07.          |

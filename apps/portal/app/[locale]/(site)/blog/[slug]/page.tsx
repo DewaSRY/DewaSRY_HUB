@@ -21,6 +21,7 @@ import {
   type ArticleSummary,
 } from "@/feature/content";
 import { getArticle, listArticles } from "@/feature/content/server";
+import { ArticleInteractionsLazy } from "@/feature/engagement";
 import { readOrFallback } from "@/lib/api/public-fetch";
 import { emptyPage } from "@/lib/api/envelope";
 import { formatDate } from "@/lib/datetime";
@@ -209,6 +210,10 @@ export default async function ArticlePage({ params }: PageProps<"/[locale]/blog/
             ) : null}
             <AdSlot slot="end-of-article" label={labels.body.advertisement} />
           </footer>
+
+          <div className="mt-12 border-t pt-8">
+            <ArticleInteractionsLazy articleId={article.id} slug={article.slug} />
+          </div>
         </div>
 
         <aside className="hidden lg:block">

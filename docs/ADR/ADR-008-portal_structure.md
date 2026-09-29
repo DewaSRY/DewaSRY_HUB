@@ -91,6 +91,7 @@ All pages sit under `app/[locale]/` (`id` is the default, `en` is second). The u
 | `(admin)`  | `/admin/users`, `/[id]`               | UC-14        | `/admin/users/**`                               | 2     |
 | `(admin)`  | `/admin/transactions`, `/[orderId]`   | UC-15        | `/admin/transactions/**`                        | 3     |
 | `(admin)`  | `/admin/products`, `/[id]`            | UC-21        | `/admin/products/**`, `/admin/plans/**`         | 3     |
+| `(admin)`  | `/admin/comments`                     | UC-26        | `/admin/comments/**` (ADR-010)                  | 5     |
 
 Outside `[locale]`: `app/api/revalidate/route.ts`, `app/sitemap.ts`, `app/robots.ts`, `app/manifest.ts`, and `public/ads.txt`.
 
@@ -215,6 +216,8 @@ flowchart TD
 | `admin/users`             | 6.1                     | `admin`, `identity`      | Browser | `admin`          |
 | `admin/transactions`      | 6.2                     | `admin`, `payment`       | Browser | `admin`          |
 | `admin/products`          | 6.7                     | `product`                | Browser | `admin`          |
+| `engagement`              | 1, 2 (ADR-010)          | `engagement`             | Browser | `engagement`     |
+| `admin/comments`          | 6.8 (ADR-010)           | `engagement`             | Browser | `admin`          |
 
 A new API sub-group gets a new feature folder. A new endpoint in an existing group becomes one more method in that feature's client.
 

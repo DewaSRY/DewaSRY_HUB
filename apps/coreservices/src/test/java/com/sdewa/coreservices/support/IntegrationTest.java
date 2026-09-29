@@ -43,7 +43,7 @@ public abstract class IntegrationTest {
     @BeforeEach
     void cleanDatabase() {
         jdbc.execute("""
-                TRUNCATE sso_codes, transaction_status_history, transactions, subscription_reminders, subscriptions,
+                TRUNCATE comment_mentions, article_comments, article_votes, sso_codes, transaction_status_history, transactions, subscription_reminders, subscriptions,
                          user_products, users, article_slug_history, article_tags, article_body_images, articles,
                          categories, tags, images, shedlock CASCADE
                 """);

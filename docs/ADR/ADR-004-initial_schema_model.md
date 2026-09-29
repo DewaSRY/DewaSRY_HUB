@@ -411,6 +411,7 @@ Migrations follow the PRD release phases, so each phase ships only the tables it
 | `V5__seed_document_doctor_client.sql` | First Document Doctor credential. The secret **hash** comes from a Flyway placeholder filled from SSM at deploy; nothing secret is in the repository. | 2 |
 | `V6__billing.sql`                     | `subscriptions`, `transactions`, `transaction_status_history`, `shedlock`                      | 3     |
 | `V7__subscription_reminders.sql`      | `subscription_reminders` (only if reminder emails are built)                                   | 4     |
+| `V11__article_interactions.sql`       | `article_votes`, `article_comments`, `comment_mentions` ([ADR-010](./ADR-010-article_interactions.md) §6) | 5 |
 
 Rules:
 
@@ -468,7 +469,6 @@ The final Pro price is set before phase 3 (PRD OQ3). Because the plan is not sol
 
 | Item                                               | Source             | Likely tables                                    |
 | -------------------------------------------------- | ------------------ | ------------------------------------------------ |
-| Post interactions: votes, comments, tagging users  | PRD §3.2, §11      | `article_votes`, `comments`, `comment_mentions`  |
 | Feedback about the application                      | PRD §11            | `feedback`                                       |
 | Usage per plan                                     | PRD OQ5            | `usage_records` (product, user, metric, period)  |
 | Admin audit log (if admin can change access later) | ADR-002 §10        | `audit_logs`                                     |

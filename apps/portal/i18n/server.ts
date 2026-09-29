@@ -15,7 +15,7 @@ import {
  * files are merged by top-level key into one namespace.
  */
 const NAMESPACE_FILES: Partial<Record<AppNamespace, string[]>> = {
-  admin: ["admin", "admin-commerce", "admin-editor"],
+  admin: ["admin", "admin-commerce", "admin-editor", "admin-engagement"],
 };
 
 async function loadNamespace(locale: AppLocale, ns: AppNamespace) {

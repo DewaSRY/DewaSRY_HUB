@@ -222,6 +222,9 @@ A user asking for another user's resource gets `404`, not `403`, so IDs cannot b
 | `/products/*/members`, `/products/*/entitlements/*` | 600 / minute per product server IP                  |
 | `/admin/media` (upload)                             | 30 / minute                                         |
 | `/webhooks/midtrans`                                | Not limited (Midtrans IP ranges only, if published) |
+| `/me/articles/*/vote` (ADR-010)                     | 30 / minute, burst 10                               |
+| `/me/articles/*/comment` (ADR-010)                  | 10 / minute, burst 5                                |
+| `/me/mentionable-users` (ADR-010)                   | 60 / minute, burst 20                               |
 | Everything else                                     | 120 / minute, burst 60                              |
 
 ### 3.8 Idempotency
@@ -318,6 +321,19 @@ Group 6 is split into sub-groups: 6.1 Users, 6.2 Transactions, 6.3 Articles, 6.4
 | 6.7   | DELETE | `/admin/products/{id}/credentials/{clientId}` | UC-21         | 3     |
 | 6.7   | POST   | `/admin/products/{id}/plans`                  | UC-21         | 3     |
 | 6.7   | PATCH  | `/admin/plans/{id}`                           | UC-21         | 3     |
+| 1     | GET    | `/public/articles/{slug}/interactions`        | UC-22         | 5     |
+| 1     | GET    | `/public/articles/{slug}/comments`            | UC-22         | 5     |
+| 2     | GET    | `/me/articles/{articleId}/interaction`        | UC-22         | 5     |
+| 2     | PUT    | `/me/articles/{articleId}/vote`               | UC-23         | 5     |
+| 2     | DELETE | `/me/articles/{articleId}/vote`               | UC-23         | 5     |
+| 2     | PUT    | `/me/articles/{articleId}/comment`            | UC-24, UC-25  | 5     |
+| 2     | DELETE | `/me/articles/{articleId}/comment`            | UC-24         | 5     |
+| 2     | GET    | `/me/mentionable-users`                       | UC-25         | 5     |
+| 6.8   | GET    | `/admin/comments`                             | UC-26         | 5     |
+| 6.8   | POST   | `/admin/comments/{id}/hide`                   | UC-26         | 5     |
+| 6.8   | POST   | `/admin/comments/{id}/show`                   | UC-26         | 5     |
+
+The interaction endpoints (groups 1, 2, 6.8) and their shapes are defined in [ADR-010](./ADR-010-article_interactions.md) §7.
 
 Phase 1 needs the product endpoints in group 1 (`/products` page) before the admin can edit products (6.7, phase 3). Until then, Document Doctor, its plans, and its first client credential are seeded by a Flyway migration (ADR-004 §8).
 
@@ -941,6 +957,8 @@ Endpoint-specific error reasons, in addition to §3.5. Each has its own fixed `m
 | 409  | `CATEGORY_IN_USE`                        | `DELETE /admin/categories/{id}`             |
 | 409  | `PLAN_SOLD`                              | `PATCH /admin/plans/{id}`                   |
 | 409  | `CREDENTIAL_LIMIT`, `LAST_CREDENTIAL`    | Product credentials                         |
+| 400  | `MENTION_INVALID`, `MENTION_LIMIT`       | `PUT /me/articles/{id}/comment` (ADR-010)   |
+| 409  | `COMMENT_HIDDEN`, `VERSION_CONFLICT`     | `PUT/DELETE /me/articles/{id}/comment` (ADR-010) |
 | 422  | `ARTICLE_INCOMPLETE`                     | `POST /admin/articles/{id}/publish`         |
 
 ## 13. Traceability

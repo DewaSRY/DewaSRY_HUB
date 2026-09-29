@@ -1,0 +1,24 @@
+{
+  "comments": {
+    "title": "Komentar",
+    "description": "Komentar pembaca pada artikel. Sembunyikan komentar untuk menghapusnya dari halaman publik; penulisnya tetap dapat melihatnya.",
+    "filters": {
+      "status": "Status",
+      "all": "Semua komentar"
+    },
+    "status": {
+      "VISIBLE": "Terlihat",
+      "HIDDEN": "Disembunyikan"
+    },
+    "hide": "Sembunyikan",
+    "show": "Tampilkan",
+    "edited": "diubah {{date}}",
+    "empty": "Belum ada komentar.",
+    "noMatch": "Tidak ada komentar yang cocok dengan filter ini.",
+    "toast": {
+      "hidden": "Komentar disembunyikan",
+      "shown": "Komentar ditampilkan kembali",
+      "failed": "Status komentar tidak dapat diubah"
+    }
+  }
+}

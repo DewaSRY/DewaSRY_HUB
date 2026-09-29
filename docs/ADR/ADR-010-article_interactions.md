@@ -383,13 +383,13 @@ useEffect(() => {
 
 | Way to leave              | Covered by                                                    |
 | ------------------------- | ------------------------------------------------------------- |
-| In-app link               | `GuardedLink` (use it for Related articles, breadcrumbs, header links on the article page). |
+| In-app link               | `NavigationGuardProvider` intercepts every same-site `<a>` click (capture phase) while the guard is armed, so plain `Link`s in the nav, footer, breadcrumbs, and Related articles are covered. In-page `#anchor` links, new-tab links, and downloads are let through. `GuardedLink` still works. |
 | Browser back / forward    | `NavigationGuardProvider` `popstate` handling (already built). |
 | Refresh / close tab       | `useUnsavedChangesWarning` → `beforeunload` (already built).  |
-| Locale switcher           | Must call `requestNavigation()` before changing locale.       |
+| Locale switcher           | Calls `requestNavigation()` before changing locale.           |
 | Successful submit / cancel / delete | `setGuard(false)` right after the action.           |
 
-Check that the header, footer, and `locale-switcher.tsx` on `(site)` pages go through `GuardedLink` / `requestNavigation`; today the guard is only used in admin and auth screens.
+Because the provider intercepts link clicks globally, no `(site)` link needs to be changed to `GuardedLink`.
 
 ## 9. Security and Privacy
 

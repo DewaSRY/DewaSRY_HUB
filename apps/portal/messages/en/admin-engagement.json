@@ -1,0 +1,24 @@
+{
+  "comments": {
+    "title": "Comments",
+    "description": "Reader comments on articles. Hide a comment to remove it from the public page; it stays visible to its author.",
+    "filters": {
+      "status": "Status",
+      "all": "All comments"
+    },
+    "status": {
+      "VISIBLE": "Visible",
+      "HIDDEN": "Hidden"
+    },
+    "hide": "Hide",
+    "show": "Show",
+    "edited": "edited {{date}}",
+    "empty": "No comments yet.",
+    "noMatch": "No comments match this filter.",
+    "toast": {
+      "hidden": "Comment hidden",
+      "shown": "Comment visible again",
+      "failed": "The comment status could not be changed"
+    }
+  }
+}

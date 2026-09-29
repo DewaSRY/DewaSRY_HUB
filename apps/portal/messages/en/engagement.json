@@ -1,0 +1,75 @@
+{
+  "section": {
+    "title": "Discussion",
+    "loadFailed": "Comments could not be loaded.",
+    "retry": "Try again"
+  },
+  "vote": {
+    "label": "Was this article helpful?",
+    "up": "Vote up",
+    "down": "Vote down",
+    "upCount_one": "{{count}} up vote",
+    "upCount_other": "{{count}} up votes",
+    "downCount_one": "{{count}} down vote",
+    "downCount_other": "{{count}} down votes"
+  },
+  "comments": {
+    "count_one": "{{count}} comment",
+    "count_other": "{{count}} comments",
+    "empty": "No comments yet. Be the first to share your thoughts.",
+    "loadMore": "Load more comments",
+    "edited": "edited",
+    "yours": "Your comment"
+  },
+  "comment": {
+    "label": "Write a comment",
+    "placeholder": "Share your thoughts… Type @ to mention someone.",
+    "placeholderVisitor": "Sign in to join the discussion",
+    "post": "Post comment",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "counter": "{{count}} / {{max}}",
+    "oneComment": "You can write one comment per article. Edit it any time.",
+    "hidden": "This comment was hidden by the moderator. It is not visible to others.",
+    "conflict": "Your comment was changed in another tab. We loaded the latest version — please review it and try again.",
+    "saveFailed": "Your comment could not be saved.",
+    "deleteTitle": "Delete your comment?",
+    "deleteDescription": "Your comment will be removed from this article. You can write a new one afterwards.",
+    "deleteConfirm": "Delete comment",
+    "mentionLimit": "You can mention at most {{max}} people in one comment.",
+    "errors": {
+      "required": "Write something before posting.",
+      "tooLong": "Comments can be at most {{max}} characters."
+    }
+  },
+  "mention": {
+    "listLabel": "People you can mention",
+    "searching": "Searching…",
+    "noResults": "No one found"
+  },
+  "guard": {
+    "title": "Discard your comment?",
+    "description": "Your comment has not been posted yet. If you leave this page, it will be lost.",
+    "discard": "Discard and leave",
+    "keepEditing": "Keep writing"
+  },
+  "signIn": {
+    "title": "Join the discussion",
+    "vote": "Sign in with your Google account to vote on this article.",
+    "comment": "Sign in with your Google account to comment and mention other readers.",
+    "continue": "Continue with Google",
+    "notNow": "Not now",
+    "failed": "Sign-in did not work. Try again, or use the sign-in page.",
+    "loginPage": "Open the sign-in page",
+    "unavailable": "Sign-in is not available right now."
+  },
+  "toast": {
+    "voteFailed": "Your vote could not be saved",
+    "commentPosted": "Comment posted",
+    "commentUpdated": "Comment updated",
+    "commentDeleted": "Comment deleted",
+    "deleteFailed": "Your comment could not be deleted"
+  }
+}

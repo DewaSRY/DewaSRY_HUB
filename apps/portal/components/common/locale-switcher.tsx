@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { locales, type AppLocale } from "@/i18n/settings";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { useNavigationGuardStore } from "@/components/common/navigation-guard/store";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,10 +26,12 @@ export function LocaleSwitcher() {
   const pathname = usePathname();
   const params = useParams<{ locale?: string }>();
   const current = params?.locale;
+  const requestNavigation = useNavigationGuardStore((s) => s.requestNavigation);
 
   function handleLocaleChange(nextLocale: AppLocale) {
     if (nextLocale === current) return;
-    router.replace(pathname, { locale: nextLocale });
+    // Switching language reloads the page content, so it respects the unsaved-changes guard.
+    requestNavigation(() => router.replace(pathname, { locale: nextLocale }));
   }
 
   return (

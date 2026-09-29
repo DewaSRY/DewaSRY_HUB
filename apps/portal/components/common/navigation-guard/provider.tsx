@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ export function NavigationGuardProvider() {
   const pendingNavigation = useNavigationGuardStore((s) => s.pendingNavigation);
   const confirmLeave = useNavigationGuardStore((s) => s.confirmLeave);
   const cancelLeave = useNavigationGuardStore((s) => s.cancelLeave);
+  const router = useRouter();
 
   useUnsavedChangesWarning(isGuarded);
 
@@ -44,6 +46,32 @@ export function NavigationGuardProvider() {
     if (!isGuarded) return;
     window.history.pushState(null, "", window.location.href);
   }, [isGuarded]);
+
+  useEffect(() => {
+    // Any same-site link on the page respects the guard, not only
+    // `GuardedLink`: public pages render plain `Link`s (nav, footer,
+    // breadcrumbs, related articles). Capture phase runs before Next's own
+    // click handler, which skips navigation once `defaultPrevented` is set.
+    const handleClick = (event: MouseEvent) => {
+      if (!useNavigationGuardStore.getState().isGuarded) return;
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = (event.target as Element | null)?.closest?.("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin) return;
+      // In-page anchors (table of contents, heading links) do not leave the page.
+      if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return;
+
+      event.preventDefault();
+      const destination = `${url.pathname}${url.search}${url.hash}`;
+      useNavigationGuardStore.getState().requestNavigation(() => router.push(destination));
+    };
+
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [router]);
 
   useEffect(() => {
     const handlePopState = () => {
