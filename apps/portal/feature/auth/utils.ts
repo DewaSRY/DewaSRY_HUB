@@ -1,3 +1,5 @@
+import type { Role } from "./type";
+
 /**
  * `?next=` after sign-in (UC-04 step 7): only a same-site path is accepted,
  * otherwise the user goes to `/account`. The value is a locale-free path
@@ -27,6 +29,11 @@ export function safeNextPath(next: string | null | undefined, fallback = DEFAULT
   const path = url.pathname.replace(LOCALE_PREFIX, "") || "/";
   if (path === "/login" || path === "/logout") return fallback;
   return `${path}${url.search}${url.hash}`;
+}
+
+/** Where sign-in lands without a `?next=`: admins go to the admin panel. */
+export function defaultAfterSignIn(role: Role | null | undefined): string {
+  return role === "ADMIN" ? "/admin" : DEFAULT_AFTER_SIGN_IN;
 }
 
 /** `/login?next=<path>` for the current locale-free path. */

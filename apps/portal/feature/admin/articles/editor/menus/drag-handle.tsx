@@ -34,8 +34,9 @@ export function BlockDragHandle({ editor, actions }: { editor: Editor; actions: 
         buttonClassName="h-7 min-w-6 cursor-grab px-0.5 text-muted-foreground active:cursor-grabbing"
         className="min-w-48"
         onOpenChange={(open) => {
-          if (open) editor.commands.lockDragHandle();
-          else editor.commands.unlockDragHandle();
+          // The React <DragHandle> registers only the plugin, not the extension
+          // that defines lock/unlockDragHandle — set the meta the plugin reads.
+          editor.commands.setMeta("lockDragHandle", open);
         }}
       >
         {(close) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initials, loginHref, safeNextPath } from "./utils";
+import { defaultAfterSignIn, initials, loginHref, safeNextPath } from "./utils";
 
 describe("safeNextPath", () => {
   it.each([
@@ -27,6 +27,12 @@ describe("safeNextPath", () => {
     undefined,
   ])("rejects %s", (input) => {
     expect(safeNextPath(input as string)).toBe("/account");
+  });
+
+  it("sends admins to /admin when there is no next", () => {
+    expect(safeNextPath(null, defaultAfterSignIn("ADMIN"))).toBe("/admin");
+    expect(safeNextPath(null, defaultAfterSignIn("USER"))).toBe("/account");
+    expect(safeNextPath("/checkout/x", defaultAfterSignIn("ADMIN"))).toBe("/checkout/x");
   });
 
   it("builds login links", () => {

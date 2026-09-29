@@ -9,26 +9,27 @@ import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/common/inline-alert";
 import { useSession } from "../session-store";
 import { isFirebaseConfigured, signInWithGoogle } from "../session";
-import { safeNextPath } from "../utils";
+import { defaultAfterSignIn, safeNextPath } from "../utils";
 import { GoogleIcon } from "./google-icon";
 
 /**
  * `/login` (UC-04): Google only; the first sign-in creates the account. After
- * sign-in the user goes to `?next=` (same-site only) or `/account`.
+ * sign-in the user goes to `?next=` (same-site only), else `/admin` for an
+ * admin or `/account` for everyone else.
  */
 export function LoginScreen() {
   const { t } = useTranslation("auth");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = safeNextPath(searchParams.get("next"));
+  const nextParam = searchParams.get("next");
   const { status, me, sessionError } = useSession();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const configured = isFirebaseConfigured();
 
   useEffect(() => {
-    if (status === "signed-in" && me) router.replace(next);
-  }, [status, me, next, router]);
+    if (status === "signed-in" && me) router.replace(safeNextPath(nextParam, defaultAfterSignIn(me.role)));
+  }, [status, me, nextParam, router]);
 
   async function handleSignIn() {
     setError(null);
