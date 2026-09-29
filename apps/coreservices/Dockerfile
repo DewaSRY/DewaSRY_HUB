@@ -5,10 +5,13 @@
 # Images: scrimage-webp ships a static-pie cwebp/dwebp for linux-aarch64 (checked with `file`),
 # so the runtime image does not need the distro `webp` package. It extracts the binary into
 # java.io.tmpdir, which therefore must be writable and not mounted noexec.
+#
+# The build stage runs on the build machine's own platform ($BUILDPLATFORM): the jar is the same on
+# every CPU, so an x86 CI runner only emulates the small runtime stage (ADR-007 §6.2).
 
 ARG JAVA_VERSION=21
 
-FROM --platform=linux/arm64 eclipse-temurin:${JAVA_VERSION}-jdk-noble AS build
+FROM --platform=$BUILDPLATFORM eclipse-temurin:${JAVA_VERSION}-jdk-noble AS build
 WORKDIR /workspace
 # Dependencies first, for layer caching.
 COPY gradlew settings.gradle build.gradle ./

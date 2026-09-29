@@ -1,0 +1,139 @@
+# Next.js portal: lint, type-check, test, OpenNext build on every PR; deploy to Cloudflare Workers
+# from main (ADR-007 §5.2, §11). Runbook: docs/DEPLOYMENT.md.
+name: portal
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portal-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    working-directory: apps/portal
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: .
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: ./.github/actions/changed
+        with:
+          paths: apps/portal contracts .github/workflows/portal.yml .github/actions
+
+  # Required check on main. Skipped (= passed) when no portal path changed.
+  check:
+    name: portal-check
+    needs: changes
+    if: ${{ needs.changes.outputs.changed == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: apps/portal/.nvmrc
+          cache: yarn
+          cache-dependency-path: apps/portal/yarn.lock
+
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn typecheck
+      # Includes the article fixture tests that read contracts/article (ADR-009 §8).
+      - run: yarn test
+
+      # Preview values only: grey ad placeholders, no ad client, sandbox Snap (P3).
+      - name: Write .env.production (preview)
+        run: |
+          cat > .env.production <<'ENV'
+          NEXT_PUBLIC_SITE_URL=https://dewasuryahub.com
+          NEXT_PUBLIC_API_URL=https://api.dewasuryahub.com/v1
+          NEXT_PUBLIC_AD_CLIENT=
+          NEXT_PUBLIC_AD_PLACEHOLDERS=true
+          NEXT_PUBLIC_MIDTRANS_SANDBOX=true
+          ENV
+
+      - name: OpenNext build
+        run: npx opennextjs-cloudflare build
+
+  deploy:
+    name: deploy
+    needs: check
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://dewasuryahub.com
+    concurrency:
+      group: deploy-production-portal
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: apps/portal/.nvmrc
+          cache: yarn
+          cache-dependency-path: apps/portal/yarn.lock
+
+      # P7: the OpenNext tag cache needs the real D1 database.
+      - name: Check wrangler.jsonc
+        run: |
+          if grep -q '"database_id": "00000000-0000-0000-0000-000000000000"' wrangler.jsonc; then
+            echo "::error::wrangler.jsonc still has the placeholder D1 database_id (ADR-007 P7)."; exit 1
+          fi
+
+      - run: yarn install --frozen-lockfile
+
+      # NEXT_PUBLIC_* are public, so they are environment variables, not secrets (P3, ADR-005 §4).
+      - name: Write .env.production
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY }}
+          NEXT_PUBLIC_MIDTRANS_SANDBOX: ${{ vars.NEXT_PUBLIC_MIDTRANS_SANDBOX }}
+          NEXT_PUBLIC_AD_CLIENT: ${{ vars.NEXT_PUBLIC_AD_CLIENT }}
+          NEXT_PUBLIC_AD_SLOT_IN_ARTICLE: ${{ vars.NEXT_PUBLIC_AD_SLOT_IN_ARTICLE }}
+          NEXT_PUBLIC_AD_SLOT_SIDEBAR: ${{ vars.NEXT_PUBLIC_AD_SLOT_SIDEBAR }}
+          NEXT_PUBLIC_AD_SLOT_END_OF_ARTICLE: ${{ vars.NEXT_PUBLIC_AD_SLOT_END_OF_ARTICLE }}
+          NEXT_PUBLIC_AD_SLOT_LIST: ${{ vars.NEXT_PUBLIC_AD_SLOT_LIST }}
+          NEXT_PUBLIC_AD_PLACEHOLDERS: "false"
+        run: |
+          : "${NEXT_PUBLIC_SITE_URL:?set the NEXT_PUBLIC_SITE_URL variable on the production environment}"
+          : "${NEXT_PUBLIC_API_URL:?set the NEXT_PUBLIC_API_URL variable on the production environment}"
+          env | grep '^NEXT_PUBLIC_' | sort > .env.production
+          cut -d= -f1 .env.production
+
+      - name: Build and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx opennextjs-cloudflare build
+          npx opennextjs-cloudflare deploy

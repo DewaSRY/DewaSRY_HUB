@@ -1,134 +1,91 @@
 variable "aws_region" {
-  description = "AWS region to deploy into"
+  description = "AWS region for every resource (ADR-001 §5.4)"
   type        = string
   default     = "ap-southeast-1"
 }
 
 variable "instance_type" {
-  description = "EC2 instance type"
+  description = "Graviton (arm64) instance type; must match the linux/arm64 image (ADR-007 I1)"
   type        = string
-  default     = "t3.micro"
+  default     = "t4g.small"
+
+  validation {
+    condition     = can(regex("^[a-z]+[0-9]+g[a-z]*\\.", var.instance_type))
+    error_message = "instance_type must be a Graviton (arm64) type such as t4g.small; the image is linux/arm64."
+  }
 }
 
-variable "docker_image" {
-  description = "Docker Hub image to run on the instance, e.g. sdewa/core-service-dep:latest"
-  type        = string
-  default     = "sdewa/core-service-dep:latest"
-}
-
-variable "app_port" {
-  description = "Port the core-service container listens on. Only reachable from the instance itself (127.0.0.1) and from nginx over the internal docker network — not exposed to the internet directly."
+variable "root_volume_size_gb" {
+  description = "Root EBS volume size. Holds two API images, Nginx, Docker logs, and the 2 GB swap file."
   type        = number
-  default     = 8080
+  default     = 20
 }
 
 variable "docker_compose_version" {
-  description = "docker compose CLI plugin release to install on the instance at boot (see https://github.com/docker/compose/releases). Defaults to a pinned version for reproducibility; set to \"latest\" to resolve GitHub's current release at boot time instead (retried and validated, unlike the old unconditional latest-lookup)."
+  description = "docker compose CLI plugin release installed at first boot (https://github.com/docker/compose/releases)"
   type        = string
   default     = "v5.5.1"
 }
 
-variable "ssh_cidr_blocks" {
-  description = "CIDR blocks allowed to SSH into the instance"
+variable "cloudflare_ipv4_cidrs" {
+  description = "Cloudflare IPv4 ranges (https://www.cloudflare.com/ips-v4). Only these reach port 443, and Nginx trusts CF-Connecting-IP only from them (ADR-006 T1, T2). Check quarterly."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default = [
+    "173.245.48.0/20",
+    "103.21.244.0/22",
+    "103.22.200.0/22",
+    "103.31.4.0/22",
+    "141.101.64.0/18",
+    "108.162.192.0/18",
+    "190.93.240.0/20",
+    "188.114.96.0/20",
+    "197.234.240.0/22",
+    "198.41.128.0/17",
+    "162.158.0.0/15",
+    "104.16.0.0/13",
+    "104.24.0.0/14",
+    "172.64.0.0/13",
+    "131.0.72.0/22",
+  ]
 }
 
-variable "app_cidr_blocks" {
-  description = "CIDR blocks allowed to reach nginx_port, i.e. the public entrypoint that reverse-proxies to core-service"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
-
-# --- nginx: reverse proxy + rate limiter in front of core-service ---
-
-variable "nginx_image" {
-  description = "nginx Docker Hub image to run as the reverse proxy in front of core-service"
+variable "ecr_repository_name" {
+  description = "ECR repository for the API image (ADR-007 §6.3)"
   type        = string
-  default     = "nginx:1.27-alpine"
+  default     = "hub/coreservices"
 }
 
-variable "nginx_port" {
-  description = "Public port nginx listens on and proxies to core-service on app_port"
-  type        = number
-  default     = 80
-}
-
-variable "nginx_rate_limit_rps" {
-  description = "nginx limit_req rate, in requests/second per client IP, enforced at the edge before a request reaches core-service"
-  type        = number
-  default     = 10
-}
-
-variable "nginx_rate_limit_burst" {
-  description = "nginx limit_req burst size: how many requests over nginx_rate_limit_rps a client can burst before nginx starts responding 429"
-  type        = number
-  default     = 20
-}
-
-# --- App config (mirrors internal/config.Config / app.env) ---
-
-variable "db_driver" {
-  description = "SQL driver name, passed through as DB_DRIVER"
+variable "github_repository" {
+  description = "owner/name of the GitHub repository whose `production` environment may assume hub-github-deploy"
   type        = string
-  default     = "postgres"
+  default     = "DewaSRY/DewaSRY_HUB"
 }
 
-variable "db_source" {
-  description = "Supabase Postgres connection string, passed through as DB_SOURCE (e.g. postgresql://user:pass@host:5432/postgres?sslmode=require)"
-  type        = string
-  sensitive   = true
-}
-
-variable "jwt_secret_key" {
-  description = "JWT signing secret, passed through as JWT_SECRET_KEY (must be at least 32 characters)"
-  type        = string
-  sensitive   = true
-
-  validation {
-    condition     = length(var.jwt_secret_key) >= 32
-    error_message = "jwt_secret_key must be at least 32 characters."
-  }
-}
-
-variable "jwt_access_token_duration" {
-  description = "Access token TTL, passed through as JWT_ACCESS_TOKEN_DURATION"
-  type        = string
-  default     = "60m"
-}
-
-variable "cors_allowed_origins" {
-  description = "Comma-separated list of allowed CORS origins, passed through as CORS_ALLOWED_ORIGINS (blank disables CORS)"
-  type        = string
-  default     = ""
-}
-
-variable "app_rate_limit_enabled" {
-  description = "Passed through as RATE_LIMIT_ENABLED — the in-process per-IP token-bucket limiter inside core-service itself, kept on behind nginx's edge limiter for defense in depth"
+variable "create_github_oidc_provider" {
+  description = "Create the token.actions.githubusercontent.com OIDC provider. Set false if the account already has one (only one per account is allowed)."
   type        = bool
   default     = true
 }
 
-variable "app_rate_limit_rps" {
-  description = "Passed through as RATE_LIMIT_REQUESTS_PER_SECOND (core-service's own limiter). Set below nginx_rate_limit_rps since nginx already sheds the worst of it at the edge."
-  type        = number
-  default     = 5
-}
-
-variable "app_rate_limit_burst" {
-  description = "Passed through as RATE_LIMIT_BURST (core-service's own limiter)"
-  type        = number
-  default     = 20
-}
-
-variable "log_level" {
-  description = "Log level for the application, passed through as LOG_LEVEL (e.g. debug, info, warn, error)"
+variable "ssm_prefix" {
+  description = "SSM Parameter Store path that deploy.sh reads at every deploy (ADR-007 §8.4). Must end with /."
   type        = string
-  default     = "info"
+  default     = "/hub/prod/"
+
+  validation {
+    condition     = can(regex("^/.+/$", var.ssm_prefix))
+    error_message = "ssm_prefix must start and end with /."
+  }
 }
 
-variable "log_format" {
-  description = "Log format for the application, passed through as LOG_FORMAT (e.g. json, text)"
+variable "ops_bucket_name" {
+  description = "Bucket for deploy files and database dumps. Empty = hub-ops-<account id>."
   type        = string
-  default     = "json"
+  default     = ""
+}
+
+variable "media_bucket_name" {
+  description = "Existing S3 bucket for article images (HUB_S3_BUCKET). Empty = no media permissions on the instance role yet."
+  type        = string
+  default     = ""
 }

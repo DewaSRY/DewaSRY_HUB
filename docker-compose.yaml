@@ -63,8 +63,13 @@ services:
         condition: service_healthy
     ports:
       - "${HUB_HTTP_PORT:-8088}:80"
+    # Same zones and routes as production (apps/nginx/*.conf); only the server block and the
+    # upstream file differ (production switches the upstream per deploy, ADR-007 §8.3).
     volumes:
-      - ./apps/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./apps/nginx/zones.conf:/etc/nginx/conf.d/00-zones.conf:ro
+      - ./apps/nginx/server.local.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./apps/nginx/routes.conf:/etc/nginx/hub/routes.conf:ro
+      - ./apps/nginx/upstream.local.conf:/etc/nginx/hub/upstream.conf:ro
 
 volumes:
   hub_postgres_data:

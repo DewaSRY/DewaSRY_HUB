@@ -1,0 +1,39 @@
+# Path filter as a job output instead of `on.<event>.paths`: a workflow skipped by `paths` leaves a
+# required check pending forever, while a skipped *job* counts as passed. So every workflow runs,
+# and its jobs are skipped when none of their paths changed (ADR-007 §4 required checks).
+# Needs a checkout with fetch-depth: 0.
+name: changed
+description: Whether any of the given paths changed in this PR or push
+inputs:
+  paths:
+    description: Space-separated git pathspecs
+    required: true
+outputs:
+  changed:
+    description: '"true" or "false"'
+    value: ${{ steps.diff.outputs.changed }}
+runs:
+  using: composite
+  steps:
+    - id: diff
+      shell: bash
+      env:
+        EVENT: ${{ github.event_name }}
+        BASE_REF: ${{ github.base_ref }}
+        BEFORE: ${{ github.event.before }}
+        PATHS: ${{ inputs.paths }}
+      run: |
+        case "$EVENT" in
+          pull_request) base="origin/$BASE_REF" ;;
+          push) base="$BEFORE" ;;
+          *) base="" ;;
+        esac
+        # Manual runs, first pushes, and unknown bases count as changed.
+        if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+          changed=true
+        else
+          # shellcheck disable=SC2086
+          if git diff --quiet "$base"...HEAD -- $PATHS; then changed=false; else changed=true; fi
+        fi
+        echo "changed=$changed" >> "$GITHUB_OUTPUT"
+        echo "Paths [$PATHS] changed: $changed"

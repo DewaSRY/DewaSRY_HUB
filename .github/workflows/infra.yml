@@ -1,0 +1,68 @@
+# Terraform and deploy scripts: format, validate, shellcheck (ADR-007 §5.3). No cloud credentials;
+# `terraform apply` stays manual until remote state exists (S11).
+name: infra
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: ./.github/actions/changed
+        with:
+          paths: infra apps/nginx .github/workflows/infra.yml .github/actions
+
+  # Required check on main. Skipped (= passed) when no infra path changed.
+  check:
+    name: infra-check
+    needs: changes
+    if: ${{ needs.changes.outputs.changed == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform -chdir=infra/terraform fmt -check -recursive -diff
+
+      - name: terraform validate
+        run: |
+          terraform -chdir=infra/terraform init -backend=false -input=false
+          terraform -chdir=infra/terraform validate
+
+      - name: shellcheck
+        run: shellcheck --external-sources infra/deploy/*.sh
+
+      # Production server block + shared zones/routes, with a throwaway certificate.
+      - name: nginx -t (production config)
+        run: |
+          mkdir -p /tmp/nginx/conf.d /tmp/nginx/hub /tmp/nginx/tls
+          cp apps/nginx/zones.conf /tmp/nginx/conf.d/00-zones.conf
+          cp apps/nginx/server.prod.conf /tmp/nginx/conf.d/default.conf
+          cp apps/nginx/routes.conf /tmp/nginx/hub/routes.conf
+          echo 'server api-blue:8080;' > /tmp/nginx/hub/upstream.conf
+          printf 'set_real_ip_from 173.245.48.0/20;\nreal_ip_header CF-Connecting-IP;\n' > /tmp/nginx/conf.d/01-cloudflare-realip.conf
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=test \
+            -keyout /tmp/nginx/tls/origin.key -out /tmp/nginx/tls/origin.pem 2>/dev/null
+          docker run --rm --add-host api-blue:127.0.0.1 \
+            -v /tmp/nginx/conf.d:/etc/nginx/conf.d:ro -v /tmp/nginx/hub:/etc/nginx/hub:ro \
+            -v /tmp/nginx/tls:/etc/nginx/tls:ro nginx:1.27-alpine nginx -t

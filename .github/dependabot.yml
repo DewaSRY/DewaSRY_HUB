@@ -1,0 +1,22 @@
+# Weekly updates for pinned actions, Gradle, and npm (ADR-007 W2).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: gradle
+    directory: /apps/coreservices
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /apps/portal
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

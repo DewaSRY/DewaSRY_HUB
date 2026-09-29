@@ -1,27 +1,15 @@
-# Copy this file to terraform.tfvars and fill in real values.
-# terraform.tfvars is gitignored - never commit real secrets.
+# Copy to terraform.tfvars if you need to override a default. terraform.tfvars is gitignored.
+# There are no secrets here any more: runtime config and secrets live in SSM Parameter Store under
+# /hub/prod/ (docs/DEPLOYMENT.md §2.2), never in Terraform variables or state.
 
-docker_image = "sdewa/core-service-dep:latest"
+# aws_region    = "ap-southeast-1"
+# instance_type = "t4g.small"
 
-# Supabase: Project Settings -> Database -> Connection string (URI, use the pooler host for EC2)
-db_source = "postgresql://postgres:<password>@<supabase-host>:5432/postgres?sslmode=require"
+# Only one GitHub OIDC provider is allowed per AWS account. Set false if it already exists.
+# create_github_oidc_provider = true
 
-jwt_secret_key            = "replace-with-a-real-32-plus-character-secret"
-jwt_access_token_duration = "7d"
-cors_allowed_origins      = ""
+# Existing bucket for article images (the API's HUB_S3_BUCKET). Grants the instance role access.
+# media_bucket_name = "hub-media-example"
 
-# Lock this down to your own IP (e.g. ["1.2.3.4/32"]) once you know it.
-ssh_cidr_blocks = ["0.0.0.0/0"]
-
-# nginx sits in front of core-service as the only public entrypoint (port
-# 80 by default) and rate-limits at the edge; core-service itself is not
-# published publicly. All of these have working defaults - uncomment to
-# override.
-# nginx_port              = 80
-# nginx_rate_limit_rps    = 10
-# nginx_rate_limit_burst  = 20
-
-# core-service's own in-process per-IP limiter, kept on behind nginx.
-# app_rate_limit_enabled = true
-# app_rate_limit_rps     = 5
-# app_rate_limit_burst   = 20
+# Refresh from https://www.cloudflare.com/ips-v4 when Cloudflare changes it.
+# cloudflare_ipv4_cidrs = ["173.245.48.0/20", "..."]

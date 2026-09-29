@@ -1,5 +1,7 @@
 # Terraform Make Commands — As Implemented
 
+> **Superseded by [ADR-007](../../../docs/ADR/ADR-007-ci_cd_pipeline.md) and [docs/DEPLOYMENT.md](../../../docs/DEPLOYMENT.md).** This describes the old Docker Hub + SSH (`make deploy` / `tf-redeploy`) setup on an x86 `t3.micro`, which no longer exists. Kept for history only.
+
 ## Who this doc is for
 
 You're assumed to already know *what* the Terraform config in [infra/terraform/](../) builds — if not, read [TERRAFORM_EC2_DEPLOY.md](TERRAFORM_EC2_DEPLOY.md) first, including its Terraform primer in Section 0. This doc is narrower: it's the day-to-day command reference for the `tf-*` targets (plus `tf-redeploy` and `deploy`) in the repo-root [Makefile](../../../Makefile) — the ones you actually type to provision, redeploy, or tear down the EC2 instance.

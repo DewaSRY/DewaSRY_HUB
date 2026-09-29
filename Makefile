@@ -1,13 +1,20 @@
-CORE_SERVICE_DIR := apps/coreservices
+# Root tasks: Terraform and production operations (ADR-007). App tasks live in apps/*/Makefile.
+# Runbook with the full flow: docs/DEPLOYMENT.md.
 
-TF_DIR := infra/terraform
-TF_KEY := $(TF_DIR)/core-service-key.pem
+CORE_SERVICE_DIR := apps/coreservices
+TF_DIR     := infra/terraform
+AWS_REGION ?= ap-southeast-1
+SSM_PREFIX ?= /hub/prod/
+# Deploy an earlier build (rollback): make deploy-dispatch SHA=<commit>
+SHA        ?=
+
+## --- Terraform (applied by hand; CI only runs fmt/validate) ---
 
 tf-init:
 	terraform -chdir=$(TF_DIR) init
 
 tf-fmt:
-	terraform -chdir=$(TF_DIR) fmt
+	terraform -chdir=$(TF_DIR) fmt -recursive
 
 tf-validate:
 	terraform -chdir=$(TF_DIR) validate
@@ -24,23 +31,56 @@ tf-output:
 tf-destroy:
 	terraform -chdir=$(TF_DIR) destroy
 
-# Re-runs the exact first-boot script (docker compose stack: core-service +
-# nginx, see infra/terraform/docker-compose.prod.yaml) against the
-# already-running instance over SSH. EC2 only executes user_data
-# automatically on an instance's first boot, so this is how an existing
-# instance picks up a new image, a new nginx rate limit, a new CORS origin,
-# etc. Idempotent (docker compose pull + up -d each time) — safe to re-run.
-# See infra/terraform/outputs.tf's rendered_user_data and
-# apps/core-service/docs/TERRAFORM_EC2_DEPLOY.md Section 7.
-tf-redeploy:
-	$(eval EC2_IP := $(shell terraform -chdir=$(TF_DIR) output -raw public_ip))
-	terraform -chdir=$(TF_DIR) output -raw rendered_user_data | ssh -i $(TF_KEY) ec2-user@$(EC2_IP) 'sudo bash -s'
+## --- Deploy (CI does the work; these only trigger or inspect it) ---
 
-# Builds + pushes the core-service prod image, then redeploys the EC2
-# instance against it (and against whatever nginx/rate-limit settings are
-# currently in infra/terraform).
-deploy:
-	$(MAKE) -C $(CORE_SERVICE_DIR) docker-dep-build docker-dep-push
-	$(MAKE) tf-redeploy
+# Runs backend.yml on main. Without SHA: test, build, and deploy main's HEAD (first deploy after a
+# new instance, B9). With SHA: deploy that commit's existing image, no rebuild (rollback, §10).
+deploy-dispatch:
+	gh workflow run backend.yml --ref main $(if $(SHA),-f sha=$(SHA))
+	@sleep 3
+	gh run list --workflow backend.yml --limit 1
 
-.PHONY: tf-init tf-fmt tf-validate tf-plan tf-apply tf-output tf-destroy tf-redeploy deploy
+deploy-watch:
+	gh run watch $$(gh run list --workflow backend.yml --limit 1 --json databaseId --jq '.[0].databaseId')
+
+portal-dispatch:
+	gh workflow run portal.yml --ref main
+
+## --- Instance (Session Manager / Run Command; no SSH) ---
+
+INSTANCE_ID = $(shell terraform -chdir=$(TF_DIR) output -raw instance_id)
+
+# Shell on the instance. Needs the AWS Session Manager plugin.
+ssm-shell:
+	aws ssm start-session --region $(AWS_REGION) --target $(INSTANCE_ID)
+
+# After a `make tf-apply` that changed infra/deploy/* or apps/nginx/*: install the new files.
+infra-sync:
+	@cmd=$$(aws ssm send-command --region $(AWS_REGION) \
+		--document-name AWS-RunShellScript \
+		--targets Key=tag:Role,Values=hub-api \
+		--parameters 'commands=["/opt/hub/bin/sync-infra.sh"]' \
+		--query Command.CommandId --output text) && \
+	echo "command $$cmd" && \
+	aws ssm wait command-executed --region $(AWS_REGION) --command-id $$cmd --instance-id $(INSTANCE_ID); \
+	aws ssm get-command-invocation --region $(AWS_REGION) --command-id $$cmd --instance-id $(INSTANCE_ID) \
+		--query '[Status,StandardOutputContent,StandardErrorContent]' --output text
+
+# Which color is live and which image each color runs.
+release-status:
+	@cmd=$$(aws ssm send-command --region $(AWS_REGION) \
+		--document-name AWS-RunShellScript \
+		--targets Key=tag:Role,Values=hub-api \
+		--parameters 'commands=["cat /opt/hub/release.env","docker ps --format \"{{.Names}} {{.Status}}\""]' \
+		--query Command.CommandId --output text) && \
+	aws ssm wait command-executed --region $(AWS_REGION) --command-id $$cmd --instance-id $(INSTANCE_ID); \
+	aws ssm get-command-invocation --region $(AWS_REGION) --command-id $$cmd --instance-id $(INSTANCE_ID) \
+		--query StandardOutputContent --output text
+
+# Names (not values) of the runtime parameters deploy.sh reads.
+ssm-list:
+	aws ssm get-parameters-by-path --region $(AWS_REGION) --path $(SSM_PREFIX) --recursive \
+		--query 'Parameters[].[Name,Type,LastModifiedDate]' --output table
+
+.PHONY: tf-init tf-fmt tf-validate tf-plan tf-apply tf-output tf-destroy \
+	deploy-dispatch deploy-watch portal-dispatch ssm-shell infra-sync release-status ssm-list

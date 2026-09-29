@@ -2,17 +2,13 @@
 
 # Local image (matches the commented-out core-services service in the root docker-compose.yaml).
 LOCAL_IMAGE := sdewa/hub-coreservices:local
-# Deploy image pulled by the EC2 instance (infra/terraform/variables.tf docker_image).
-DEP_IMAGE   ?= sdewa/core-service-dep
-TAG         ?= latest
-GIT_SHA     := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 PLATFORM    ?= linux/arm64
 PORT        ?= 8080
 PROFILE     ?= local
 # The container can't reach the host's localhost, so point the DB at host.docker.internal.
 DOCKER_DB_URL ?= $(subst localhost,host.docker.internal,$(shell grep -E '^DB_URL=' .env 2>/dev/null | cut -d= -f2-))
 
-.PHONY: run build test clean docker-build docker-run docker-dep-build docker-dep-push
+.PHONY: run build test contract-update clean docker-build docker-run
 
 ## --- Gradle ---
 
@@ -25,6 +21,14 @@ build:
 
 test:
 	./gradlew test
+
+# Regenerates contracts/openapi/v1.json after an intended API change (ADR-007 §5.1). Review the diff.
+contract-update:
+	-./gradlew test --tests '*OpenApiContractTest' -q
+	@if [ -f build/contracts/openapi/v1.json ]; then \
+		cp build/contracts/openapi/v1.json ../../contracts/openapi/v1.json && rm -rf build/contracts && \
+		echo "Updated contracts/openapi/v1.json; review it with git diff."; \
+	else echo "contracts/openapi/v1.json is already up to date."; fi
 
 clean:
 	./gradlew clean
@@ -44,14 +48,4 @@ docker-run:
 		$(if $(DOCKER_DB_URL),-e DB_URL=$(DOCKER_DB_URL)) \
 		$(LOCAL_IMAGE)
 
-## --- Docker (deploy) --- used by the root Makefile's `deploy` target
-
-docker-dep-build:
-	docker buildx build --platform $(PLATFORM) \
-		-t $(DEP_IMAGE):$(TAG) \
-		-t $(DEP_IMAGE):$(GIT_SHA) \
-		--load .
-
-docker-dep-push:
-	docker push $(DEP_IMAGE):$(TAG)
-	docker push $(DEP_IMAGE):$(GIT_SHA)
+# Production images are built by CI only (.github/workflows/backend.yml, ADR-007 D8).

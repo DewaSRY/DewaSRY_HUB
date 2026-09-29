@@ -1,0 +1,4836 @@
+{
+  "components" : {
+    "schemas" : {
+      "AdminArticle" : {
+        "properties" : {
+          "category" : {
+            "$ref" : "#/components/schemas/AdminTermRef"
+          },
+          "categoryId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "coverImage" : {
+            "$ref" : "#/components/schemas/ImageView"
+          },
+          "coverImageId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "images" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/ImageView"
+            },
+            "type" : "object"
+          },
+          "locales" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "previousSlugs" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "publishedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "revalidation" : {
+            "$ref" : "#/components/schemas/RevalidationResult"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "DRAFT", "PUBLISHED" ],
+            "type" : "string"
+          },
+          "tagIds" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "tags" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminTermRef"
+            },
+            "type" : "array"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "translations" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/AdminTranslation"
+            },
+            "type" : "object"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminArticleSummary" : {
+        "properties" : {
+          "category" : {
+            "$ref" : "#/components/schemas/AdminTermRef"
+          },
+          "coverImage" : {
+            "$ref" : "#/components/schemas/ImageView"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "excerpt" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "locales" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "publishedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "DRAFT", "PUBLISHED" ],
+            "type" : "string"
+          },
+          "tags" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminTermRef"
+            },
+            "type" : "array"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wordCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminAuthor" : {
+        "properties" : {
+          "avatarUrl" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminComment" : {
+        "properties" : {
+          "article" : {
+            "$ref" : "#/components/schemas/ArticleRef"
+          },
+          "author" : {
+            "$ref" : "#/components/schemas/AdminAuthor"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "editedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "mentions" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/UserMini"
+            },
+            "type" : "object"
+          },
+          "status" : {
+            "enum" : [ "VISIBLE", "HIDDEN" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminImage" : {
+        "properties" : {
+          "alt" : {
+            "type" : "string"
+          },
+          "contentHash" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "height" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "sizeBytes" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "usedBy" : {
+            "items" : {
+              "$ref" : "#/components/schemas/UsedBy"
+            },
+            "type" : "array"
+          },
+          "variants" : {
+            "items" : {
+              "$ref" : "#/components/schemas/VariantView"
+            },
+            "type" : "array"
+          },
+          "width" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminPlan" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "activeSubscriptions" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "billingPeriod" : {
+            "enum" : [ "MONTHLY", "YEARLY" ],
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "features" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "public" : {
+            "type" : "boolean"
+          },
+          "sold" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminProduct" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "credential" : {
+            "$ref" : "#/components/schemas/IssuedCredentialView"
+          },
+          "credentials" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CredentialSummary"
+            },
+            "type" : "array"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "memberCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "planCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "plans" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminPlan"
+            },
+            "type" : "array"
+          },
+          "redirectUris" : {
+            "items" : {
+              "$ref" : "#/components/schemas/RedirectUriView"
+            },
+            "type" : "array"
+          },
+          "websiteUrl" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminTerm" : {
+        "properties" : {
+          "articleCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "publishedCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "revalidation" : {
+            "$ref" : "#/components/schemas/RevalidationResult"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminTermRef" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminTransactionDetail" : {
+        "properties" : {
+          "changed" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "failureReason" : {
+            "type" : "string"
+          },
+          "gatewayTransactionId" : {
+            "type" : "string"
+          },
+          "needsReview" : {
+            "type" : "boolean"
+          },
+          "orderId" : {
+            "type" : "string"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "QRIS", "BANK_TRANSFER", "GOPAY", "SHOPEEPAY", "CREDIT_CARD", "OTHER" ],
+            "type" : "string"
+          },
+          "plan" : {
+            "$ref" : "#/components/schemas/TransactionPlan"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "product" : {
+            "$ref" : "#/components/schemas/ProductRef"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "statusHistory" : {
+            "items" : {
+              "$ref" : "#/components/schemas/StatusHistoryItem"
+            },
+            "type" : "array"
+          },
+          "subscription" : {
+            "$ref" : "#/components/schemas/SubscriptionView"
+          },
+          "subscriptionId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/UserRef"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminTransactionView" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "failureReason" : {
+            "type" : "string"
+          },
+          "gatewayTransactionId" : {
+            "type" : "string"
+          },
+          "needsReview" : {
+            "type" : "boolean"
+          },
+          "orderId" : {
+            "type" : "string"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "QRIS", "BANK_TRANSFER", "GOPAY", "SHOPEEPAY", "CREDIT_CARD", "OTHER" ],
+            "type" : "string"
+          },
+          "plan" : {
+            "$ref" : "#/components/schemas/TransactionPlan"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "product" : {
+            "$ref" : "#/components/schemas/ProductRef"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "subscriptionId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/UserRef"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminTranslation" : {
+        "properties" : {
+          "body" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          },
+          "bodySchemaVersion" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "excerpt" : {
+            "type" : "string"
+          },
+          "locale" : {
+            "type" : "string"
+          },
+          "metaDescription" : {
+            "type" : "string"
+          },
+          "metaTitle" : {
+            "type" : "string"
+          },
+          "readingMinutes" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "wordCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminUser" : {
+        "properties" : {
+          "avatarUrl" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "firebaseUid" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastSignInAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "paymentSummary" : {
+            "$ref" : "#/components/schemas/PaymentSummary"
+          },
+          "products" : {
+            "items" : {
+              "$ref" : "#/components/schemas/JoinedProduct"
+            },
+            "type" : "array"
+          },
+          "role" : {
+            "enum" : [ "USER", "ADMIN" ],
+            "type" : "string"
+          },
+          "subscriptions" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SubscriptionView"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminUserSummary" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastSignInAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "paymentSummary" : {
+            "$ref" : "#/components/schemas/PaymentSummary"
+          },
+          "products" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRef"
+            },
+            "type" : "array"
+          },
+          "role" : {
+            "enum" : [ "USER", "ADMIN" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminArticle" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminArticle"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminComment" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminComment"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminImage" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminImage"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminPlan" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminPlan"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminProduct" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminProduct"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminTerm" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminTerm"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminTransactionDetail" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminTransactionDetail"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseAdminUser" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/AdminUser"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseCodeResponse" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/CodeResponse"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseEntitlement" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Entitlement"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseInteractionSummary" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/InteractionSummary"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseIssuedCredentialView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/IssuedCredentialView"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseLinkPreview" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/LinkPreview"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseListAdminProduct" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminProduct"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseListAdminTerm" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminTerm"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseListPublicProduct" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PublicProduct"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseListPublicTerm" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PublicTerm"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseListSubscriptionView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SubscriptionView"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseListUserMini" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/UserMini"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseMe" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Me"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseMemberResponse" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/MemberResponse"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseMyComment" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/MyComment"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseMyInteraction" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/MyInteraction"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseObject" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : { },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponsePublicProduct" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PublicProduct"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponsePublicTerm" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PublicTerm"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseRedirectUriView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/RedirectUriView"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseSitemap" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Sitemap"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseTokenResponse" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/TokenResponse"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseTransactionView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/TransactionView"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ApiResponseVoteResult" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/VoteResult"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ArticleInput" : {
+        "properties" : {
+          "categoryId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "coverImageId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "slug" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "tagIds" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "translations" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/TranslationInput"
+            },
+            "type" : "object"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "ArticleRef" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ArticleSitemapEntry" : {
+        "properties" : {
+          "locales" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ArticleSummary" : {
+        "properties" : {
+          "availableLocales" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "category" : {
+            "$ref" : "#/components/schemas/TermRef"
+          },
+          "coverImage" : {
+            "$ref" : "#/components/schemas/ImageView"
+          },
+          "excerpt" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "locale" : {
+            "type" : "string"
+          },
+          "publishedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "tags" : {
+            "items" : {
+              "$ref" : "#/components/schemas/TermRef"
+            },
+            "type" : "array"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CheckoutRequest" : {
+        "properties" : {
+          "planId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "planId" ],
+        "type" : "object"
+      },
+      "CodeRequest" : {
+        "properties" : {
+          "clientId" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "codeChallenge" : {
+            "maxLength" : 128,
+            "minLength" : 43,
+            "type" : "string"
+          },
+          "codeChallengeMethod" : {
+            "type" : "string"
+          },
+          "redirectUri" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "clientId", "codeChallenge", "redirectUri" ],
+        "type" : "object"
+      },
+      "CodeResponse" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "redirectUri" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CommentInput" : {
+        "properties" : {
+          "body" : {
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CommentView" : {
+        "properties" : {
+          "author" : {
+            "$ref" : "#/components/schemas/UserMini"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "editedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "mentions" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/UserMini"
+            },
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "CredentialSummary" : {
+        "properties" : {
+          "clientId" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "lastUsedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "Entitlement" : {
+        "properties" : {
+          "checkedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "endDate" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "entitled" : {
+            "type" : "boolean"
+          },
+          "features" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          },
+          "plan" : {
+            "$ref" : "#/components/schemas/EntitlementPlan"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "ACTIVE", "EXPIRED", "CANCELLED" ],
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "EntitlementPlan" : {
+        "properties" : {
+          "billingPeriod" : {
+            "enum" : [ "MONTHLY", "YEARLY" ],
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ImageView" : {
+        "properties" : {
+          "alt" : {
+            "type" : "string"
+          },
+          "height" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "variants" : {
+            "items" : {
+              "$ref" : "#/components/schemas/VariantView"
+            },
+            "type" : "array"
+          },
+          "width" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "InteractionSummary" : {
+        "properties" : {
+          "articleId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "commentCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "downCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "upCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "IssuedCredentialView" : {
+        "properties" : {
+          "clientId" : {
+            "type" : "string"
+          },
+          "clientSecret" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "JoinedProduct" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "joinedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "JsonNode" : {
+        "properties" : {
+          "array" : {
+            "type" : "boolean"
+          },
+          "bigDecimal" : {
+            "type" : "boolean"
+          },
+          "bigInteger" : {
+            "type" : "boolean"
+          },
+          "binary" : {
+            "type" : "boolean"
+          },
+          "boolean" : {
+            "type" : "boolean"
+          },
+          "container" : {
+            "type" : "boolean"
+          },
+          "double" : {
+            "type" : "boolean"
+          },
+          "embeddedValue" : {
+            "type" : "boolean"
+          },
+          "empty" : {
+            "type" : "boolean"
+          },
+          "float" : {
+            "type" : "boolean"
+          },
+          "floatingPointNumber" : {
+            "type" : "boolean"
+          },
+          "int" : {
+            "type" : "boolean"
+          },
+          "integralNumber" : {
+            "type" : "boolean"
+          },
+          "long" : {
+            "type" : "boolean"
+          },
+          "missingNode" : {
+            "type" : "boolean"
+          },
+          "nodeType" : {
+            "enum" : [ "ARRAY", "BINARY", "BOOLEAN", "MISSING", "NULL", "NUMBER", "OBJECT", "POJO", "STRING" ],
+            "type" : "string"
+          },
+          "null" : {
+            "type" : "boolean"
+          },
+          "number" : {
+            "type" : "boolean"
+          },
+          "object" : {
+            "type" : "boolean"
+          },
+          "pojo" : {
+            "type" : "boolean"
+          },
+          "short" : {
+            "type" : "boolean"
+          },
+          "string" : {
+            "type" : "boolean"
+          },
+          "textual" : {
+            "deprecated" : true,
+            "type" : "boolean"
+          },
+          "valueNode" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "LinkPreview" : {
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "siteName" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "LinkPreviewRequest" : {
+        "properties" : {
+          "url" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "url" ],
+        "type" : "object"
+      },
+      "Me" : {
+        "properties" : {
+          "avatarUrl" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "firebaseUid" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastSignInAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "products" : {
+            "items" : {
+              "$ref" : "#/components/schemas/JoinedProduct"
+            },
+            "type" : "array"
+          },
+          "role" : {
+            "enum" : [ "USER", "ADMIN" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MemberResponse" : {
+        "properties" : {
+          "entitlement" : {
+            "$ref" : "#/components/schemas/Entitlement"
+          },
+          "membership" : {
+            "$ref" : "#/components/schemas/Membership"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/ProductUser"
+          }
+        },
+        "type" : "object"
+      },
+      "Membership" : {
+        "properties" : {
+          "joinedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "productCode" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "Money" : {
+        "properties" : {
+          "amount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "currency" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MoneyInput" : {
+        "properties" : {
+          "amount" : {
+            "format" : "int64",
+            "minimum" : 0,
+            "type" : "integer"
+          },
+          "currency" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "currency" ],
+        "type" : "object"
+      },
+      "MyComment" : {
+        "properties" : {
+          "author" : {
+            "$ref" : "#/components/schemas/UserMini"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "editedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "mentions" : {
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/UserMini"
+            },
+            "type" : "object"
+          },
+          "status" : {
+            "enum" : [ "VISIBLE", "HIDDEN" ],
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "MyInteraction" : {
+        "properties" : {
+          "comment" : {
+            "$ref" : "#/components/schemas/MyComment"
+          },
+          "vote" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PageMeta" : {
+        "properties" : {
+          "limit" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "summary" : { },
+          "total" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "total_page" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseAdminArticleSummary" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminArticleSummary"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseAdminComment" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminComment"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseAdminImage" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminImage"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseAdminTransactionView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminTransactionView"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseAdminUserSummary" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminUserSummary"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseArticleSummary" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ArticleSummary"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseCommentView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CommentView"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PagedResponseTransactionView" : {
+        "properties" : {
+          "code" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "data" : {
+            "items" : {
+              "$ref" : "#/components/schemas/TransactionView"
+            },
+            "type" : "array"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "meta" : {
+            "$ref" : "#/components/schemas/PageMeta"
+          }
+        },
+        "type" : "object"
+      },
+      "PaymentSummary" : {
+        "properties" : {
+          "lastPaidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paidAmount" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "paidCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PlanInput" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "billingPeriod" : {
+            "enum" : [ "MONTHLY", "YEARLY" ],
+            "type" : "string"
+          },
+          "code" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "pattern" : "^[a-z0-9-]+$",
+            "type" : "string"
+          },
+          "features" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          },
+          "name" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/MoneyInput"
+          },
+          "public" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "code", "name", "price" ],
+        "type" : "object"
+      },
+      "ProductCreateRequest" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "pattern" : "^[a-z0-9-]+$",
+            "type" : "string"
+          },
+          "description" : {
+            "maxLength" : 5000,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "name" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "websiteUrl" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "name" ],
+        "type" : "object"
+      },
+      "ProductRef" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ProductUser" : {
+        "properties" : {
+          "avatarUrl" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "firebaseUid" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PublicPlan" : {
+        "properties" : {
+          "billingPeriod" : {
+            "enum" : [ "MONTHLY", "YEARLY" ],
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "features" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        },
+        "type" : "object"
+      },
+      "PublicProduct" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "plans" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PublicPlan"
+            },
+            "type" : "array"
+          },
+          "websiteUrl" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PublicTerm" : {
+        "properties" : {
+          "articleCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RedirectUriInput" : {
+        "properties" : {
+          "uri" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "uri" ],
+        "type" : "object"
+      },
+      "RedirectUriView" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "uri" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RevalidationResult" : {
+        "properties" : {
+          "paths" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "Sitemap" : {
+        "properties" : {
+          "articles" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ArticleSitemapEntry"
+            },
+            "type" : "array"
+          },
+          "categories" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SitemapEntry"
+            },
+            "type" : "array"
+          },
+          "tags" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SitemapEntry"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "SitemapEntry" : {
+        "properties" : {
+          "slug" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "Snap" : {
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "redirectUrl" : {
+            "type" : "string"
+          },
+          "token" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "StatusHistoryItem" : {
+        "properties" : {
+          "at" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "fromStatus" : {
+            "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "source" : {
+            "enum" : [ "CHECKOUT", "WEBHOOK", "SYNC" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SubscriptionPlan" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "billingPeriod" : {
+            "enum" : [ "MONTHLY", "YEARLY" ],
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        },
+        "type" : "object"
+      },
+      "SubscriptionView" : {
+        "properties" : {
+          "endDate" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "entitled" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "plan" : {
+            "$ref" : "#/components/schemas/SubscriptionPlan"
+          },
+          "product" : {
+            "$ref" : "#/components/schemas/ProductRef"
+          },
+          "startDate" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "ACTIVE", "EXPIRED", "CANCELLED" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TermInput" : {
+        "properties" : {
+          "name" : {
+            "maxLength" : 80,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "slug" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "name" ],
+        "type" : "object"
+      },
+      "TermRef" : {
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TokenRequest" : {
+        "properties" : {
+          "clientId" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "clientSecret" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "code" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "codeVerifier" : {
+            "maxLength" : 256,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "redirectUri" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "clientId", "clientSecret", "code", "codeVerifier" ],
+        "type" : "object"
+      },
+      "TokenResponse" : {
+        "properties" : {
+          "customToken" : {
+            "type" : "string"
+          },
+          "entitlement" : {
+            "$ref" : "#/components/schemas/Entitlement"
+          },
+          "expiresIn" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "tokenType" : {
+            "type" : "string"
+          },
+          "user" : {
+            "$ref" : "#/components/schemas/ProductUser"
+          }
+        },
+        "type" : "object"
+      },
+      "TransactionPlan" : {
+        "properties" : {
+          "billingPeriod" : {
+            "enum" : [ "MONTHLY", "YEARLY" ],
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TransactionView" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "failureReason" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "type" : "string"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "QRIS", "BANK_TRANSFER", "GOPAY", "SHOPEEPAY", "CREDIT_CARD", "OTHER" ],
+            "type" : "string"
+          },
+          "plan" : {
+            "$ref" : "#/components/schemas/TransactionPlan"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "product" : {
+            "$ref" : "#/components/schemas/ProductRef"
+          },
+          "snap" : {
+            "$ref" : "#/components/schemas/Snap"
+          },
+          "status" : {
+            "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          },
+          "subscriptionId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TranslationInput" : {
+        "properties" : {
+          "body" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          },
+          "bodySchemaVersion" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "excerpt" : {
+            "type" : "string"
+          },
+          "metaDescription" : {
+            "type" : "string"
+          },
+          "metaTitle" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UsedBy" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "usage" : {
+            "enum" : [ "COVER", "BODY" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UserMini" : {
+        "properties" : {
+          "avatarUrl" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UserRef" : {
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "VariantView" : {
+        "properties" : {
+          "url" : {
+            "type" : "string"
+          },
+          "width" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "VoteInput" : {
+        "properties" : {
+          "value" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "VoteResult" : {
+        "properties" : {
+          "articleId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "commentCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "downCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "myVote" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "upCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      }
+    },
+    "securitySchemes" : {
+      "firebaseIdToken" : {
+        "bearerFormat" : "JWT",
+        "description" : "Firebase ID token (HS256 dev token in local)",
+        "scheme" : "bearer",
+        "type" : "http"
+      },
+      "productClientId" : {
+        "in" : "header",
+        "name" : "X-Client-Id",
+        "type" : "apiKey"
+      },
+      "productClientSecret" : {
+        "in" : "header",
+        "name" : "X-Client-Secret",
+        "type" : "apiKey"
+      }
+    }
+  },
+  "info" : {
+    "description" : "Hub API (ADR-003). Locally, get a bearer token from POST /v1/dev/token.",
+    "title" : "DewaSRY Hub core services",
+    "version" : "v1"
+  },
+  "openapi" : "3.1.0",
+  "paths" : {
+    "/v1/admin/articles" : {
+      "get" : {
+        "operationId" : "list_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "enum" : [ "DRAFT", "PUBLISHED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "tag",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "locale",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "missingLocale",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseAdminArticleSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      },
+      "post" : {
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ArticleInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminArticle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      }
+    },
+    "/v1/admin/articles/{id}" : {
+      "delete" : {
+        "operationId" : "delete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      },
+      "get" : {
+        "operationId" : "get",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminArticle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      },
+      "put" : {
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ArticleInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminArticle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      }
+    },
+    "/v1/admin/articles/{id}/publish" : {
+      "post" : {
+        "operationId" : "publish",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminArticle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      }
+    },
+    "/v1/admin/articles/{id}/unpublish" : {
+      "post" : {
+        "operationId" : "unpublish",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminArticle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-article-controller" ]
+      }
+    },
+    "/v1/admin/categories" : {
+      "get" : {
+        "operationId" : "categories",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListAdminTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      },
+      "post" : {
+        "operationId" : "createCategory",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TermInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      }
+    },
+    "/v1/admin/categories/{id}" : {
+      "delete" : {
+        "operationId" : "deleteCategory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      },
+      "patch" : {
+        "operationId" : "patchCategory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JsonNode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      }
+    },
+    "/v1/admin/comments" : {
+      "get" : {
+        "operationId" : "list_7",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "articleId",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseAdminComment"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-comment-controller" ]
+      }
+    },
+    "/v1/admin/comments/{id}/hide" : {
+      "post" : {
+        "operationId" : "hide",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminComment"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-comment-controller" ]
+      }
+    },
+    "/v1/admin/comments/{id}/show" : {
+      "post" : {
+        "operationId" : "show",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminComment"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-comment-controller" ]
+      }
+    },
+    "/v1/admin/link-preview" : {
+      "post" : {
+        "operationId" : "preview",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LinkPreviewRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseLinkPreview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-link-preview-controller" ]
+      }
+    },
+    "/v1/admin/media" : {
+      "get" : {
+        "operationId" : "list_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "unused",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseAdminImage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-media-controller" ]
+      },
+      "post" : {
+        "operationId" : "upload",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "alt",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  }
+                },
+                "type" : "object"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminImage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-media-controller" ]
+      }
+    },
+    "/v1/admin/media/{id}" : {
+      "delete" : {
+        "operationId" : "delete_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-media-controller" ]
+      },
+      "get" : {
+        "operationId" : "get_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminImage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-media-controller" ]
+      },
+      "patch" : {
+        "operationId" : "patch_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JsonNode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminImage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-media-controller" ]
+      }
+    },
+    "/v1/admin/plans/{id}" : {
+      "patch" : {
+        "operationId" : "patchPlan",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JsonNode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminPlan"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products" : {
+      "get" : {
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListAdminProduct"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      },
+      "post" : {
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProductCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminProduct"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products/{id}" : {
+      "get" : {
+        "operationId" : "get_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminProduct"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      },
+      "patch" : {
+        "operationId" : "patch",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JsonNode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminProduct"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products/{id}/credentials" : {
+      "post" : {
+        "operationId" : "createCredential",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseIssuedCredentialView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products/{id}/credentials/{clientId}" : {
+      "delete" : {
+        "operationId" : "revokeCredential",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "clientId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products/{id}/plans" : {
+      "post" : {
+        "operationId" : "createPlan",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlanInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminPlan"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products/{id}/redirect-uris" : {
+      "post" : {
+        "operationId" : "addRedirectUri",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RedirectUriInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseRedirectUriView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/products/{id}/redirect-uris/{redirectUriId}" : {
+      "delete" : {
+        "operationId" : "removeRedirectUri",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "redirectUriId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-product-controller" ]
+      }
+    },
+    "/v1/admin/tags" : {
+      "get" : {
+        "operationId" : "tags",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListAdminTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      },
+      "post" : {
+        "operationId" : "createTag",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TermInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      }
+    },
+    "/v1/admin/tags/{id}" : {
+      "delete" : {
+        "operationId" : "deleteTag",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      },
+      "patch" : {
+        "operationId" : "patchTag",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JsonNode"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-taxonomy-controller" ]
+      }
+    },
+    "/v1/admin/transactions" : {
+      "get" : {
+        "operationId" : "list_6",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "userId",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productCode",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "needsReview",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseAdminTransactionView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-transaction-controller" ]
+      }
+    },
+    "/v1/admin/transactions/{orderId}" : {
+      "get" : {
+        "operationId" : "get_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminTransactionDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-transaction-controller" ]
+      }
+    },
+    "/v1/admin/transactions/{orderId}/sync" : {
+      "post" : {
+        "operationId" : "sync",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminTransactionDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-transaction-controller" ]
+      }
+    },
+    "/v1/admin/users" : {
+      "get" : {
+        "operationId" : "list_5",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productCode",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseAdminUserSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-user-controller" ]
+      }
+    },
+    "/v1/admin/users/{id}" : {
+      "get" : {
+        "operationId" : "get_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseAdminUser"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-user-controller" ]
+      }
+    },
+    "/v1/admin/users/{id}/transactions" : {
+      "get" : {
+        "operationId" : "transactions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseAdminTransactionView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "admin-user-controller" ]
+      }
+    },
+    "/v1/checkout" : {
+      "post" : {
+        "operationId" : "checkout",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CheckoutRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseTransactionView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-transaction-controller" ]
+      }
+    },
+    "/v1/me" : {
+      "get" : {
+        "operationId" : "me",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseMe"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-controller" ]
+      }
+    },
+    "/v1/me/articles/{articleId}/comment" : {
+      "delete" : {
+        "operationId" : "deleteComment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "articleId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-engagement-controller" ]
+      },
+      "put" : {
+        "operationId" : "saveComment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "articleId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CommentInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseMyComment"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-engagement-controller" ]
+      }
+    },
+    "/v1/me/articles/{articleId}/interaction" : {
+      "get" : {
+        "operationId" : "mine_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "articleId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseMyInteraction"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-engagement-controller" ]
+      }
+    },
+    "/v1/me/articles/{articleId}/vote" : {
+      "delete" : {
+        "operationId" : "clearVote",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "articleId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseVoteResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-engagement-controller" ]
+      },
+      "put" : {
+        "operationId" : "vote",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "articleId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VoteInput"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseVoteResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-engagement-controller" ]
+      }
+    },
+    "/v1/me/mentionable-users" : {
+      "get" : {
+        "operationId" : "mentionable",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListUserMini"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-engagement-controller" ]
+      }
+    },
+    "/v1/me/session" : {
+      "post" : {
+        "operationId" : "session",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseMe"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-controller" ]
+      }
+    },
+    "/v1/me/subscriptions" : {
+      "get" : {
+        "operationId" : "mine",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListSubscriptionView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "subscription-controllers" ]
+      }
+    },
+    "/v1/me/transactions" : {
+      "get" : {
+        "operationId" : "list_4",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "enum" : [ "PENDING", "PAID", "FAILED", "REFUNDED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseTransactionView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-transaction-controller" ]
+      }
+    },
+    "/v1/me/transactions/{orderId}" : {
+      "get" : {
+        "operationId" : "get_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseTransactionView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "me-transaction-controller" ]
+      }
+    },
+    "/v1/products/{productCode}/entitlements/me" : {
+      "get" : {
+        "operationId" : "entitlement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "productCode",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseEntitlement"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ],
+          "productClientId" : [ ],
+          "productClientSecret" : [ ]
+        } ],
+        "tags" : [ "subscription-controllers" ]
+      }
+    },
+    "/v1/products/{productCode}/members" : {
+      "post" : {
+        "operationId" : "join",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "productCode",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseMemberResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ],
+          "productClientId" : [ ],
+          "productClientSecret" : [ ]
+        } ],
+        "tags" : [ "connected-product-controller" ]
+      }
+    },
+    "/v1/public/articles" : {
+      "get" : {
+        "operationId" : "articles",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "tag",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "locale",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseArticleSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/public/articles/{slug}" : {
+      "get" : {
+        "operationId" : "article",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "locale",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseObject"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/public/articles/{slug}/comments" : {
+      "get" : {
+        "operationId" : "comments",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedResponseCommentView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-engagement-controller" ]
+      }
+    },
+    "/v1/public/articles/{slug}/interactions" : {
+      "get" : {
+        "operationId" : "interactions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseInteractionSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-engagement-controller" ]
+      }
+    },
+    "/v1/public/categories" : {
+      "get" : {
+        "operationId" : "categories_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListPublicTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/public/categories/{slug}" : {
+      "get" : {
+        "operationId" : "category",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponsePublicTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/public/products" : {
+      "get" : {
+        "operationId" : "list_3",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListPublicProduct"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-product-controller" ]
+      }
+    },
+    "/v1/public/products/{productCode}" : {
+      "get" : {
+        "operationId" : "get_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "productCode",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponsePublicProduct"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-product-controller" ]
+      }
+    },
+    "/v1/public/sitemap" : {
+      "get" : {
+        "operationId" : "sitemap",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseSitemap"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/public/tags" : {
+      "get" : {
+        "operationId" : "tags_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseListPublicTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/public/tags/{slug}" : {
+      "get" : {
+        "operationId" : "tag",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponsePublicTerm"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "public-content-controller" ]
+      }
+    },
+    "/v1/sso/codes" : {
+      "post" : {
+        "operationId" : "code",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseCodeResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "firebaseIdToken" : [ ]
+        } ],
+        "tags" : [ "sso-controller" ]
+      }
+    },
+    "/v1/sso/token" : {
+      "post" : {
+        "operationId" : "token",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiResponseTokenResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "sso-controller" ]
+      }
+    },
+    "/v1/webhooks/midtrans" : {
+      "post" : {
+        "operationId" : "notification",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "additionalProperties" : { },
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "additionalProperties" : { },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "midtrans-webhook-controller" ]
+      }
+    }
+  }
+}

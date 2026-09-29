@@ -1,64 +1,44 @@
 #!/bin/bash
+# First-boot setup of the hub API host (ADR-007 I7). Installs Docker, Compose, the ECR credential
+# helper, and a swap file, writes /opt/hub/hub.env, then installs the deploy files from S3 through
+# sync-infra.sh. It does not start the API: run the backend workflow after `terraform apply` (B9).
+# No secrets here: deploy.sh reads them from SSM at every deploy.
 set -euxo pipefail
 
-dnf update -y
-dnf install -y docker
+dnf install -y docker jq amazon-ecr-credential-helper
 systemctl enable --now docker
-usermod -aG docker ec2-user
 
-# docker compose plugin — Amazon Linux 2023's `docker` package doesn't bundle
-# it. Defaults to a pinned release (var.docker_compose_version) for
-# reproducibility; set that variable to "latest" to opt back into resolving
-# GitHub's current release at boot instead. Either way this now uses
-# --retry and an explicit `docker compose version` check afterward — the
-# previous always-latest lookup had neither, so a transient network blip or
-# GitHub rate limit during boot silently left docker-compose missing/empty
-# and the whole stack never started, with `set -e` aborting the script right
-# there before `docker ps` ever had anything to show.
-COMPOSE_VERSION="${docker_compose_version}"
-if [ "$COMPOSE_VERSION" = "latest" ]; then
-  COMPOSE_VERSION=$(curl -fsSL --retry 5 --retry-delay 5 --retry-connrefused \
-    https://api.github.com/repos/docker/compose/releases/latest \
-    | grep -m1 '"tag_name"' | cut -d '"' -f4)
-  if [ -z "$COMPOSE_VERSION" ]; then
-    echo "ERROR: failed to resolve the latest docker compose release from GitHub's API" >&2
-    exit 1
-  fi
+# 2 GB swap: two JVMs overlap for a few seconds during blue/green (ADR-007 B2).
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile
+  mkswap /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
+swapon /swapfile || true
 
 mkdir -p /usr/local/lib/docker/cli-plugins
 curl -fsSL --retry 5 --retry-delay 5 --retry-connrefused \
-  "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-linux-x86_64" \
+  "https://github.com/docker/compose/releases/download/${docker_compose_version}/docker-compose-linux-aarch64" \
   -o /usr/local/lib/docker/cli-plugins/docker-compose
 chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-
-# Fail loudly here, with a clear error in cloud-init-output.log, rather than
-# silently reaching `docker compose up -d` with a broken/missing plugin.
 docker compose version
 
-mkdir -p /opt/core-service
+# Pull from ECR with the instance role; no docker login and no token on disk (ADR-007 §6.3).
+mkdir -p /root/.docker
+cat > /root/.docker/config.json <<JSON
+{ "credHelpers": { "${ecr_registry}": "ecr-login" } }
+JSON
 
-cat > /opt/core-service/app.env <<EOF
-DB_DRIVER=${db_driver}
-DB_SOURCE=${db_source}
-SERVER_ADDRESS=0.0.0.0:${app_port}
-JWT_SECRET_KEY=${jwt_secret_key}
-JWT_ACCESS_TOKEN_DURATION=${jwt_access_token_duration}
-CORS_ALLOWED_ORIGINS=${cors_allowed_origins}
-RATE_LIMIT_ENABLED=${rate_limit_enabled}
-RATE_LIMIT_REQUESTS_PER_SECOND=${rate_limit_rps}
-RATE_LIMIT_BURST=${rate_limit_burst}
-EOF
-chmod 600 /opt/core-service/app.env
+install -d -m 0755 /opt/hub /opt/hub/bin /opt/hub/nginx /opt/hub/secrets
+cat > /opt/hub/hub.env <<ENV
+AWS_REGION=${aws_region}
+ECR_REPOSITORY_URI=${ecr_repository_url}
+OPS_BUCKET=${ops_bucket}
+SSM_PREFIX=${ssm_prefix}
+ENV
+chmod 600 /opt/hub/hub.env
 
-echo '${nginx_conf_base64}' | base64 -d > /opt/core-service/nginx.conf
-chmod 644 /opt/core-service/nginx.conf
-
-echo '${docker_compose_yml_base64}' | base64 -d > /opt/core-service/docker-compose.yml
-chmod 644 /opt/core-service/docker-compose.yml
-
-# Idempotent: pull + up -d each time, safe to rerun over SSH on an
-# already-running instance (see docs/TERRAFORM_EC2_DEPLOY.md Section 7).
-cd /opt/core-service
-docker compose pull
-docker compose up -d
+aws s3 cp --region "${aws_region}" "s3://${ops_bucket}/infra/sync-infra.sh" /opt/hub/bin/sync-infra.sh
+chmod 700 /opt/hub/bin/sync-infra.sh
+/opt/hub/bin/sync-infra.sh

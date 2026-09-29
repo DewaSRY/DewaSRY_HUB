@@ -1,0 +1,278 @@
+# Spring Boot API: test on arm64 → build the arm64 image → push to ECR → blue/green deploy through
+# SSM Run Command (ADR-007 §5.1). Runbook: docs/DEPLOYMENT.md.
+#
+# workflow_dispatch on main:
+#   no sha  → test, build, and deploy main's HEAD (first deploy of a new instance, B9)
+#   sha=... → deploy that commit's existing ECR image, no rebuild (rollback, §10)
+name: backend
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to deploy without rebuilding (rollback). Empty = build and deploy HEAD.
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    name: changes
+    if: ${{ !inputs.sha }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: ./.github/actions/changed
+        with:
+          paths: apps/coreservices apps/nginx contracts infra/deploy .github/workflows/backend.yml .github/actions
+
+  # Required check on main. Skipped (= passed) when no backend path changed.
+  test:
+    name: backend-test
+    needs: changes
+    if: ${{ needs.changes.outputs.changed == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/coreservices
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # §9 M3: an applied V*.sql must never change (Flyway checksums would stop startup).
+      - name: Migration guard
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            pull_request) base="origin/$BASE_REF" ;;
+            push) base="$BEFORE" ;;
+            *) echo "No base to compare on $EVENT."; exit 0 ;;
+          esac
+          if [ -z "$base" ] || [ "$base" = 0000000000000000000000000000000000000000 ]; then
+            echo "No previous commit to compare."; exit 0
+          fi
+          changed=$(git diff --diff-filter=MDR --name-only "$base"...HEAD -- src/main/resources/db/migration)
+          if [ -n "$changed" ]; then
+            echo "::error::Applied migrations were modified, renamed, or deleted. Add a new V<n>__*.sql instead (ADR-007 §9):"
+            echo "$changed"
+            exit 1
+          fi
+          echo "Migrations: only additions."
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      # Includes ArticleBodyValidatorTest (contracts/article, ADR-009) and OpenApiContractTest
+      # (contracts/openapi/v1.json, ADR-003). Testcontainers uses the runner's Docker.
+      - name: Test
+        run: ./gradlew test --no-daemon
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-test-reports
+          path: |
+            apps/coreservices/build/reports/tests/
+            apps/coreservices/build/contracts/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  image:
+    name: image
+    needs: test
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    # The OIDC role trusts only the production environment (§7).
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: apps/coreservices
+          platforms: linux/arm64
+          push: true
+          # Immutable tag; deploys use the digest (§6.3). One manifest, no attestation index.
+          tags: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=coreservices
+          cache-to: type=gha,mode=max,scope=coreservices
+
+      - name: Scan findings (report only)
+        continue-on-error: true
+        env:
+          REPO: ${{ vars.ECR_REPOSITORY }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          aws ecr wait image-scan-complete --repository-name "$REPO" --image-id imageDigest="$DIGEST"
+          counts=$(aws ecr describe-image-scan-findings --repository-name "$REPO" --image-id imageDigest="$DIGEST" \
+            --query 'imageScanFindings.findingSeverityCounts' --output json)
+          {
+            echo "### Image"
+            echo "\`$REPO@$DIGEST\` (sha-$GITHUB_SHA)"
+            echo "### ECR basic scan"
+            echo '```json'
+            echo "$counts"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: deploy
+    needs: image
+    if: >-
+      ${{ always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+          (needs.image.result == 'success' || (needs.image.result == 'skipped' && inputs.sha != '')) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ vars.API_BASE_URL }}
+    # A second merge waits; a half-finished deploy is never cancelled (W3).
+    concurrency:
+      group: deploy-production-backend
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Resolve revision and digest
+        id: target
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+          BUILT_DIGEST: ${{ needs.image.outputs.digest }}
+          REPO: ${{ vars.ECR_REPOSITORY }}
+        run: |
+          if [ -n "$INPUT_SHA" ]; then
+            revision=$(git rev-parse --verify --quiet "${INPUT_SHA}^{commit}") \
+              || { echo "::error::$INPUT_SHA is not a commit in this repository"; exit 1; }
+            digest=$(aws ecr describe-images --repository-name "$REPO" --image-ids imageTag="sha-$revision" \
+              --query 'imageDetails[0].imageDigest' --output text) \
+              || { echo "::error::No image sha-$revision in ECR (never built on main, or expired after 20 builds)"; exit 1; }
+          else
+            revision=$GITHUB_SHA
+            digest=$BUILT_DIGEST
+          fi
+          [[ $digest =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::bad digest '$digest'"; exit 1; }
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Deploying $revision ($digest)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Run hub-deploy on the instance
+        env:
+          DIGEST: ${{ steps.target.outputs.digest }}
+          REVISION: ${{ steps.target.outputs.revision }}
+        run: |
+          command_id=$(aws ssm send-command \
+            --document-name hub-deploy \
+            --targets Key=tag:Role,Values=hub-api \
+            --parameters "Digest=$DIGEST,Revision=$REVISION" \
+            --max-concurrency 1 --max-errors 0 --timeout-seconds 600 \
+            --comment "backend ${REVISION:0:12} run $GITHUB_RUN_ID" \
+            --query Command.CommandId --output text)
+          echo "SSM command $command_id"
+
+          deadline=$((SECONDS + 720))
+          while :; do
+            read -r status targets < <(aws ssm list-commands --command-id "$command_id" \
+              --query 'Commands[0].[Status,TargetCount]' --output text)
+            case "$status" in Pending|InProgress|Delayed|Cancelling) ;; *) break ;; esac
+            if (( SECONDS > deadline )); then echo "::error::timed out waiting for $command_id"; exit 1; fi
+            sleep 5
+          done
+
+          for instance in $(aws ssm list-command-invocations --command-id "$command_id" \
+            --query 'CommandInvocations[].InstanceId' --output text); do
+            echo "--- $instance"
+            aws ssm get-command-invocation --command-id "$command_id" --instance-id "$instance" \
+              --query '[StandardOutputContent,StandardErrorContent]' --output text
+          done | tee deploy.log
+
+          if [ "${targets:-0}" -lt 1 ]; then
+            echo "::error::No instance tagged Role=hub-api is online in SSM"; exit 1
+          fi
+          if [ "$status" != Success ]; then
+            echo "::error::Deploy $status. The previous color is still serving (B5)."; exit 1
+          fi
+
+          # The script on the instance is installed by Terraform, not by this job (§16.2).
+          remote=$(grep -o 'deploy-script-sha256=[0-9a-f]*' deploy.log | head -1 | cut -d= -f2)
+          repo=$(sha256sum infra/deploy/deploy.sh | cut -d' ' -f1)
+          if [ "$remote" != "$repo" ]; then
+            echo "::warning::/opt/hub/deploy.sh on the instance differs from infra/deploy/deploy.sh. Run make tf-apply and make infra-sync."
+          fi
+
+      - name: Smoke test through Cloudflare
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          REVISION: ${{ steps.target.outputs.revision }}
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -fsS --max-time 10 "$API_BASE_URL/v1/public/products" -o body.json \
+              && jq -e '.code == 200 and (.data | type == "array")' body.json >/dev/null; then
+              echo "Smoke test passed."; exit 0
+            fi
+            echo "Attempt $i failed; retrying in 5 s."
+            sleep 5
+          done
+          echo "::error::GET $API_BASE_URL/v1/public/products did not return the ADR-003 envelope."
+          echo "The new color passed its health check on the instance, so check Cloudflare/DNS first."
+          echo "To roll back: make deploy-dispatch SHA=<last good commit>  (or Actions → backend → Run workflow)."
+          exit 1

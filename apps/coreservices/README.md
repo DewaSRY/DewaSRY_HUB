@@ -51,8 +51,8 @@ curl http://localhost:8088/v1/public/products
 ```
 
 `postgres` (host port 5434), `core-services` (not published; `local` profile by default) and
-`nginx` (host port 8088, config `apps/nginx/nginx.conf` with the ADR-003 §3.7 rate limits, JSON
-error pages, `/actuator` blocked). Ports 5437 and 8081 are avoided on purpose. Override with
+`nginx` (host port 8088, config `apps/nginx/` — `zones.conf` + `routes.conf`, shared with production — with the
+ADR-003 §3.7 rate limits, JSON error pages, `/actuator` blocked). Ports 5437 and 8081 are avoided on purpose. Override with
 `HUB_DB_PORT`, `HUB_HTTP_PORT`, `SPRING_PROFILES_ACTIVE`, etc.
 
 ### Docker image
@@ -202,8 +202,6 @@ cancels the product's other open codes for that user.
 ## Not done / known gaps
 
 - Renewal reminder emails (UC-13 step 3, phase 4) — table only.
-- OpenAPI ↔ ADR-003 contract test in CI (ADR-003 D4) — springdoc serves `/v1/openapi.json` (disabled in prod), no diff test yet.
 - `HttpMidtransGateway`, `S3ImageStorage` and `FirebaseAdminTokenMinter` are not exercised by tests
   (no sandbox keys / LocalStack / service account here); tests use the fake/local implementations.
 - Link preview is tested for its SSRF rejections only; the happy path needs outbound network.
-- `infra/terraform/nginx.conf.tpl` and the root `Makefile` (`apps/core-service`) were not updated.

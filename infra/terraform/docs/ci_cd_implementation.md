@@ -1,5 +1,7 @@
 # CI/CD Implementation — Auto-Deploying core-service to EC2
 
+> **Superseded by [ADR-007](../../../docs/ADR/ADR-007-ci_cd_pipeline.md) and [docs/DEPLOYMENT.md](../../../docs/DEPLOYMENT.md).** This describes the old Docker Hub + SSH (`make deploy` / `tf-redeploy`) setup on an x86 `t3.micro`, which no longer exists. Kept for history only.
+
 ## The problem this doc solves
 
 Your branch flow is `epic/* → dev → main` (enforced by [.github/workflows/pr-branch-rules.yml](../../../.github/workflows/pr-branch-rules.yml) and the local pre-commit hook that blocks direct commits to `main`/`dev`). Once a PR lands on `main`, [core-service-ci.yml](../../../.github/workflows/core-service-ci.yml) builds, vets, and tests it — but nothing after that touches the EC2 instance. Getting a merged change live today means you, personally, running:

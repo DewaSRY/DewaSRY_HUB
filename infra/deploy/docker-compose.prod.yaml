@@ -1,0 +1,61 @@
+# Production stack on the EC2 instance (ADR-007 §8.3, I9). Installed to /opt/hub/docker-compose.yml
+# by sync-infra.sh. Only deploy.sh drives it, one service at a time: never run a bare
+# `docker compose up -d`, because that would start both colors.
+#
+#   /opt/hub/release.env   ACTIVE, BLUE_IMAGE, GREEN_IMAGE (written by deploy.sh; exported before
+#                          every compose call, so ${BLUE_IMAGE}/${GREEN_IMAGE} always resolve)
+#   /opt/hub/app.<color>.env           rendered from SSM /hub/prod/* at each deploy (0600)
+#   /opt/hub/secrets/<color>/firebase.json   rendered from SSM, 0400, owner uid 10001
+#   /opt/hub/nginx/conf.d, /opt/hub/nginx/hub   from apps/nginx (upstream.conf written by deploy.sh)
+#   /opt/hub/tls           Cloudflare Origin CA certificate and key, rendered from SSM
+name: hub
+
+x-api: &api
+  restart: unless-stopped
+  mem_limit: 768m
+  # Not published on the host; Nginx reaches the active color by service name.
+  expose:
+    - "8080"
+  environment:
+    SPRING_PROFILES_ACTIVE: prod
+  logging:
+    driver: json-file
+    options:
+      max-size: 20m
+      max-file: "5"
+
+services:
+  api-blue:
+    <<: *api
+    image: ${BLUE_IMAGE:?BLUE_IMAGE is set by deploy.sh}
+    env_file:
+      - path: ./app.blue.env
+        format: raw
+        required: false
+    volumes:
+      - ./secrets/blue:/run/secrets:ro
+
+  api-green:
+    <<: *api
+    image: ${GREEN_IMAGE:?GREEN_IMAGE is set by deploy.sh}
+    env_file:
+      - path: ./app.green.env
+        format: raw
+        required: false
+    volumes:
+      - ./secrets/green:/run/secrets:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/hub:/etc/nginx/hub:ro
+      - ./tls:/etc/nginx/tls:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: "5"

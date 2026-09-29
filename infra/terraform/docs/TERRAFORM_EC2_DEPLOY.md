@@ -1,5 +1,7 @@
 # Terraform EC2 Deployment — As Implemented
 
+> **Superseded by [ADR-007](../../../docs/ADR/ADR-007-ci_cd_pipeline.md) and [docs/DEPLOYMENT.md](../../../docs/DEPLOYMENT.md).** This describes the old Docker Hub + SSH (`make deploy` / `tf-redeploy`) setup on an x86 `t3.micro`, which no longer exists. Kept for history only.
+
 ## Who this doc is for
 
 You're assumed to be comfortable with Go, Docker, and this project's Makefile — but you've said you haven't used Terraform before, so this doc treats it as unfamiliar. If you already know Terraform, skip [Section 0](#section-0--background-primer-what-terraform-actually-is) — it's a primer, not load-bearing for the rest of the doc.
