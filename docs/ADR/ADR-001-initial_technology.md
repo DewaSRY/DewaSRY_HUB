@@ -520,6 +520,6 @@ Create a new ADR that supersedes the relevant part of this one when any of these
 | ADR-002 | Use cases (update: products sign in through the hub, OQ4)                                                         | Proposed |
 | ADR-003 | API contract, including SSO (`/sso/authorize`, `/sso/codes`, `/sso/token`) and entitlement for connected products | Proposed |
 | ADR-004 | Initial schema model (add registered redirect URIs and SSO codes)                                                 | Proposed |
-| ADR-005 | Ads provider and placement (for example Google AdSense), consent banner                                           | To do    |
-| ADR-006 | Domain, DNS, and email sending provider                                                                           | To do    |
-| ADR-007 | CI/CD pipeline (build Spring Boot ARM image, deploy to EC2)                                                       | To do    |
+| ADR-005 | [Ads provider and placement (Google AdSense), consent banner](./ADR-005-ads_and_consent.md)                       | Proposed |
+| ADR-006 | [Domain, DNS, and email sending provider (Cloudflare, Amazon SES)](./ADR-006-domain_dns_and_email.md)             | Proposed |
+| ADR-007 | [CI/CD pipeline (build Spring Boot ARM image, deploy to EC2)](./ADR-007-ci_cd_pipeline.md)                        | Proposed |
