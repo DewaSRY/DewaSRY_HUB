@@ -1,18 +1,9 @@
+Learn this code base. then make me a PRD naem PRD-001_react_library.md
 
+make it with this document structure:
 
-
-
-for my authentication flow 
-
-
-how every login with they google, will automaticly have account/user for my application 
-
-# for the user story 
-
-as new user, i want to sign in on the hub with my google account, so i can access my data on the application 
-
-
-# The scop 
-
-- for new user just by auht with google account they will automatically have access to application 
-- for users, when they login again with they google account they will get all they record data on appliation 
+1. Overview
+2. Problem statement
+3. Goals
+4. List of component and what the functionality the component will have.
+5. Other reusable code, also better to make it generic and make the library for it.
