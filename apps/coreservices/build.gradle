@@ -19,7 +19,7 @@ repositories {
 
 ext {
 	shedlockVersion = '7.10.1'
-	scrimageVersion = '4.6.8'
+	scrimageVersion = '4.6.9'
 	awsSdkVersion = '2.55.6'
 	firebaseAdminVersion = '9.11.0'
 	bouncycastleVersion = '1.86'
